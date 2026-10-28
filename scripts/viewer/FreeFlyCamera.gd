@@ -25,7 +25,7 @@ func _setup_hud() -> void:
 	
 	var panel = PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	panel.position = Vector2(16, 16)
+	panel.position = Vector2(16, 52)
 	panel.custom_minimum_size = Vector2(340, 160)
 	canvas.add_child(panel)
 	

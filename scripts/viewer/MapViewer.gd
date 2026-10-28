@@ -7,6 +7,7 @@ class_name MapViewer
 
 var _is_fps_mode: bool = false
 var _sun: DirectionalLight3D = null
+var _fps_label: Label = null
 
 const POI_LOCATIONS = {
 	"SPAWN": Vector3(-900.0, 28.0, -1100.0),
@@ -38,6 +39,36 @@ func _ready() -> void:
 	# Default to FreeFly on startup for bird's-eye inspection, press F1 for FPS
 	_set_fps_mode(false)
 	_setup_poi_teleport_ui()
+	_setup_fps_counter()
+
+func _setup_fps_counter() -> void:
+	var canvas = CanvasLayer.new()
+	canvas.name = "GlobalFPSOverlay"
+	canvas.layer = 120 # above all other UI
+	add_child(canvas)
+	
+	var panel = PanelContainer.new()
+	panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	panel.position = Vector2(16, 12)
+	canvas.add_child(panel)
+	
+	_fps_label = Label.new()
+	_fps_label.text = "FPS: -- (0.0 ms)"
+	_fps_label.add_theme_font_size_override("font_size", 16)
+	_fps_label.add_theme_color_override("font_color", Color(0.2, 1.0, 0.4))
+	panel.add_child(_fps_label)
+
+func _process(_delta: float) -> void:
+	if _fps_label:
+		var fps = Engine.get_frames_per_second()
+		var ms = 1000.0 / maxf(float(fps), 1.0)
+		_fps_label.text = "FPS: %d (%.1f ms)" % [fps, ms]
+		if fps >= 55:
+			_fps_label.add_theme_color_override("font_color", Color(0.2, 1.0, 0.4)) # green
+		elif fps >= 30:
+			_fps_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2)) # yellow
+		else:
+			_fps_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3)) # red
 
 func _toggle_mode() -> void:
 	_set_fps_mode(not _is_fps_mode)

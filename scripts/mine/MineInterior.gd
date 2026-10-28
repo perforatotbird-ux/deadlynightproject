@@ -14,14 +14,45 @@ const INCLINE_GRADE: float = 0.03 # 3% slope upwards
 var _player: CharacterBody3D = null
 var _ambient_audio: AudioStreamPlayer = null
 var _fade_rect: ColorRect = null
+var _fps_label: Label = null
 
 func _ready() -> void:
 	_setup_fade_ui()
+	_setup_fps_counter()
 	_setup_audio()
 	_build_tunnel_geometry()
 	_setup_entrance_exit_trigger()
 	_spawn_player()
 	_fade_in()
+
+func _setup_fps_counter() -> void:
+	var canvas = CanvasLayer.new()
+	canvas.name = "MineFPSOverlay"
+	canvas.layer = 120
+	add_child(canvas)
+	
+	var panel = PanelContainer.new()
+	panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	panel.position = Vector2(16, 12)
+	canvas.add_child(panel)
+	
+	_fps_label = Label.new()
+	_fps_label.text = "FPS: -- (0.0 ms)"
+	_fps_label.add_theme_font_size_override("font_size", 16)
+	_fps_label.add_theme_color_override("font_color", Color(0.2, 1.0, 0.4))
+	panel.add_child(_fps_label)
+
+func _process(_delta: float) -> void:
+	if _fps_label:
+		var fps = Engine.get_frames_per_second()
+		var ms = 1000.0 / maxf(float(fps), 1.0)
+		_fps_label.text = "FPS: %d (%.1f ms)" % [fps, ms]
+		if fps >= 55:
+			_fps_label.add_theme_color_override("font_color", Color(0.2, 1.0, 0.4))
+		elif fps >= 30:
+			_fps_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+		else:
+			_fps_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
 
 func _setup_fade_ui() -> void:
 	var canvas = CanvasLayer.new()
