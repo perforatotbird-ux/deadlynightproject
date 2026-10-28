@@ -1,0 +1,337 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "project_name": "Deadly Night — Spring Forest",
+  "version": "1.1",
+  "seed": 20261028,
+  "world": {
+    "size_x": 4000.0,
+    "size_y": 4000.0,
+    "min_x": -2000.0,
+    "max_x": 2000.0,
+    "min_y": -2000.0,
+    "max_y": 2000.0,
+    "center": [0.0, 0.0],
+    "height_min": 0.0,
+    "height_max": 400.0,
+    "axes": {
+      "blender": "X=East, Y=North, Z=Up",
+      "godot_export": "X, Z, -Y"
+    }
+  },
+  "terrain": {
+    "heightmap_resolution": [4096, 4096],
+    "pixel_size_meters": 0.9765625,
+    "heightmap_format": "16-bit PNG + .r16",
+    "splatmap_resolution": [4096, 4096],
+    "chunks": {
+      "count_x": 16,
+      "count_y": 16,
+      "total": 256,
+      "size_meters": 250.0
+    },
+    "preview_mesh_step": 4.0,
+    "traversable_slope_max_deg": 40.0,
+    "cliff_slope_threshold_deg": 35.0,
+    "height_zones": {
+      "river_valley": [0.0, 40.0],
+      "forest_hills": [40.0, 120.0],
+      "foothills": [120.0, 220.0],
+      "mountain_massif": [220.0, 380.0]
+    }
+  },
+  "pois": [
+    {
+      "id": "SPAWN",
+      "name": "Поляна старта",
+      "position": [-900.0, -1100.0, 25.0],
+      "radius": 70.0,
+      "priority": 1,
+      "notes": "Стартовая поляна, 5 учебных деревьев (20-40м), пень и поваленный ствол"
+    },
+    {
+      "id": "FORK",
+      "name": "Развилка дороги",
+      "position": [600.0, 200.0, 60.0],
+      "priority": 2,
+      "notes": "Налево к шахте, прямо выход на восток"
+    },
+    {
+      "id": "BRIDGE",
+      "name": "Мост через реку",
+      "position": [925.0, 37.0, 70.0],
+      "length": 12.0,
+      "priority": 2,
+      "notes": "Бревенчатый мост 12 м на восточной ветке дороги"
+    },
+    {
+      "id": "FORD",
+      "name": "Брод через ручей",
+      "position": [795.0, 520.0, 85.0],
+      "priority": 2,
+      "notes": "Брод на ответвлении дороги к шахте"
+    },
+    {
+      "id": "WINDFALL",
+      "name": "Бурелом",
+      "position": [-1500.0, -300.0, 45.0],
+      "priority": 3,
+      "notes": "Завал поваленных деревьев, трудный проход"
+    },
+    {
+      "id": "CLEARCUT",
+      "name": "Старая вырубка",
+      "position": [-1100.0, 900.0, 70.0],
+      "priority": 3,
+      "notes": "Пни, подлесок, хороший обзор"
+    },
+    {
+      "id": "HUT",
+      "name": "Лесная сторожка",
+      "position": [-200.0, 800.0, 60.0],
+      "priority": 4,
+      "notes": "Пока маркер POI (после MVP)"
+    },
+    {
+      "id": "MEADOW",
+      "name": "Горный луг",
+      "position": [-1500.0, 1300.0, 120.0],
+      "priority": 3,
+      "notes": "Открытая горная панорама"
+    },
+    {
+      "id": "MINE_YARD",
+      "name": "Площадка шахты",
+      "position": [1100.0, 1180.0, 140.0],
+      "size": [40.0, 40.0],
+      "priority": 1,
+      "notes": "Ровная площадка 40x40 м у скальной стены 12-15 м"
+    },
+    {
+      "id": "MINE_ADIT",
+      "name": "Вход в штольню",
+      "position": [1130.0, 1210.0, 143.0],
+      "azimuth_deg": 225.0,
+      "portal_size": [3.0, 2.6],
+      "priority": 1,
+      "notes": "Портал смотрит на юго-запад, колея 0.6 м, вагонетка"
+    },
+    {
+      "id": "LOOKOUT",
+      "name": "Скальный выступ",
+      "position": [700.0, 1550.0, 230.0],
+      "priority": 3,
+      "notes": "Обзорная точка на всю карту"
+    },
+    {
+      "id": "PEAK",
+      "name": "Вершина Каменная голова",
+      "position": [1500.0, 1500.0, 380.0],
+      "priority": 1,
+      "notes": "Главный северо-восточный высотный ориентир"
+    }
+  ],
+  "splines": {
+    "road_main": [
+      [-2000.0, -900.0],
+      [-1400.0, -1000.0],
+      [-900.0, -930.0],
+      [-300.0, -600.0],
+      [200.0, -300.0],
+      [600.0, 200.0]
+    ],
+    "road_east_branch": [
+      [600.0, 200.0],
+      [925.0, 37.0],
+      [2000.0, -500.0]
+    ],
+    "road_mine_branch": [
+      [600.0, 200.0],
+      [795.0, 520.0],
+      [900.0, 700.0],
+      [1050.0, 1000.0],
+      [1100.0, 1180.0]
+    ],
+    "river": [
+      [1550.0, 1800.0],
+      [1500.0, 1200.0],
+      [1300.0, 600.0],
+      [900.0, 0.0],
+      [500.0, -700.0],
+      [100.0, -1300.0],
+      [-100.0, -2000.0]
+    ],
+    "creek": [
+      [700.0, 1350.0],
+      [850.0, 950.0],
+      [795.0, 520.0],
+      [900.0, 250.0],
+      [1000.0, 150.0]
+    ],
+    "trails": {
+      "T1": [[-900.0, -1100.0], [-900.0, -930.0]],
+      "T2": [[-900.0, -1100.0], [-600.0, -1500.0], [0.0, -1450.0]],
+      "T3": [[-300.0, -600.0], [-600.0, 0.0], [-1100.0, 900.0]],
+      "T4": [[-1100.0, 900.0], [-1500.0, 1300.0]],
+      "T5": [[200.0, -300.0], [0.0, 300.0], [-200.0, 800.0]],
+      "T6": [[-200.0, 800.0], [300.0, 1300.0], [700.0, 1550.0]],
+      "T7": [[1100.0, 1180.0], [900.0, 1400.0], [700.0, 1550.0]],
+      "T8": [[-1400.0, -1000.0], [-1500.0, -300.0]]
+    }
+  },
+  "vegetation": {
+    "budgets": {
+      "trees_target": 80000,
+      "trees_mvp_initial": 40000,
+      "bushes_target": 120000,
+      "boulders": 2000,
+      "deadwood": 3000
+    },
+    "species": {
+      "beech": {
+        "name": "Бук",
+        "height_m": [22.0, 30.0],
+        "trunk_diam_m": [0.5, 0.9],
+        "hp_hits": 16,
+        "logs_yield": 4,
+        "log_weight_kg": 7.0,
+        "wood_color": "#EEDC82"
+      },
+      "oak": {
+        "name": "Дуб",
+        "height_m": [18.0, 26.0],
+        "trunk_diam_m": [0.6, 1.0],
+        "hp_hits": 20,
+        "logs_yield": 5,
+        "log_weight_kg": 9.0,
+        "wood_color": "#8B5A2B"
+      },
+      "birch": {
+        "name": "Берёза",
+        "height_m": [14.0, 22.0],
+        "trunk_diam_m": [0.25, 0.45],
+        "hp_hits": 8,
+        "logs_yield": 2,
+        "log_weight_kg": 4.0,
+        "wood_color": "#F5F5DC"
+      },
+      "spruce": {
+        "name": "Ель",
+        "height_m": [20.0, 32.0],
+        "trunk_diam_m": [0.4, 0.8],
+        "hp_hits": 12,
+        "logs_yield": 3,
+        "log_weight_kg": 5.0,
+        "wood_color": "#D2691E"
+      }
+    },
+    "zones": {
+      "valley": {
+        "height_range": [0.0, 60.0],
+        "composition": {"beech": 0.3, "oak": 0.2, "birch": 0.3, "spruce": 0.2},
+        "density_per_ha": 90
+      },
+      "mixed_forest": {
+        "height_range": [60.0, 180.0],
+        "composition": {"beech": 0.4, "spruce": 0.4, "birch": 0.1, "oak": 0.1},
+        "density_per_ha": 90
+      },
+      "coniferous_belt": {
+        "height_range": [180.0, 300.0],
+        "composition": {"spruce": 0.85, "beech": 0.1, "birch": 0.05},
+        "density_per_ha": 60
+      },
+      "alpine_rocks": {
+        "height_range": [300.0, 400.0],
+        "density_per_ha": 0
+      }
+    },
+    "exclusion_zones": {
+      "road_margin_m": 5.0,
+      "trail_margin_m": 1.5,
+      "water_margin_m": 3.0,
+      "spawn_radius_m": 70.0,
+      "slope_max_deg": 35.0,
+      "elevation_max_m": 300.0
+    }
+  },
+  "chopping_system": {
+    "hit_range_m": 2.0,
+    "hit_cooldown_s": 0.8,
+    "damage_per_hit": 1.0,
+    "damage_stages": [
+      {"stage": 0, "threshold_hp_pct": 1.0, "notch_pct": 0.0, "effects": "none"},
+      {"stage": 1, "threshold_hp_pct": 0.7, "notch_pct": 0.2, "effects": "chips_sound"},
+      {"stage": 2, "threshold_hp_pct": 0.35, "notch_pct": 0.5, "effects": "crack_sound"},
+      {"stage": 3, "threshold_hp_pct": 0.1, "notch_pct": 0.8, "tilt_deg": 2.0, "effects": "creak_warning"},
+      {"stage": 4, "threshold_hp_pct": 0.0, "action": "fall_and_stump", "stump_height_m": 0.6}
+    ],
+    "particles": {
+      "type": "GPUParticles3D",
+      "count_cubes": 24,
+      "cube_size_cm": [1.0, 3.0],
+      "lifetime_s": 0.8,
+      "cone_deg": 35.0,
+      "speed_mps": [1.5, 3.0],
+      "large_chips_count": 4,
+      "emitter_pool_size": 8
+    },
+    "interaction_radius_m": 25.0,
+    "max_active_trees": 16
+  },
+  "mine_interior": {
+    "scene_path": "scenes/mine/MineInterior.tscn",
+    "transition_fade_s": 0.5,
+    "main_adit": {
+      "length_m": 70.0,
+      "cross_section_m": [2.6, 2.4],
+      "slope_inward_pct": 3.0,
+      "frames_spacing_m": 3.0,
+      "frames_count": 23,
+      "rail_gauge_m": 0.6
+    },
+    "chamber_a": {
+      "position_along_adit_m": 30.0,
+      "size_m": [8.0, 6.0],
+      "side": "left",
+      "props": ["boxes", "barrels", "rack"]
+    },
+    "branch_b": {
+      "position_along_adit_m": 45.0,
+      "length_m": 25.0,
+      "side": "right",
+      "flooded_tail_m": 6.0,
+      "water_depth_m": 0.3
+    },
+    "end_hall": {
+      "position_along_adit_m": 70.0,
+      "size_m": [12.0, 10.0, 4.0],
+      "partially_caved_in": true,
+      "vertical_shaft_with_ladder": true
+    }
+  },
+  "player": {
+    "collision": {
+      "type": "CharacterBody3D",
+      "shape": "CapsuleShape3D",
+      "radius": 0.35,
+      "height": 1.8,
+      "step_height_m": 0.4
+    },
+    "camera": {
+      "eye_height_stand_m": 1.6,
+      "eye_height_crouch_m": 1.0,
+      "fov_world_deg": 80.0,
+      "fov_viewmodel_deg": 60.0
+    },
+    "movement": {
+      "walk_speed_mps": 2.0,
+      "run_speed_mps": 5.0,
+      "crouch_speed_mps": 1.0,
+      "jump_height_m": 0.6
+    },
+    "inventory": {
+      "backpack_capacity_kg": 25.0,
+      "overweight_speed_penalty": 0.7
+    }
+  }
+}
