@@ -40,8 +40,8 @@ shadow_enabled = true
 [node name="WorldMap" parent="." instance=ExtResource("2_world")]
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -900, 26, -1100)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -900, 26, 1100)
 
 [node name="FreeFlyCamera" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -900, 35, -1100)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -900, 32, 1105)
 script = ExtResource("4_freefly")

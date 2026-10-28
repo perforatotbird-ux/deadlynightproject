@@ -13,10 +13,17 @@ var _hud_label: Label = null
 var _mode_label: Label = null
 
 func _ready() -> void:
-	current = true
 	_setup_hud()
-	# Capture mouse on click
-	_set_mouse_capture(true)
+
+func set_active(active: bool) -> void:
+	current = active
+	set_process(active)
+	set_process_unhandled_input(active)
+	var canvas = get_node_or_null("FreeFlyHUD")
+	if canvas:
+		canvas.visible = active
+	if active:
+		_set_mouse_capture(true)
 
 func _setup_hud() -> void:
 	var canvas = CanvasLayer.new()
@@ -118,8 +125,8 @@ func _update_hud() -> void:
 		
 	var pos = global_position
 	var chunk_x = clampi(int(floor((pos.x + 2000.0) / 250.0)), 0, 15)
-	var chunk_z = clampi(int(floor((pos.z + 2000.0) / 250.0)), 0, 15)
-	var chunk_name = "Chunk_%02d_%02d" % [chunk_x, chunk_z]
+	var chunk_y = clampi(int(floor((-pos.z + 2000.0) / 250.0)), 0, 15)
+	var chunk_name = "Chunk_%02d_%02d" % [chunk_x, chunk_y]
 	var fps = Engine.get_frames_per_second()
 	
 	_hud_label.text = "Pos: (X: %.1f, Y: %.1f, Z: %.1f)\nChunk: %s | FPS: %d\nAlt: %.1f m" % [
@@ -131,6 +138,6 @@ func _toggle_top_down() -> void:
 	rotation_degrees = Vector3(-89.9, 0.0, 0.0)
 
 func _teleport_to_spawn() -> void:
-	# SPAWN is at (-900, 25, -1100)
-	global_position = Vector3(-900.0, 35.0, -1100.0)
+	# SPAWN is at (-900, 25, 1100)
+	global_position = Vector3(-900.0, 32.0, 1105.0)
 	rotation_degrees = Vector3(-10.0, 45.0, 0.0)

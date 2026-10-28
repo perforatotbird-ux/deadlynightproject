@@ -61,23 +61,24 @@ func _setup_camera_and_axe() -> void:
 	# Camera3D
 	_camera = Camera3D.new()
 	_camera.name = "PlayerCamera"
-	_camera.fov = 80.0
+	_camera.fov = 75.0
+	_camera.near = 0.05
 	_camera.current = false # activated by MapViewer
 	_camera_pivot.add_child(_camera)
 	
-	# Raycast for chopping and pickup (range 2.0m)
+	# Raycast for chopping and pickup (range 2.2m)
 	_raycast = RayCast3D.new()
 	_raycast.name = "InteractRay"
-	_raycast.target_position = Vector3(0, 0, -2.2)
+	_raycast.target_position = Vector3(0, 0, -2.4)
 	_raycast.collision_mask = 2 | 4 # Layer 2 (Trees), Layer 4 (Logs)
 	_camera.add_child(_raycast)
 	
 	# Axe Viewmodel Pivot
 	_axe_pivot = Node3D.new()
 	_axe_pivot.name = "AxePivot"
-	# Position in front and slightly right of camera
-	_axe_pivot.position = Vector3(0.35, -0.28, -0.55)
-	_axe_pivot.rotation_degrees = Vector3(-15.0, -10.0, -5.0)
+	_axe_pivot.position = Vector3(0.26, -0.25, -0.42)
+	_axe_pivot.rotation_degrees = Vector3(-20.0, -65.0, 15.0)
+	_axe_pivot.scale = Vector3(0.75, 0.75, 0.75)
 	_camera.add_child(_axe_pivot)
 	
 	var axe_path = "res://assets/models/props/axe_iron.glb"
@@ -162,6 +163,8 @@ func set_active(active: bool) -> void:
 		_camera.current = active
 	if _hud_layer:
 		_hud_layer.visible = active
+	set_physics_process(active)
+	set_process_unhandled_input(active)
 	if active:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -193,11 +196,11 @@ func _physics_process(delta: float) -> void:
 	if not _camera.current:
 		return
 		
-	# Gravity
+	# Gravity & Ground snap
 	if not is_on_floor():
 		velocity.y -= _gravity * delta
 	else:
-		velocity.y = 0.0
+		velocity.y = -0.1
 		
 	# Crouch logic
 	_is_crouching = Input.is_key_pressed(KEY_CTRL)
@@ -257,12 +260,12 @@ func _update_viewmodel_sway(delta: float, h_speed: float) -> void:
 		return
 	# Gentle idle bobbing + movement sway
 	var time = Time.get_ticks_msec() / 1000.0
-	var bob_x = sin(time * 2.0) * 0.015
-	var bob_y = cos(time * 4.0) * 0.010
+	var bob_x = sin(time * 2.0) * 0.006
+	var bob_y = cos(time * 4.0) * 0.005
 	if h_speed > 0.5:
-		bob_x += sin(time * 8.0) * 0.035
-		bob_y += abs(cos(time * 8.0)) * 0.025
-	_axe_pivot.position = Vector3(0.35 + bob_x, -0.28 + bob_y, -0.55)
+		bob_x += sin(time * 8.0) * 0.018
+		bob_y += abs(cos(time * 8.0)) * 0.012
+	_axe_pivot.position = Vector3(0.26 + bob_x, -0.25 + bob_y, -0.42)
 
 func _play_footstep(delta: float, current_speed: float) -> void:
 	if not is_on_floor():
@@ -330,10 +333,12 @@ func _play_swing_animation_and_sound() -> void:
 		
 	if _axe_pivot:
 		var tween = create_tween()
-		# Fast forward slash
-		tween.tween_property(_axe_pivot, "rotation_degrees", Vector3(-45.0, 35.0, -35.0), 0.12).set_trans(Tween.TRANS_QUAD)
+		# Fast chop swing downwards and towards center
+		tween.tween_property(_axe_pivot, "rotation_degrees", Vector3(-55.0, -35.0, -25.0), 0.12).set_trans(Tween.TRANS_QUAD)
+		tween.parallel().tween_property(_axe_pivot, "position", Vector3(0.18, -0.28, -0.45), 0.12)
 		# Slower return to ready stance
-		tween.tween_property(_axe_pivot, "rotation_degrees", Vector3(-15.0, -10.0, -5.0), 0.35).set_trans(Tween.TRANS_SINE)
+		tween.tween_property(_axe_pivot, "rotation_degrees", Vector3(-20.0, -65.0, 15.0), 0.35).set_trans(Tween.TRANS_SINE)
+		tween.parallel().tween_property(_axe_pivot, "position", Vector3(0.26, -0.25, -0.42), 0.35)
 
 func _try_interact() -> void:
 	if not _raycast.is_colliding():

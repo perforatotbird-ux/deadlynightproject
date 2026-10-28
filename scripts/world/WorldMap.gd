@@ -82,17 +82,17 @@ func _load_pois_and_props() -> void:
 	_pois_root.name = "POIs_and_Props"
 	add_child(_pois_root)
 	
-	# 1. Place Bridge at BRIDGE POI (925, 37, height 36.8)
+	# 1. Place Bridge at BRIDGE POI (925, 37, height 65)
 	var bridge_path = "res://assets/models/props/bridge_wood.glb"
 	if ResourceLoader.exists(bridge_path):
 		var b_scene = load(bridge_path)
 		if b_scene:
 			var bridge = b_scene.instantiate()
 			bridge.name = "POI_Bridge"
-			# BRIDGE position: X=925, Elevation=36.8, Z=37
-			bridge.position = Vector3(925.0, 36.8, 37.0)
+			# BRIDGE position: X=925, Elevation=65.0, Z=-37
+			bridge.position = Vector3(925.0, 65.0, -37.0)
 			# Align across the river
-			bridge.rotation_degrees = Vector3(0.0, 75.0, 0.0)
+			bridge.rotation_degrees = Vector3(0.0, -75.0, 0.0)
 			_pois_root.add_child(bridge)
 			# Add collision for bridge
 			for m in _collect_all_meshes(bridge):
@@ -105,9 +105,9 @@ func _load_pois_and_props() -> void:
 		if p_scene:
 			var portal = p_scene.instantiate()
 			portal.name = "POI_MinePortal"
-			portal.position = Vector3(1130.0, 143.0, 1210.0)
-			# Azimuth 225 deg (South-West facing)
-			portal.rotation_degrees = Vector3(0.0, 225.0, 0.0)
+			portal.position = Vector3(1130.0, 143.0, -1210.0)
+			# Azimuth facing into the yard (-45 deg)
+			portal.rotation_degrees = Vector3(0.0, -45.0, 0.0)
 			_pois_root.add_child(portal)
 			for m in _collect_all_meshes(portal):
 				m.create_trimesh_collision()
@@ -115,7 +115,7 @@ func _load_pois_and_props() -> void:
 			# Entrance trigger to Mine Interior
 			var trigger = Area3D.new()
 			trigger.name = "MineEntranceTrigger"
-			trigger.position = Vector3(1130.0, 144.0, 1210.0)
+			trigger.position = Vector3(1130.0, 144.0, -1210.0)
 			var t_col = CollisionShape3D.new()
 			var t_box = BoxShape3D.new()
 			t_box.size = Vector3(2.5, 2.5, 2.5)
@@ -130,8 +130,8 @@ func _load_pois_and_props() -> void:
 		var c_scene = load(cart_path)
 		if c_scene:
 			var cart = c_scene.instantiate()
-			cart.position = Vector3(1115.0, 140.5, 1195.0)
-			cart.rotation_degrees = Vector3(0.0, 45.0, 0.0)
+			cart.position = Vector3(1115.0, 140.5, -1195.0)
+			cart.rotation_degrees = Vector3(0.0, -135.0, 0.0)
 			_pois_root.add_child(cart)
 			for m in _collect_all_meshes(cart):
 				m.create_trimesh_collision()
@@ -143,8 +143,8 @@ func _load_pois_and_props() -> void:
 			for ri in range(5):
 				var rails = r_scene.instantiate()
 				var offset = ri * 2.9
-				rails.position = Vector3(1126.0 - offset * 0.707, 141.5 - offset * 0.05, 1206.0 - offset * 0.707)
-				rails.rotation_degrees = Vector3(0.0, 45.0, 0.0)
+				rails.position = Vector3(1126.0 - offset * 0.707, 141.5 - offset * 0.05, -1206.0 + offset * 0.707)
+				rails.rotation_degrees = Vector3(0.0, -135.0, 0.0)
 				_pois_root.add_child(rails)
 				
 	# 4. Spawn 3D Markers & Floating Labels for all 12 POIs from spec.json
@@ -168,7 +168,7 @@ func _spawn_poi_markers() -> void:
 		# pos_arr: [X, Z_map, Elevation_Y]
 		var px = pos_arr[0]
 		var py = pos_arr[2]
-		var pz = pos_arr[1]
+		var pz = -pos_arr[1] # Flip map Y to Godot Z
 		
 		var marker = Node3D.new()
 		marker.name = "Marker_" + poi.get("id", "POI")
@@ -269,8 +269,8 @@ func _load_vegetation() -> void:
 			for i in range(tree_list.size()):
 				var t = tree_list[i]
 				var pos_arr = t["pos"]
-				# pos: [X, Z_map, Elevation_Y]
-				var origin = Vector3(pos_arr[0], pos_arr[2], pos_arr[1])
+				# pos: [X, Z_map, Elevation_Y] -> Godot: [X, Elevation_Y, -Z_map]
+				var origin = Vector3(pos_arr[0], pos_arr[2], -pos_arr[1])
 				var yaw = deg_to_rad(t.get("yaw_deg", 0.0))
 				var scl = t.get("scale", 1.0)
 				
@@ -299,7 +299,7 @@ func _spawn_tutorial_trees() -> void:
 		if tree.get("tutorial", false):
 			var sp = tree.get("species", "birch")
 			var pos_arr = tree.get("pos")
-			var origin = Vector3(pos_arr[0], pos_arr[2], pos_arr[1])
+			var origin = Vector3(pos_arr[0], pos_arr[2], -pos_arr[1])
 			var yaw = deg_to_rad(tree.get("yaw_deg", 0.0))
 			var scl = tree.get("scale", 1.0)
 			

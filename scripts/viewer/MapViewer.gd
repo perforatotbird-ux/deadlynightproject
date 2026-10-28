@@ -10,18 +10,18 @@ var _sun: DirectionalLight3D = null
 var _fps_label: Label = null
 
 const POI_LOCATIONS = {
-	"SPAWN": Vector3(-900.0, 28.0, -1100.0),
-	"BRIDGE": Vector3(925.0, 42.0, 37.0),
-	"FORD": Vector3(795.0, 65.0, 520.0),
-	"FORK": Vector3(600.0, 45.0, 200.0),
-	"LOOKOUT": Vector3(700.0, 235.0, 1550.0),
-	"PEAK": Vector3(1500.0, 395.0, 1500.0),
-	"MINE_YARD": Vector3(1100.0, 145.0, 1180.0),
-	"MINE_ADIT": Vector3(1130.0, 146.0, 1210.0),
-	"HUT": Vector3(0.0, 75.0, 300.0),
-	"CLEARCUT": Vector3(-600.0, 50.0, 0.0),
-	"WINDFALL": Vector3(-1400.0, 70.0, -600.0),
-	"MEADOW": Vector3(-400.0, 40.0, 400.0)
+	"SPAWN": Vector3(-900.0, 26.0, 1100.0),
+	"BRIDGE": Vector3(925.0, 66.0, -37.0),
+	"FORD": Vector3(795.0, 66.0, -520.0),
+	"FORK": Vector3(600.0, 78.0, -200.0),
+	"LOOKOUT": Vector3(700.0, 366.0, -1550.0),
+	"PEAK": Vector3(1500.0, 381.0, -1500.0),
+	"MINE_YARD": Vector3(1100.0, 142.0, -1180.0),
+	"MINE_ADIT": Vector3(1130.0, 144.0, -1210.0),
+	"HUT": Vector3(0.0, 21.0, -300.0),
+	"CLEARCUT": Vector3(-600.0, 32.0, 0.0),
+	"WINDFALL": Vector3(-1400.0, 42.0, 600.0),
+	"MEADOW": Vector3(-400.0, 2.0, -400.0)
 }
 
 func _ready() -> void:
@@ -33,11 +33,11 @@ func _ready() -> void:
 		
 	# Start at SPAWN
 	player.global_position = POI_LOCATIONS["SPAWN"]
-	free_fly_cam.global_position = POI_LOCATIONS["SPAWN"] + Vector3(0, 5, 10)
+	free_fly_cam.global_position = POI_LOCATIONS["SPAWN"] + Vector3(0, 3, 5)
 	free_fly_cam.look_at(POI_LOCATIONS["SPAWN"])
 	
-	# Default to FreeFly on startup for bird's-eye inspection, press F1 for FPS
-	_set_fps_mode(false)
+	# Default to FIRST PERSON PLAYER on startup, press F1 for FreeFly
+	_set_fps_mode(true)
 	_setup_poi_teleport_ui()
 	_setup_fps_counter()
 
