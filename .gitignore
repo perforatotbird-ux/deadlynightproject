@@ -1,0 +1,19 @@
+# Godot
+.godot/
+Godot/*.exe
+*.translation
+
+# Web Exports & Builds
+exports/web/
+
+# Python / Blender
+__pycache__/
+*.pyc
+*.blend1
+*.blend2
+
+# OS / Temporary files
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
