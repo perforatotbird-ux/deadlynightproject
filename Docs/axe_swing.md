@@ -37,7 +37,7 @@ blender -b --python scripts/blender/create_axe_hand_viewmodel.py -- /absolute/pa
 
 Либо `python scripts/blender/create_axe_hand_viewmodel.py` при установленном официальном `bpy==5.2.3`.
 
-Скрипт создаёт glTF в проекте и редактируемый `.blend` с референсным топором/освещением в рабочей папке: `/data/axe-hand-work` в агентском окружении, иначе `build/axe_hands`. Шаблонные рукава/левая кисть скрыты в исходном viewport, доступны через Outliner. Python-генератор и glTF находятся в Git; `.blend` передан отдельно как исходник.
+Скрипт создаёт glTF в проекте и редактируемый `.blend` с референсным топором/освещением в рабочей папке: `/data/axe-hand-work` в агентском окружении, иначе `build/axe_hands`. Шаблонные рукава/левая кисть скрыты в исходном viewport, доступны через Outliner. Python-генератор и glTF находятся в Git; редактируемый `.blend` хранится в `assets/source_blender/axe_grip_hands.blend` через Git LFS.
 
 ## Проверка
 
