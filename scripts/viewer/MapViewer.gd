@@ -40,7 +40,7 @@ func _ready() -> void:
 	_set_fps_mode(true)
 	var survival = load("res://scripts/survival/SurvivalWorld.gd").new()
 	add_child(survival)
-	_setup_poi_teleport_ui()
+	# POI travel is now inside the F8 developer menu.
 	_setup_fps_counter()
 	load("res://scripts/core/SettingsManager.gd").get_instance().call_deferred("apply_graphics_settings")
 

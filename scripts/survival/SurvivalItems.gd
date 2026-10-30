@@ -1,6 +1,12 @@
 extends RefCounted
 # All recipes use the existing backpack. Transactions commit only if outputs fit.
 const DEFINITIONS = {
+ "water": {"name":"Питьевая вода · 0,5 л", "unit_weight":0.5, "description":"Безопасная вода. Восстанавливает 35% запаса воды."},
+ "raw_water": {"name":"Сырая вода · 0,5 л", "unit_weight":0.5, "description":"Нужно кипятить у горящего костра. Пить сырой нельзя."},
+ "ration": {"name":"Походный рацион", "unit_weight":0.3, "description":"Готовая еда. Восстанавливает 45% питания."},
+ "berries": {"name":"Перезимовавшая клюква", "unit_weight":0.15, "description":"Ограниченный тестовый весенний сбор перезимовавших ягод. Восстанавливает 12% питания."},
+ "bandage": {"name":"Бинт", "unit_weight":0.05, "description":"Останавливает кровотечение, но не возвращает здоровье."},
+ "compress": {"name":"Компресс для ноги", "unit_weight":0.1, "description":"Снимает травму ноги. Без лечения она проходит со временем."},
  "brush": {"name":"Хворост", "unit_weight":0.12, "burn_time":"5 мин", "description":"Сухие веточки для костра и розжига."},
  "stone": {"name":"Камень", "unit_weight":0.35, "description":"Для каменного кольца костра. Обычный камень не даёт огневой искры."},
  "flint": {"name":"Кремень", "unit_weight":0.2, "description":"Искровой камень: ударять о пирит над сухим хворостом."},

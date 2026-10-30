@@ -24,7 +24,12 @@ func refresh() -> void:
  var cold:String="опасно холодно" if s.warmth<20 else ("зябко" if s.warmth<50 else "тепло")
  var wet:String="мокро" if s.wetness>50 else ("сыро" if s.wetness>10 else "сухо")
  var roof:String="закрытая стоянка" if s.safe_shelter() else ("под крышей" if s.covered() else "на улице")
- hud.text="День %d · %02d:%02d · %s · %.0f°C · %s\n%s / %s · силы %.0f%% · здоровье %.0f%% · спички %d · [Tab] рюкзак" % [int(s.clock/86400)+1,h,m,"дождь" if s.weather=="rain" else "ясно",s.air_temperature(),roof,cold,wet,s.energy,s.health,s.matches]
+ hud.text="День %d · %02d:%02d · %s · %.0f°C · %s\n%s / %s · отдых %.0f%% · здоровье %.0f%% · спички %d · [Tab] журнал · [F8] Dev" % [int(s.clock/86400)+1,h,m,"дождь" if s.weather=="rain" else "ясно",s.air_temperature(),roof,cold,wet,s.energy,s.health,s.matches]
+ hud.text+="\nВода %.0f%% · питание %.0f%% · выносливость %.0f%%" % [s.body.water,s.body.food,s.body.stamina]
+ if not s.body.conditions.is_empty():hud.text+=" · травмы: %d [Tab → Состояние]" % s.body.conditions.size()
+ if s.dev_tainted:hud.text+=" · DEV"
+ if s.health<=0:hud.text="ВЫ ПОГИБЛИ · "+s.body.death_reason+"\nEsc — меню загрузки · F8 — Dev Menu"
+ hud.add_theme_color_override("font_color",Color("f0a78e") if s.health<25 or s.body.water<15 or s.body.food<15 else Color("eee5d3"))
  hud.visible=s.player._hud_enabled and s.player._is_active and not s.player._is_inventory_open
  hud_panel.visible=hud.visible
  var fire:Dictionary=s.nearby_fire()

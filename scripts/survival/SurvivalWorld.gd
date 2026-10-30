@@ -19,6 +19,15 @@ var wetness := 0.0
 var warmth := 80.0
 var energy := 100.0
 var health := 100.0
+var body=preload("res://scripts/survival/BodyModel.gd").new()
+var rain_reserve:=2.0 # 0.5-litre portions, capped at 6; saved, never refilled on load.
+var dev_menu:CanvasLayer
+var dev_time_rate:=1.0
+var dev_freeze_world:=false
+var dev_events_enabled:=true
+var dev_tainted:=false
+var _last_need_warning:=""
+var _supply_setup:=false
 var matches := 12
 var fires: Array = []
 var picked: Dictionary = {}
@@ -35,7 +44,7 @@ var selected_fire := ""
 var placing := false
 var preview: MeshInstance3D
 var placement: Dictionary = {}
-var message := "[Tab] Выживание · Собирайте хворост и камни · Стоянка к северо-западу от поляны"
+var message := "[Tab] Журнал и состояние · Припасы у стоянки к северо-западу · [F8] Dev Menu"
 var message_time := 15.0
 var _scan := 0.0
 var _visual_tick := 0.0
@@ -83,6 +92,8 @@ func _ready() -> void:
    _restore_exterior_logs(payload.get("logs",[]))
    get_parent().get_node("WorldMap").restore_felled_stumps()
   else:_restore_exterior_logs(_mine_logs)
+ dev_menu=preload("res://scripts/dev/DevMenu.gd").new();dev_menu.session=self;add_child(dev_menu)
+ if location=="forest":call_deferred("_setup_supplies")
  _update_lighting()
 
 func notify(text: String) -> void:
@@ -93,8 +104,12 @@ func _process(delta: float) -> void:
  if not is_instance_valid(player):return
  if not player._is_active:return
  var sleeping:bool=job.get("kind")=="rest"
- advance(delta)
+ advance(delta*dev_time_rate)
  weather_visual=weather_model.sample(clock,weather=="rain",weather_until,daylight())
+ if not dev_events_enabled:
+  # Suppress scheduling, not animation of manually started diagnostic events.
+  atmosphere.cooldown=maxf(60,atmosphere.cooldown)
+  sky_events.meteor_cooldown=maxf(60,sky_events.meteor_cooldown);sky_events.anomaly_cooldown=maxf(60,sky_events.anomaly_cooldown);sky_events.lightning_cooldown=maxf(60,sky_events.lightning_cooldown)
  sky_events.advance(delta,weather_visual,sleeping)
  rain_field.update_field(delta,weather_visual,int(load("res://scripts/core/SettingsManager.gd").get_instance().get_setting("graphics","rain_quality",1)))
  atmosphere.advance(delta,sleeping)
@@ -110,7 +125,7 @@ func _process(delta: float) -> void:
 
 func advance(real_seconds: float) -> void:
  # Called by _process, which naturally stops with SceneTree pause.
- if real_seconds<=0 or health<=0:return
+ if real_seconds<=0 or health<=0 or dev_freeze_world:return
  var remaining:=real_seconds
  # Bounded integration preserves fuel/temperature order during accelerated sleep.
  while remaining>0.00001:
@@ -120,6 +135,7 @@ func advance(real_seconds: float) -> void:
   remaining-=dt
   var world_dt:=dt*factor
   clock+=world_dt
+  if weather=="rain":rain_reserve=minf(6,rain_reserve+world_dt/3600.0)
   weather_model.sample(clock,weather=="rain",weather_until,daylight())
   if clock>=weather_until:
    weather="rain" if weather=="clear" else "clear"
@@ -136,11 +152,11 @@ func advance(real_seconds: float) -> void:
   if warmth<20 and not _cold_warned:_cold_warned=true;notify("Опасный холод! Найдите огонь или закрытое укрытие.")
   elif warmth>35:_cold_warned=false
   if health<=0:
-   job={};notify("Вы погибли от переохлаждения. Загрузите сохранение через меню.");break
+   _die();break
   if not job.is_empty():
    if job.get("kind")=="rest":
-    if not safe_shelter() or warmth<20:
-     cancel_job();notify("Отдых прерван: холод или открытая дверь");continue
+    if not safe_shelter() or warmth<20 or body.water<=0 or body.food<=0 or body.conditions.has("bleeding"):
+     cancel_job();notify("Отдых прерван: холод, открытая дверь, голод, жажда или кровотечение");continue
    elif player.global_position.distance_to(_v3(job.get("origin",[])))>0.7:
     cancel_job();notify("Действие прервано движением");continue
    job["elapsed"]=float(job.get("elapsed",0))+dt
@@ -164,18 +180,27 @@ func heat_at_player() -> float:
   heat=maxf(heat,(1.0-dist/4.5)*(20 if f["state"]=="burning" else 6))
  return heat
 func _update_body(world_dt: float, resting: bool) -> void:
+ if body.freeze_needs:body.causes.clear();return
  var minutes:=world_dt/60.0
  var under_roof:=covered();var heat:=heat_at_player()
  if weather=="rain" and not under_roof:wetness=minf(100,wetness+minutes*1.5)
  else:wetness=maxf(0,wetness-minutes*(0.25+heat*0.1))
- var felt:=air_temperature()-wetness*0.09+heat
+ var wind_chill:=float(weather_model.sample(clock,weather=="rain",weather_until,daylight()).wind)*3.0 if not under_roof else 0.0
+ var felt:=air_temperature()-wetness*0.09+heat-wind_chill
  if location=="mine":felt=8.0-wetness*0.04
  elif safe_shelter():felt+=5.0
  warmth=clampf(warmth+minutes*(felt-7.0)*0.16,0,100)
- var effort:=0.025+(0.04 if player.velocity.length()>5 else 0.0)
- energy=clampf(energy+minutes*(0.5 if resting and warmth>=20 else -effort),0,100)
- if warmth<12:health=maxf(0,health-minutes*0.6)
- elif resting and warmth>45:health=minf(100,health+minutes*0.08)
+ var sprinting:bool=player.velocity.length()>5
+ var effort:=0.09+(0.10 if sprinting else 0.0)+(0.08 if job.get("kind")=="split" or player._is_lmb_held else 0.0)
+ if not body.freeze_needs:energy=clampf(energy+minutes*(0.5 if resting and warmth>=20 else -effort),0,100)
+ health=clampf(health+body.tick(minutes,resting,warmth,energy,sprinting),0,100)
+ var warning:=""
+ if body.water<15:warning="Мало воды. Пейте безопасную воду; сырую кипятите у костра."
+ elif body.food<15:warning="Вы голодны. Найдите еду или соберите съедобные ягоды."
+ elif energy<15:warning="Вы устали. Подготовьте стоянку и поспите."
+ if warning!=_last_need_warning:
+  _last_need_warning=warning
+  if warning!="":notify(warning)
 
 func find_fire(id: String) -> Dictionary:
  for f in fires:
@@ -267,6 +292,8 @@ func rest_block_reason() -> String:
  if not covered() or location!="forest":return "Нужна койка в лесной стоянке."
  if not safe_shelter():return "Закройте дверь стоянки."
  if warmth<20:return "Слишком холодно для сна. Сначала согрейтесь."
+ if body.water<=0 or body.food<=0:return "Перед сном нужно поесть и попить."
+ if body.conditions.has("bleeding"):return "Сначала остановите кровотечение."
  return ""
 func begin_rest(hours: int = 1) -> bool:
  var reason:=rest_block_reason()
@@ -288,6 +315,10 @@ func _finish_job() -> void:
    var f:=find_fire(done["fire"])
    if not f.is_empty() and _fire_in_reach(f) and f["fuel"]>0 and done["success"]:f["state"]="burning";notify("Костёр разгорелся")
    else:notify("Розжиг не удался. Добавьте растопку и попробуйте ещё раз.")
+  "boil":
+   var f:=find_fire(str(done.get("fire","")))
+   if f.is_empty() or f.get("state")!="burning" or not _fire_in_reach(f):notify("Кипячение прервано: нужен горящий костёр рядом.")
+   else:notify("Готово: 0,5 л питьевой воды" if Items.transact(player,{"raw_water":1},[Items.item("water")]) else "Вода сохранена: нет сырой воды или места в рюкзаке")
   "rest":notify("Сон завершён: %d ч" % int(done.get("hours",1)))
  ui.refresh()
 
@@ -344,6 +375,7 @@ func _create_shelter() -> void:
  get_parent().add_child(shelter);shelter.global_position=pos
 
 func _stream_resources() -> void:
+ if is_instance_valid(shelter) and player.global_position.distance_to(shelter.global_position)<60:_spawn_supplies()
  # Deterministic, finite per-cell resources; collected IDs survive unloading/loading.
  var center:=Vector2i(floori(player.global_position.x/24),floori(player.global_position.z/24))
  for x in range(center.x-1,center.x+2):
@@ -352,7 +384,7 @@ func _stream_resources() -> void:
    if loaded_cells.has(key):continue
    loaded_cells[key]=true
    var random:=RandomNumberGenerator.new();random.seed=hash("DeadlyNight:"+key)
-   var types=["brush","brush","brush","brush","stone","stone","stone","stone","flint","pyrite"]
+   var types=["brush","brush","brush","brush","stone","stone","stone","stone","flint","pyrite","berries"]
    for i in types.size():
     var id:=key+":"+str(i)
     if picked.has(id):continue
@@ -378,10 +410,12 @@ func drop_resource(item: Dictionary, pos: Vector3) -> void:
  _spawn_pickup(item,id,pos)
 
 func export_state() -> Dictionary:
- var state:={"version":2,"sky_weather":weather_model.export_state(),"sky_events":sky_events.export_state() if is_instance_valid(sky_events) else {},"atmosphere":atmosphere.export_state(),"clock":clock,"weather":weather,"weather_until":weather_until,"wetness":wetness,"warmth":warmth,"energy":energy,"health":health,"matches":matches,"active_tool":player.active_hotbar_slot,"belt_items":player.belt_items.duplicate(),"lantern_on":player._is_lantern_on,"fires":fires.duplicate(true),"picked":picked.duplicate(),"dropped":dropped.duplicate(true),"job":job.duplicate(true),"rng_state":str(rng.state),"location":location,"door_closed":shelter.door_closed if is_instance_valid(shelter) else _saved_door_closed,"exterior_felled":_old_felled,"exterior_logs":_old_logs,"mine_logs":_mine_logs}
+ var state:={"version":3,"body":body.export_state(),"rain_reserve":rain_reserve,"dev_tainted":dev_tainted,"sky_weather":weather_model.export_state(),"sky_events":sky_events.export_state() if is_instance_valid(sky_events) else {},"atmosphere":atmosphere.export_state(),"clock":clock,"weather":weather,"weather_until":weather_until,"wetness":wetness,"warmth":warmth,"energy":energy,"health":health,"matches":matches,"active_tool":player.active_hotbar_slot,"belt_items":player.belt_items.duplicate(),"lantern_on":player._is_lantern_on,"fires":fires.duplicate(true),"picked":picked.duplicate(),"dropped":dropped.duplicate(true),"job":job.duplicate(true),"rng_state":str(rng.state),"location":location,"door_closed":shelter.door_closed if is_instance_valid(shelter) else _saved_door_closed,"exterior_felled":_old_felled,"exterior_logs":_old_logs,"mine_logs":_mine_logs}
  return state
 func import_state(state: Dictionary) -> void:
  close_backpack();cancel_placement()
+ body.import_state(state.get("body",{}));rain_reserve=body.bounded(state.get("rain_reserve",2),0,6)
+ dev_time_rate=1.0;dev_freeze_world=false;dev_events_enabled=true;dev_tainted=bool(state.get("dev_tainted",false))
  clock=float(state.get("clock",16*3600));weather=state.get("weather","clear");weather_until=float(state.get("weather_until",clock+7200))
  wetness=clampf(float(state.get("wetness",0)),0,100);warmth=clampf(float(state.get("warmth",80)),0,100);energy=clampf(float(state.get("energy",100)),0,100);health=clampf(float(state.get("health",100)),0,100);matches=maxi(0,int(state.get("matches",12)))
  player.belt_items=state.get("belt_items",["","",""]).duplicate();player.belt_items.resize(3)
@@ -409,6 +443,7 @@ func import_state(state: Dictionary) -> void:
  weather_model.import_state(state.get("sky_weather",{}),clock,weather=="rain")
  if is_instance_valid(sky_events):sky_events.import_state(state.get("sky_events",{}))
  atmosphere.import_state(state.get("atmosphere",{}))
+ if _supply_setup:_spawn_supplies()
  _update_lighting();ui.refresh()
 func prepare_travel() -> void:
  if _transitioning:return
@@ -461,3 +496,59 @@ func _update_lighting() -> void:
   _last_phase=phase
 static func _arr(v: Vector3) -> Array:return [v.x,v.y,v.z]
 static func _v3(a: Array) -> Vector3:return Vector3(a[0],a[1],a[2]) if a.size()==3 else Vector3.ZERO
+
+func _die() -> void:
+ job={};cancel_placement()
+ if is_instance_valid(player):player._cancel_chop()
+ if body.death_reason=="":body.death_reason=body.last_damage if body.last_damage!="" else "Истощение"
+ notify("Вы погибли: %s. Esc — загрузить сохранение." % body.death_reason)
+ if is_instance_valid(atmosphere):atmosphere.suspend()
+ if is_instance_valid(sky_events):sky_events.suspend()
+func apply_damage(amount:float,cause:String) -> void:
+ if health<=0 or body.invulnerable or not is_finite(amount) or amount<=0:return
+ health=maxf(0,health-amount);body.causes.clear();body.last_damage=cause
+ if health<=0:_die()
+func land(impact_speed:float) -> void:
+ if impact_speed<11 or body.invulnerable or health<=0:return
+ apply_damage((impact_speed-10)*4,"Падение")
+ if health<=0:return
+ body.conditions["sprain"]={"remaining":240.0}
+ if impact_speed>=16:body.conditions["bleeding"]={"remaining":-1.0}
+ notify("Травма после падения. Откройте «Состояние» в журнале.")
+func use_supply(slot:int) -> bool:
+ if health<=0 or not job.is_empty() or slot<0 or slot>=player.inventory_slots.size():return false
+ var item=player.inventory_slots[slot]
+ if item==null:return false
+ var kind:String=item.get("type","")
+ if kind=="raw_water":return begin_boil()
+ if kind not in ["water","ration","berries","bandage","compress"]:return false
+ if kind=="water" and body.water>=100:notify("Запас воды полон");return false
+ if kind in ["ration","berries"] and body.food>=100:notify("Вы сыты");return false
+ if kind=="bandage" and not body.conditions.has("bleeding"):notify("Нет кровотечения");return false
+ if kind=="compress" and not body.conditions.has("sprain"):notify("Нет травмы ноги");return false
+ if not Items.transact(player,{item.id:1},[],slot):return false
+ match kind:
+  "water":body.water=minf(100,body.water+35)
+  "ration":body.food=minf(100,body.food+45)
+  "berries":body.food=minf(100,body.food+12)
+  "bandage":body.conditions.erase("bleeding")
+  "compress":body.conditions.erase("sprain")
+ notify("Использовано: "+str(item.name));ui.refresh();return true
+func begin_boil() -> bool:
+ if health<=0 or not job.is_empty() or Items.count(player.inventory_slots,"raw_water")<1:return false
+ var f:=nearby_fire()
+ if f.is_empty() or f.get("state")!="burning":notify("Для кипячения нужен горящий костёр рядом");return false
+ job={"kind":"boil","elapsed":0.0,"duration":5.0,"fire":f.id,"origin":_arr(player.global_position)}
+ notify("Кипячение: 5 игровых минут. Сырая вода расходуется только при завершении.");return true
+func _setup_supplies() -> void:
+ if _supply_setup or not is_instance_valid(shelter):return
+ _supply_setup=true
+ _spawn_supplies()
+ var collector=preload("res://scripts/survival/RainCollector.gd").new();collector.session=self;get_parent().add_child(collector);collector.global_position=shelter.to_global(Vector3(3.2,0,0))
+
+func _spawn_supplies() -> void:
+ if not is_instance_valid(shelter):return
+ var supply_ids:=["ration","ration","water","water","bandage","bandage","compress"]
+ for i in supply_ids.size():
+  var id:="camp_supply_"+str(i)
+  if not picked.has(id):_spawn_pickup(Items.item(supply_ids[i]),id,shelter.to_global(Vector3(-1.2+(i%4)*0.65,0.15,0.1+(i/4)*0.6)))

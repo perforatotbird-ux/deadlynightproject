@@ -48,6 +48,9 @@ var ignition_reason:Label
 var drop_amount:SpinBox
 var belt_buttons:Array[Button]=[]
 var item_empty:Label
+var condition_info:Label
+var condition_values:Dictionary={}
+var supply_select:OptionButton
 
 func label(parent:Node,text:String,size:int=14) -> Label:
  var n:=Label.new();n.text=text;n.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;n.size_flags_horizontal=Control.SIZE_EXPAND_FILL
@@ -87,7 +90,7 @@ func build(p:Node) -> void:
  p._inv_weight_bar=ProgressBar.new();p._inv_weight_bar.max_value=p.max_backpack_kg;p._inv_weight_bar.show_percentage=false;p._inv_weight_bar.custom_minimum_size.y=4;layout.add_child(p._inv_weight_bar)
  tabs=TabContainer.new();tabs.size_flags_vertical=Control.SIZE_EXPAND_FILL;tabs.add_theme_font_size_override("font_size",15);layout.add_child(tabs)
  tabs.tab_changed.connect(func(_index):call_deferred("_focus_page"))
- _build_inventory();_build_craft();_build_fire();_build_sleep()
+ _build_inventory();_build_craft();_build_fire();_build_sleep();_build_condition()
  layout.add_child(HSeparator.new())
  status=label(layout,"",13);status.custom_minimum_size.y=20
  var action:=row(layout);progress=ProgressBar.new();progress.show_percentage=false;progress.size_flags_horizontal=Control.SIZE_EXPAND_FILL;progress.custom_minimum_size.y=8;progress.size_flags_vertical=Control.SIZE_SHRINK_CENTER;action.add_child(progress)
@@ -100,7 +103,7 @@ func _build_inventory() -> void:
  var toolbar:=row(inventory,8)
  search=LineEdit.new();search.placeholder_text="Найти предмет…";search.size_flags_horizontal=Control.SIZE_EXPAND_FILL;search.custom_minimum_size=Vector2(80,44);toolbar.add_child(search)
  category=picker(toolbar);category.size_flags_horizontal=0
- for name in ["Все предметы","Ресурсы","Топливо","Размещаемое"]:category.add_item(name)
+ for name in ["Все предметы","Ресурсы","Топливо","Размещаемое","Еда и вода","Медицина"]:category.add_item(name)
  sorting=picker(toolbar);sorting.size_flags_horizontal=0
  for name in ["По ячейке","По имени","По весу"]:sorting.add_item(name)
  search.text_changed.connect(func(_value):refresh_inventory());category.item_selected.connect(func(_value):refresh_inventory());sorting.item_selected.connect(func(_value):refresh_inventory())
@@ -124,6 +127,7 @@ func p_inspector() -> void:
  player._inv_details_title=heading(player._inv_inspector_box,"",24)
  player._inv_details_category=label(player._inv_inspector_box,"");player._inv_details_category.add_theme_color_override("font_color",Journal.MUTED)
  player._inv_details_stats=label(player._inv_inspector_box,"");player._inv_inspector_box.add_child(HSeparator.new());player._inv_details_desc=label(player._inv_inspector_box,"")
+ button(player._inv_inspector_box,"use_supply","Использовать",func():player.survival.use_supply(player._selected_slot_index);refresh_actions())
  button(player._inv_inspector_box,"place","Разместить костёр",func():player.survival.begin_placement())
  button(player._inv_inspector_box,"recipe_link","Открыть рецепт раскола",func():select_recipe("split_"+str(player.inventory_slots[player._selected_slot_index].get("species","birch")));tabs.current_tab=1)
  button(player._inv_inspector_box,"fuel_link","Добавить в костёр…",func():tabs.current_tab=2;fuel_select.select(fuel_select.get_item_index(player._selected_slot_index));refresh_actions())
@@ -248,6 +252,8 @@ func refresh_inventory() -> void:
   var accepted:=search.text.is_empty() or title.to_lower().contains(search.text.to_lower())
   if category.selected==1:accepted=accepted and kind in ["stone","flint","pyrite","brush","log"]
   elif category.selected==2:accepted=accepted and kind in ["firewood","brush"]
+  elif category.selected==4:accepted=accepted and kind in ["water","raw_water","ration","berries"]
+  elif category.selected==5:accepted=accepted and kind in ["bandage","compress"]
   elif category.selected==3:accepted=accepted and kind=="camp_kit"
   card.visible=accepted
   if accepted:visible_count+=1
@@ -262,7 +268,7 @@ func refresh_inventory() -> void:
  player._inv_empty_inspector_label.visible=item.is_empty();player._inv_inspector_box.visible=not item.is_empty()
  if item.is_empty():return
  inspector_image.texture=Art.texture(Art.item_key(item));player._inv_details_title.text=item.get("name","")
- player._inv_details_category.text={"log":"ДРЕВЕСИНА / БРЕВНО","firewood":"ТОПЛИВО","brush":"РАСТОПКА / ТОПЛИВО","camp_kit":"РАЗМЕЩАЕМЫЙ НАБОР"}.get(item.get("type",""),"ПРИРОДНЫЙ МАТЕРИАЛ")
+ player._inv_details_category.text={"log":"ДРЕВЕСИНА / БРЕВНО","firewood":"ТОПЛИВО","brush":"РАСТОПКА / ТОПЛИВО","camp_kit":"РАЗМЕЩАЕМЫЙ НАБОР","water":"ПИТЬЕВАЯ ВОДА","raw_water":"ВОДА / НУЖНО КИПЯТИТЬ","ration":"ПИТАНИЕ","berries":"ПИТАНИЕ / СБОР","bandage":"МЕДИЦИНА","compress":"МЕДИЦИНА"}.get(item.get("type",""),"ПРИРОДНЫЙ МАТЕРИАЛ")
  var count:=int(item.get("count",1));var weight:=float(item.get("unit_weight",0))
  player._inv_details_stats.text="%d шт.   /   %.2f кг за шт.   /   %.2f кг всего" % [count,weight,count*weight]
  if item.get("type")=="firewood" and is_instance_valid(player.survival):player._inv_details_stats.text+="\nГорение: %d мин за поленце" % int(player.survival.Fire.FUEL_SECONDS.get(item.get("species","birch"),1800)/60)
@@ -304,6 +310,10 @@ func refresh_actions() -> void:
  if player._selected_slot_index>=0 and player._selected_slot_index<player.inventory_slots.size() and player.inventory_slots[player._selected_slot_index]!=null:item=player.inventory_slots[player._selected_slot_index]
  var type:String=item.get("type","")
  var busy:bool=valid and (not s.job.is_empty() or s.health<=0)
+ buttons["use_supply"].visible=type in ["water","raw_water","ration","berries","bandage","compress"]
+ buttons["use_supply"].disabled=busy or not valid
+ buttons["use_supply"].text={"water":"Выпить · 0,5 л","raw_water":"Кипятить у костра · 5 мин","ration":"Съесть рацион","berries":"Съесть ягоды","bandage":"Перевязать рану","compress":"Наложить компресс"}.get(type,"Использовать")
+ if valid:_refresh_condition(s)
  # Assign final states once. No false→true visibility/disabled pulses across refreshes.
  buttons["drop_one"].disabled=busy;buttons["drop_all"].disabled=busy
  buttons["place"].visible=valid and type=="camp_kit";buttons["place"].disabled=busy or not valid or (valid and s.location!="forest")
@@ -352,13 +362,13 @@ func refresh_actions() -> void:
  var wake:=fposmod(s.hour()+remaining,24)
  sleep_value.text="%d ч · пробуждение около %02d:%02d" % [hours,int(wake),int(wake*60)%60]
  var reason:String=s.rest_block_reason()
- sleep_info.text="Силы %.0f%% · тепло %.0f%% · здоровье %.0f%%\n%s" % [s.energy,s.warmth,s.health,reason if reason!="" else "Стоянка закрыта. Можно спать."]
+ sleep_info.text="Отдых %.0f%% · тепло %.0f%% · здоровье %.0f%%\nВода %.0f%% → ~%.0f%% · питание %.0f%% → ~%.0f%%\n%s" % [s.energy,s.warmth,s.health,s.body.water,maxf(0,s.body.water-hours*3.6),s.body.food,maxf(0,s.body.food-hours*2.1),reason if reason!="" else "Потребности расходуются. Сон прервётся при опасном состоянии."]
  rest.text="Спать %d ч" % hours;rest.disabled=busy or reason!=""
  sleep_hours.editable=not busy
  status.text=s.message if s.message_time>0 else "Мир не на паузе. Tab / Esc закрывает рюкзак и отменяет действие."
  if active:
   progress.max_value=float(s.job["duration"]);progress.value=float(s.job["elapsed"])
-  status.text="%s · %.1f / %.1f с" % [{"split":"Раскол","ignite":"Розжиг","rest":"Сон"}.get(s.job["kind"],"Действие"),s.job["elapsed"],s.job["duration"]]
+  status.text="%s · %.1f / %.1f с" % [{"split":"Раскол","ignite":"Розжиг","rest":"Сон","boil":"Кипячение"}.get(s.job["kind"],"Действие"),s.job["elapsed"],s.job["duration"]]
 
  # Refresh content in place; never hide/re-enable a pressed control as an intermediate state.
  buttons["recipe_link"].visible=type=="log";buttons["recipe_link"].disabled=busy
@@ -389,3 +399,27 @@ func refresh_actions() -> void:
  buttons["spark"].tooltip_text=ignition_block+" Нужны кремень и пирит; инструменты не расходуются."
  rest.tooltip_text="Завершите текущее действие." if busy else ("Начать выбранный отдых" if not rest.disabled else s.rest_block_reason())
  _refresh_recipe();refresh_inventory()
+
+func _build_condition() -> void:
+ var health_page:=page("Состояние");var body_row:=row(health_page,20);body_row.size_flags_vertical=Control.SIZE_EXPAND_FILL
+ var overview:=column(scroll(body_row),12)
+ heading(overview,"Состояние персонажа",24)
+ for id in ["health","warmth","water","food","energy","stamina"]:
+  var line:=row(overview,8);var text:=label(line,{"health":"Здоровье","warmth":"Тепло","water":"Вода","food":"Питание","energy":"Отдых","stamina":"Выносливость"}[id],14)
+  var bar:=ProgressBar.new();bar.custom_minimum_size=Vector2(90,20);bar.size_flags_horizontal=Control.SIZE_EXPAND_FILL;bar.show_percentage=false;line.add_child(bar);var value_text:=label(line,"100%",14);value_text.size_flags_horizontal=0;value_text.custom_minimum_size.x=45;value_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_RIGHT;condition_values[id]={"label":text,"bar":bar,"value":value_text}
+ label(overview,"Здоровье — последствия. Выносливость возвращается после передышки; усталость требует сна. Лечение останавливает причину, а не мгновенно возвращает здоровье.",14)
+ var details:=column(scroll(body_row),12);heading(details,"Травмы и восстановление",24);condition_info=label(details,"")
+ label(details,"Безопасная вода и готовая еда используются из рюкзака. У стоянки есть ограниченные припасы и дождесборник; съедобные ягоды встречаются в лесу. Сырую воду кипятите у горящего костра.",14)
+ supply_select=picker(details)
+ button(details,"condition_use","Использовать выбранный припас",func():player.survival.use_supply(supply_select.get_selected_id());refresh_actions())
+ button(details,"condition_rest","Подготовиться ко сну",func():focus_rest())
+ label(details,"Восстановление здоровья: сон, тепло выше 45%, питание и вода, отсутствие кровотечения и переохлаждения. Травма ноги проходит за 4 игровых часа или быстрее во сне.",13)
+func _refresh_condition(s:Node) -> void:
+ for id in condition_values:
+  var value:float=s.body.get(id) if id in ["water","food","stamina"] else s.get(id)
+  condition_values[id].bar.value=value
+  condition_values[id].value.text="%.0f%%" % value
+ condition_info.text=("Причина гибели: "+s.body.death_reason+"\n" if s.health<=0 else "")+s.body.describe()
+ _update_picker(supply_select,["water","raw_water","ration","berries","bandage","compress"],"Нет еды, воды или медикаментов")
+ buttons["condition_use"].disabled=s.health<=0 or not s.job.is_empty() or supply_select.item_count==0
+ buttons["condition_rest"].disabled=s.health<=0

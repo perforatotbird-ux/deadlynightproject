@@ -49,7 +49,7 @@ func run() -> void:
  await physics_frame;await settle()
  add("stone",6);add("brush",8);add("flint");add("pyrite");p._add_to_backpack({"species":"birch","weight":4.0})
  await key(KEY_TAB);var ui=p._backpack_ui
- check(ui.tabs.get_tab_count()==4,"four backpack tabs")
+ check(ui.tabs.get_tab_count()==5,"five backpack tabs including character condition")
  await tab(1);check(ui.tabs.current_tab==1,"real mouse switches to recipes")
  await shot("01_craft");await click(ui.buttons["kit"])
  check(Items.count(p.inventory_slots,"camp_kit")==1,"held craft click survives repeated refresh")

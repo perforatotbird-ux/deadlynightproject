@@ -158,6 +158,7 @@ var _chop_cooldown: float = 0.50
 var _is_active: bool = true
 var _is_mouse_captured: bool = true
 var _is_inventory_open: bool = false
+var _fall_speed:float = 0.0
 var _is_lmb_held: bool = false
 
 var is_lmb_held: bool:
@@ -820,11 +821,15 @@ func _setup_inventory_ui() -> void:
 	_backpack_ui.build(self)
 
 func _input(event: InputEvent) -> void:
+	if is_instance_valid(survival) and is_instance_valid(survival.dev_menu) and survival.dev_menu.visible:
+		return
 	if get_tree().paused:
 		return
 	if not _is_active or not _camera.current:
 		return
 		
+	if is_instance_valid(survival) and survival.health<=0:
+		if not (event is InputEventKey and event.keycode==KEY_ESCAPE):return
 	# Survival owns modal/placement input before tools and movement.
 	if is_instance_valid(survival) and survival.handle_input(event):
 		get_viewport().set_input_as_handled()
@@ -999,10 +1004,11 @@ func _physics_process(delta: float) -> void:
 		
 	# If inventory is open, player stands still
 	if _is_inventory_open:
+		if is_instance_valid(survival):survival.body.update_stamina(delta,false)
 		_is_lmb_held = false
 		velocity.x = move_toward(velocity.x, 0.0, 15.0 * delta)
 		velocity.z = move_toward(velocity.z, 0.0, 15.0 * delta)
-		move_and_slide()
+		_move_with_impact()
 		return
 
 	# Continuous Auto-Chop with Axe when LMB is held down
@@ -1034,6 +1040,10 @@ func _physics_process(delta: float) -> void:
 	# Speed calculation
 	var is_sprint_key = _is_action_down("sprint")
 	var is_sprinting = (is_sprint_key or _is_sprint_jumping) and input_dir.length_squared() > 0.0 and not _is_crouching
+	if is_instance_valid(survival):
+		is_sprinting = is_sprinting and survival.body.can_sprint(survival.energy)
+		survival.body.update_stamina(delta,is_sprinting)
+		if not is_sprinting:_is_sprint_jumping=false
 	var base_spd = walk_speed
 	if _is_crouching:
 		base_spd = crouch_speed
@@ -1042,8 +1052,10 @@ func _physics_process(delta: float) -> void:
 		
 	# Jump execution (reliable during sprint, walking, slopes with coyote time & buffer)
 	var can_jump = (_coyote_timer > 0.0 or is_on_floor()) and not _is_crouching
+	if is_instance_valid(survival):can_jump=can_jump and survival.body.stamina>=10 and not survival.body.conditions.has("sprain")
 	if _jump_buffer_timer > 0.0 and can_jump:
 		velocity.y = jump_velocity
+		if is_instance_valid(survival):survival.body.stamina=maxf(0,survival.body.stamina-10)
 		_jump_buffer_timer = 0.0
 		_coyote_timer = 0.0
 		if is_sprinting:
@@ -1060,6 +1072,7 @@ func _physics_process(delta: float) -> void:
 	if is_instance_valid(survival):
 		if survival.energy < 10.0:base_spd = minf(base_spd,walk_speed)
 		if survival.warmth < 20.0:speed_multiplier *= 0.85
+		if survival.body.conditions.has("sprain"):speed_multiplier *= 0.7
 	var final_speed = base_spd * speed_multiplier
 	
 	# Movement vector relative to character heading
@@ -1072,7 +1085,7 @@ func _physics_process(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0.0, final_speed * 10.0 * delta)
 		velocity.z = move_toward(velocity.z, 0.0, final_speed * 10.0 * delta)
 		
-	move_and_slide()
+	_move_with_impact()
 	
 	# The Long Dark Dynamic FOV kick on sprint
 	var target_fov = minf(_base_fov + 7.0, 110.0) if is_sprinting else _base_fov
@@ -1537,3 +1550,10 @@ func _is_action_down(action: String) -> bool:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_PAUSED:
 		_cancel_chop()
+
+func _move_with_impact() -> void:
+	if not is_on_floor():_fall_speed=maxf(_fall_speed,-velocity.y)
+	move_and_slide()
+	if is_on_floor():
+		if is_instance_valid(survival):survival.land(_fall_speed)
+		_fall_speed=0.0
