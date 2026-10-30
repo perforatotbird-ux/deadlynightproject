@@ -385,6 +385,8 @@ func _apply_loaded_state(payload: Dictionary) -> void:
 		if player_node.has_method("_update_hud_display"):
 			player_node._update_hud_display()
 			
+	if world_node != null and world_node.has_method("restore_felled_stumps"):
+		world_node.restore_felled_stumps()
 	print("[SaveManager] Loaded game state successfully applied to active scene.")
 
 func delete_save(slot_id: String) -> bool:

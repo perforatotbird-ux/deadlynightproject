@@ -24,6 +24,7 @@ var _tree_mmi_index: Dictionary = {}   # tree_id -> { "mm": mm, "index": i, "xfo
 var _dynamic_trees: Dictionary = {}    # tree_id -> TreeInteractive
 var _player_ref: Node3D = null
 var _dynamic_update_timer: float = 0.0
+var _remnant_requested: Dictionary = {}
 
 func _ready() -> void:
 	_load_tree_models()
@@ -337,17 +338,17 @@ func _spawn_tutorial_trees() -> void:
 				
 			var pos_id = "pos_%d_%d_%d" % [int(round(origin.x)), int(round(origin.y)), int(round(origin.z))]
 			if TreeChoppable.felled_tree_ids.has(tree_id) or TreeChoppable.felled_tree_ids.has(pos_id):
+				_ensure_saved_remnant(tree_id, origin)
 				continue
 				
 			var yaw = deg_to_rad(tree.get("yaw_deg", 0.0))
 			var scl = tree.get("scale", 1.0)
 			
 			var inst = interactive_scene.instantiate()
+			inst.species = sp
+			inst.tree_id = tree_id
+			inst.transform = _interactive_root.global_transform.affine_inverse() * Transform3D(Basis(Vector3.UP,yaw).scaled(Vector3.ONE*scl),origin)
 			_interactive_root.add_child(inst)
-			inst.global_position = origin
-			inst.rotation = Vector3(0, yaw, 0)
-			inst.scale = Vector3.ONE * scl
-			inst.init_tree(sp, tree_id)
 			_interactive_trees[tree_id] = inst
 			print("[WorldMap] Spawned tutorial %s tree (%s) at %s" % [sp.to_upper(), tree_id, str(origin)])
 
@@ -395,6 +396,7 @@ func _process(delta: float) -> void:
 					var pos_id = "pos_%d_%d_%d" % [int(round(origin.x)), int(round(origin.y)), int(round(origin.z))]
 					if TreeChoppable.felled_tree_ids.has(t_id) or TreeChoppable.felled_tree_ids.has(pos_id):
 						_set_mmi_tree_scale(t_id, 0.0)
+						_ensure_saved_remnant(t_id, origin)
 						continue
 					if not _dynamic_trees.has(t_id) and not _interactive_trees.has(t_id):
 						_activate_dynamic_tree(t, origin)
@@ -426,11 +428,10 @@ func _activate_dynamic_tree(tree_data: Dictionary, origin: Vector3) -> void:
 	var interactive_scene = load("res://scenes/props/TreeInteractive.tscn")
 	if interactive_scene:
 		var inst = interactive_scene.instantiate()
+		inst.species = sp
+		inst.tree_id = t_id
+		inst.transform = _dynamic_trees_root.global_transform.affine_inverse() * Transform3D(Basis(Vector3.UP,yaw).scaled(Vector3.ONE*scl),origin)
 		_dynamic_trees_root.add_child(inst)
-		inst.global_position = origin
-		inst.rotation = Vector3(0, yaw, 0)
-		inst.scale = Vector3.ONE * scl
-		inst.init_tree(sp, t_id)
 		_dynamic_trees[t_id] = inst
 		
 		# Temporarily hide MultiMesh instance
@@ -440,6 +441,7 @@ func _deactivate_dynamic_tree(t_id: String) -> void:
 	if _dynamic_trees.has(t_id):
 		var inst = _dynamic_trees[t_id]
 		if is_instance_valid(inst):
+			if inst._is_falling or inst._fall_preparing or (inst._voxel_trunk and inst._voxel_trunk.is_busy()): return
 			var pos_id = ""
 			if inst is Node3D:
 				pos_id = "pos_%d_%d_%d" % [int(round(inst.global_position.x)), int(round(inst.global_position.y)), int(round(inst.global_position.z))]
@@ -451,6 +453,60 @@ func _deactivate_dynamic_tree(t_id: String) -> void:
 				_set_mmi_tree_scale(t_id, 0.0)
 			inst.queue_free()
 		_dynamic_trees.erase(t_id)
+
+func _ensure_saved_remnant(t_id: String, fallback_position: Vector3) -> void:
+	if _remnant_requested.has(t_id): return
+	for pending in get_children():
+		if pending is TreeChoppable and pending.tree_id==t_id and pending._restoring_remnant:
+			_remnant_requested[t_id]=true
+			return
+	var pos_id := "pos_%d_%d_%d" % [roundi(fallback_position.x),roundi(fallback_position.y),roundi(fallback_position.z)]
+	var info: Dictionary = TreeChoppable.felled_tree_ids.get(t_id,TreeChoppable.felled_tree_ids.get(pos_id,{}))
+	if info.is_empty(): return
+	for stump in get_tree().get_nodes_in_group("permanent_stumps"):
+		if stump.get_meta("tree_id","") == t_id:
+			_remnant_requested[t_id]=true
+			return
+	_remnant_requested[t_id]=true
+	var origin := fallback_position
+	var stored = info.get("pos",[])
+	if stored is Array and stored.size()==3: origin=Vector3(stored[0],stored[1],stored[2])
+	elif stored is Vector3: origin=stored
+	elif stored is String:
+		var coords: PackedStringArray = stored.trim_prefix("(").trim_suffix(")").split(",")
+		if coords.size()==3:origin=Vector3(float(coords[0]),float(coords[1]),float(coords[2]))
+	var basis := Basis.IDENTITY
+	var values: Array = info.get("basis",[])
+	if values.size()==9:basis=Basis(Vector3(values[0],values[1],values[2]),Vector3(values[3],values[4],values[5]),Vector3(values[6],values[7],values[8]))
+	var restore := TreeChoppable.new()
+	restore.species=info.get("species","birch")
+	restore.tree_id=t_id
+	restore.transform=global_transform.affine_inverse()*Transform3D(basis,origin)
+	add_child(restore) # _ready reconstructs the saved lower section asynchronously.
+
+func restore_felled_stumps() -> void:
+	# Called after a loaded player's position is applied. Far remnants are
+	# reconstructed lazily by the normal proximity loop, not all at world load.
+	_remnant_requested.clear()
+	var player := get_node_or_null("../Player") as Node3D
+	if player == null:return
+	var seen: Dictionary={}
+	for key in TreeChoppable.felled_tree_ids:
+		var info: Dictionary=TreeChoppable.felled_tree_ids[key]
+		var t_id: String=info.get("id",key)
+		if t_id=="":t_id=key
+		if seen.has(t_id):continue
+		seen[t_id]=true
+		_set_mmi_tree_scale(t_id,0.0)
+		for pool in [_interactive_trees,_dynamic_trees]:
+			if pool.has(t_id):
+				var standing=pool[t_id]
+				if is_instance_valid(standing):standing.hide();standing.queue_free()
+				pool.erase(t_id)
+		var p=info.get("pos",[])
+		if p is Array and p.size()==3:
+			var origin:=Vector3(p[0],p[1],p[2])
+			if origin.distance_squared_to(player.global_position)<70.0*70.0:_ensure_saved_remnant(t_id,origin)
 
 func _set_mmi_tree_scale(t_id: String, scale_mult: float) -> void:
 	if _tree_mmi_index.has(t_id):

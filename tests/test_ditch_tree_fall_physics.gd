@@ -36,11 +36,20 @@ func _run_ditch_tree_fall_test() -> void:
 	print("\n[TEST 1] Instantiating test tree on uneven slope...")
 	var tree_scene = load("res://scenes/props/TreeInteractive.tscn")
 	var tree = tree_scene.instantiate() as TreeChoppable
+	# Place the authored root on terrain BEFORE activation, as WorldMap does.
+	var space = viewer.get_world_3d().direct_space_state
+	var placement = PhysicsRayQueryParameters3D.create(Vector3(-890, 55, 1090), Vector3(-890, -5, 1090))
+	placement.collision_mask = 1
+	var ground = space.intersect_ray(placement)
+	if ground.is_empty():
+		print("FAIL: Terrain missing at test tree origin")
+		quit(1)
+		return
+	var original_root: Vector3 = ground.position
+	tree.species = "spruce"
+	tree.tree_id = "tree_ditch_test_01"
+	tree.position = viewer.global_transform.affine_inverse() * original_root
 	viewer.add_child(tree)
-	
-	# Position near slope / ditch edge around spawn (-890, 25.5, 1090)
-	tree.global_position = Vector3(-890.0, 25.5, 1090.0)
-	tree.init_tree("spruce", "tree_ditch_test_01")
 	await process_frame
 	
 	if is_instance_valid(tree):
@@ -55,6 +64,8 @@ func _run_ditch_tree_fall_test() -> void:
 	# Simulate chop from player standing downhill (-890, 25.5, 1093) pushing tree towards -Z (uphill)
 	tree._fall_direction = Vector3(0.0, 0.0, -1.0).normalized()
 	tree._start_falling()
+	# Fracture geometry is calculated asynchronously; inspect the actual result.
+	await tree._voxel_trunk.fracture_ready
 	
 	print("  -> Calculated target fall angle: %.2f deg (standard flat is 88 deg)" % rad_to_deg(tree._target_fall_angle))
 	if tree._target_fall_angle > 0.0 and tree._target_fall_angle <= deg_to_rad(115.0):
@@ -71,7 +82,6 @@ func _run_ditch_tree_fall_test() -> void:
 	# TEST 3: Verifying that all spawned logs are strictly ON or ABOVE terrain surface
 	print("\n[TEST 3] Auditing spawned log elevations relative to terrain mesh...")
 	var logs = root.get_tree().get_nodes_in_group("pickup_logs")
-	var space = viewer.get_world_3d().direct_space_state
 	var valid_elevations = 0
 	
 	for l in logs:
@@ -121,31 +131,24 @@ func _run_ditch_tree_fall_test() -> void:
 		print("  -> FAIL: Log remained underground.")
 		failed += 1
 
-	# TEST 5: Stump snapped flush with ground
-	print("\n[TEST 5] Testing stump ground snapping...")
-	var stumps = root.get_tree().get_nodes_in_group("permanent_stumps")
-	var found_snapped_stump = false
-	for s in stumps:
-		if is_instance_valid(s) and (s is Node3D):
-			var s_pos = (s as Node3D).global_position
-			var q = PhysicsRayQueryParameters3D.create(
-				Vector3(s_pos.x, s_pos.y + 5.0, s_pos.z),
-				Vector3(s_pos.x, s_pos.y - 5.0, s_pos.z)
-			)
-			q.collision_mask = 1
-			var hit = space.intersect_ray(q)
-			if not hit.is_empty():
-				var diff = absf(s_pos.y - hit.position.y)
-				if diff < 0.25:
-					found_snapped_stump = true
-					print("  -> Stump at Y=%0.2f, ground Y=%0.2f (diff=%0.3fm)" % [s_pos.y, hit.position.y, diff])
-					break
-					
-	if found_snapped_stump:
-		print("  -> PASS: Stump base snapped flush with terrain surface.")
+	# TEST 5: Lower trunk retains its original grounded transform and real cut height.
+	# Do not snap a replacement model or raycast against the stump's own collider.
+	print("\n[TEST 5] Testing original lower trunk placement...")
+	var found_remnant = false
+	for s in get_nodes_in_group("permanent_stumps"):
+		if not is_instance_valid(s) or s.get_meta("tree_id", "") != "tree_ditch_test_01":
+			continue
+		var visual = s.get_child(0) as MeshInstance3D
+		var cut_y = float(s.get_meta("cut_y"))
+		var base_error = s.global_position.distance_to(original_root)
+		var mesh_top = visual.mesh.get_aabb().end.y
+		found_remnant = base_error < 0.001 and absf(mesh_top - cut_y) < 0.001
+		print("  -> Lower root error=%.5fm, mesh top=%.3fm, cut=%.3fm" % [base_error, mesh_top, cut_y])
+	if found_remnant:
+		print("  -> PASS: Actual lower trunk preserved at grounded root and fracture height.")
 		passed += 1
 	else:
-		print("  -> FAIL: Stump not properly snapped to ground.")
+		print("  -> FAIL: Actual lower trunk moved or does not end at fracture height.")
 		failed += 1
 
 	print("\n" + "=".repeat(70))

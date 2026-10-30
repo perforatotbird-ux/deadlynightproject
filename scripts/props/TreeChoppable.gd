@@ -22,6 +22,10 @@ var _fall_direction: Vector3 = Vector3.FORWARD
 var _fall_progress: float = 0.0
 var _fall_duration: float = 1.2
 var _fall_start_rot: Basis
+var _break_height: float = 1.3
+var _fall_pivot: Node3D = null
+var _fall_preparing: bool = false
+var _restoring_remnant: bool = false
 var _target_fall_angle: float = deg_to_rad(88.0)
 
 # Audio players
@@ -56,6 +60,7 @@ const SPECIES_CONFIG = {
 }
 
 static var felled_tree_ids: Dictionary = {}
+static var _collision_cache: Dictionary = {}
 
 func get_effective_id() -> String:
 	if tree_id != "":
@@ -78,8 +83,7 @@ func _ready() -> void:
 	collision_mask = 0
 	
 	if _is_already_felled():
-		_spawn_stump()
-		queue_free()
+		_restore_remnant()
 		return
 		
 	add_to_group("choppable_trees")
@@ -94,9 +98,9 @@ func init_tree(p_species: String, p_id: String = "") -> void:
 	species = p_species.to_lower()
 	tree_id = p_id
 	if _is_already_felled():
-		_spawn_stump()
-		queue_free()
+		_restore_remnant()
 		return
+	_restoring_remnant = false
 	_apply_species_config()
 	if is_inside_tree():
 		_setup_collision()
@@ -113,7 +117,10 @@ func _setup_voxel_trunk() -> void:
 	_voxel_trunk.name = "VoxelTrunk"
 	add_child(_voxel_trunk)
 	# Bind damage to the authored bark instead of rendering an oversized shell.
-	_voxel_trunk.init_trunk(species, cfg["radius"], 3.2, 0.04)
+	_voxel_trunk.init_trunk(species, cfg["radius"], cfg["height"], 0.04)
+	_voxel_trunk.strength_hits = max_hp
+	_voxel_trunk.fracture_ready.connect(_on_fracture_ready)
+	_voxel_trunk.mesh_updated.connect(_on_cut_mesh_updated)
 
 func _apply_species_config() -> void:
 	var cfg = SPECIES_CONFIG.get(species, SPECIES_CONFIG["birch"])
@@ -216,6 +223,11 @@ func _update_mesh_stage(stage: int) -> void:
 func _update_cut_collision() -> void:
 	if _visual_node == null:
 		return
+	var cached_col := get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if _collision_cache.has(species) and cached_col:
+		cached_col.position=Vector3.ZERO
+		cached_col.set_deferred("shape",_collision_cache[species])
+		return
 	var faces := PackedVector3Array()
 	# Only trunk/branch bark, never canopy: leaves must not block axe impacts.
 	for node in _visual_node.find_children("*", "MeshInstance3D", true, false):
@@ -238,53 +250,37 @@ func _update_cut_collision() -> void:
 		return
 	var shape := ConcavePolygonShape3D.new()
 	shape.set_faces(faces)
+	_collision_cache[species]=shape
 	var col := get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if col:
 		col.position = Vector3.ZERO
 		col.set_deferred("shape", shape)
 
 func hit(damage: int, hit_point: Vector3, player_pos: Vector3) -> bool:
-	if _is_falling or current_hp <= 0:
+	if _is_falling or _fall_preparing:
 		return false
 		
-	current_hp -= damage
+	var local_hit := to_local(hit_point)
+	var cfg: Dictionary = SPECIES_CONFIG.get(species,SPECIES_CONFIG["birch"])
+	if Vector2(local_hit.x,local_hit.z).length()>float(cfg["radius"])*1.5:return false
+	current_hp = maxi(1, current_hp - damage)
+	if _voxel_trunk:
+		hit_point = _voxel_trunk.project_hit(hit_point)
 	_play_hit_sound()
 	_emit_chips(hit_point, player_pos)
 	
-	# Carve voxel trunk strictly where the axe hits
-	var is_severed = false
+	# No mesh/BVH rebuild on the gameplay thread. Fracture is decided by the
+	# worker's weakest real cross-section, never by summed HP across the tree.
+	var away := global_position - player_pos
+	away.y = 0.0
+	_fall_direction = away.normalized() if away.length_squared() > 0.001 else Vector3.FORWARD
 	if _voxel_trunk:
-		var strike_dir = (hit_point - player_pos).normalized()
-		var carve_res = _voxel_trunk.carve(hit_point, strike_dir, damage)
-		_update_cut_collision()
-		if carve_res.get("severed", false):
-			is_severed = true
-	
-	var hp_ratio = float(current_hp) / float(max_hp)
-	var new_stage = 0
-	if hp_ratio <= 0.10:
-		new_stage = 3
-	elif hp_ratio <= 0.35:
-		new_stage = 2
-	elif hp_ratio <= 0.70:
-		new_stage = 1
-		
-	if new_stage != _current_stage and current_hp > 0:
-		_current_stage = new_stage
-		
-	if current_hp <= 0 or is_severed:
-		# Direction away from player
-		var away = (global_position - player_pos)
-		away.y = 0.0
-		if away.length_squared() < 0.001:
-			away = Vector3.FORWARD
-		else:
-			away = away.normalized()
-		_fall_direction = away
-		_start_falling()
-		return true
-		
+		_voxel_trunk.carve(hit_point, (hit_point-player_pos).normalized(), damage)
 	return false
+
+func _on_cut_mesh_updated() -> void:
+	var strength := clampf(inverse_lerp(0.65,1.0,_voxel_trunk.remaining_ratio),0.0,1.0)
+	current_hp = maxi(1,ceili(max_hp*strength))
 
 func _play_hit_sound() -> void:
 	# Exactly one fixed impact sample, emitted only here (not again on player).
@@ -313,32 +309,61 @@ func _emit_chips(point: Vector3, player_pos: Vector3) -> void:
 		emitter.emitting = true
 
 func _start_falling() -> void:
-	_is_falling = true
-	var eff_id = get_effective_id()
-	var info = {
-		"species": species,
-		"pos": global_position,
-		"id": tree_id
-	}
-	felled_tree_ids[eff_id] = info
-	if tree_id != "":
-		felled_tree_ids[tree_id] = info
-	var pos_id = "pos_%d_%d_%d" % [int(round(global_position.x)), int(round(global_position.y)), int(round(global_position.z))]
-	felled_tree_ids[pos_id] = info
+	if _is_falling or _fall_preparing: return
+	_fall_preparing = true
+	if _voxel_trunk: _voxel_trunk.request_fracture(_break_height)
 
-	# Immediately remove from choppable group & collision so it can never be hit or detected again
+func _on_fracture_ready(lower: ArrayMesh, upper: ArrayMesh, cut_y: float) -> void:
+	_break_height = cut_y
+	_spawn_stump(lower)
+	if _restoring_remnant:
+		queue_free()
+		return
+	_fall_preparing = false
+	_is_falling = true
+	current_hp = 0
 	remove_from_group("choppable_trees")
 	set_collision_layer_value(2, false)
-	
-	if _audio_fall:
-		_audio_fall.play()
-		
+	var b := global_basis
+	var pos := global_position
+	var info := {"species": species, "pos": [pos.x,pos.y,pos.z], "id": tree_id,
+		"cut_y": cut_y, "cuts": _voxel_trunk.export_cuts(),
+		"basis": [b.x.x,b.x.y,b.x.z,b.y.x,b.y.y,b.y.z,b.z.x,b.z.y,b.z.z]}
+	felled_tree_ids[get_effective_id()] = info
+	if tree_id != "": felled_tree_ids[tree_id] = info
+	felled_tree_ids["pos_%d_%d_%d" % [roundi(pos.x),roundi(pos.y),roundi(pos.z)]] = info
+	if _visual_node: _visual_node.hide(); _visual_node.queue_free()
+	if _voxel_trunk._mesh_instance: _voxel_trunk._mesh_instance.hide()
+	_fall_pivot = Node3D.new()
+	_fall_pivot.name = "FracturePivot"
+	add_child(_fall_pivot)
+	_fall_pivot.position.y = cut_y
+	var top := MeshInstance3D.new()
+	top.name = "BrokenUpperTree"
+	top.mesh = upper
+	_fall_pivot.add_child(top)
+	top.position.y = -cut_y
+	_visual_node = top
 	_fall_progress = 0.0
-	_fall_start_rot = global_transform.basis
 	_target_fall_angle = _calculate_target_fall_angle()
-	
-	# Spawn Stump immediately at base
-	_spawn_stump()
+	if _audio_fall: _audio_fall.play()
+
+func _saved_felling() -> Dictionary:
+	var key := get_effective_id()
+	if felled_tree_ids.has(key): return felled_tree_ids[key]
+	key = "pos_%d_%d_%d" % [roundi(global_position.x),roundi(global_position.y),roundi(global_position.z)]
+	return felled_tree_ids.get(key,{})
+
+func _restore_remnant() -> void:
+	_restoring_remnant = true
+	_apply_species_config()
+	_setup_voxel_trunk()
+	_update_mesh_stage(0)
+	if _visual_node: _visual_node.hide()
+	var saved := _saved_felling()
+	_break_height = float(saved.get("cut_y",0.6)) # Legacy saves have no cut height.
+	_voxel_trunk.restore_cuts(saved.get("cuts",[]))
+	_voxel_trunk.request_fracture(_break_height)
 
 func _calculate_target_fall_angle() -> float:
 	if not is_inside_tree():
@@ -348,9 +373,9 @@ func _calculate_target_fall_angle() -> float:
 		return deg_to_rad(88.0)
 		
 	var cfg = SPECIES_CONFIG.get(species, SPECIES_CONFIG["birch"])
-	var tree_h: float = cfg["height"]
-	var radius: float = cfg["radius"]
-	var base_pos: Vector3 = global_position
+	var tree_h: float = maxf(0.5, cfg["height"] - _break_height) * global_basis.y.length()
+	var radius: float = cfg["radius"] * global_basis.x.length()
+	var base_pos: Vector3 = global_transform * Vector3(0,_break_height,0)
 	
 	# Sample distances along the fall direction: 2m up to tree_h in steps
 	var min_contact_angle: float = deg_to_rad(88.0)
@@ -384,44 +409,33 @@ func _calculate_target_fall_angle() -> float:
 				
 	return clampf(min_contact_angle, deg_to_rad(25.0), deg_to_rad(115.0))
 
-func _spawn_stump() -> void:
-	if not is_inside_tree():
-		return
-	for s in get_tree().get_nodes_in_group("permanent_stumps"):
-		if is_instance_valid(s) and s is Node3D:
-			if (s as Node3D).global_position.distance_squared_to(global_position) < 0.36:
-				return
-
-	var stump_path = "res://assets/models/trees/tree_%s_stump.glb" % species
-	if ResourceLoader.exists(stump_path):
-		var scene = load(stump_path)
-		if scene:
-			var stump = scene.instantiate()
-			var parent_node = get_parent()
-			if parent_node == null or not is_instance_valid(parent_node):
-				parent_node = get_tree().current_scene
-			if parent_node:
-				parent_node.add_child(stump)
-				
-				# Snap stump position to exact ground surface
-				var stump_pos = global_position
-				var space_state = get_world_3d().direct_space_state
-				if space_state != null:
-					var q = PhysicsRayQueryParameters3D.create(
-						Vector3(stump_pos.x, stump_pos.y + 3.0, stump_pos.z),
-						Vector3(stump_pos.x, stump_pos.y - 4.0, stump_pos.z)
-					)
-					q.collision_mask = 1 # Terrain
-					var hit = space_state.intersect_ray(q)
-					if not hit.is_empty():
-						stump_pos.y = hit.position.y
-						
-				stump.global_position = stump_pos
-				stump.global_basis = global_basis
-				stump.add_to_group("permanent_stumps")
+func _spawn_stump(mesh: ArrayMesh) -> void:
+	if not is_inside_tree(): return
+	for stump in get_tree().get_nodes_in_group("permanent_stumps"):
+		if stump is Node3D and stump.global_position.distance_squared_to(global_position) < 0.01: return
+	var stump := StaticBody3D.new()
+	stump.name = "RemainingTrunk"
+	stump.collision_layer = 1
+	stump.collision_mask = 0
+	get_parent().add_child(stump)
+	stump.global_transform = global_transform
+	stump.add_to_group("permanent_stumps")
+	stump.set_meta("cut_y",_break_height)
+	stump.set_meta("tree_id",tree_id)
+	var visual := MeshInstance3D.new()
+	visual.mesh = mesh
+	stump.add_child(visual)
+	# Build one inexpensive stationary collider; never a per-hit triangle BVH.
+	var col := CollisionShape3D.new()
+	var shape := CylinderShape3D.new()
+	shape.height = maxf(0.05,_break_height)
+	shape.radius = SPECIES_CONFIG.get(species,SPECIES_CONFIG["birch"])["radius"] * 0.65
+	col.shape = shape
+	col.position.y = _break_height * 0.5
+	stump.add_child(col)
 
 func _process(delta: float) -> void:
-	if not _is_falling:
+	if not _is_falling or _fall_pivot == null:
 		return
 		
 	_fall_progress += delta / _fall_duration
@@ -435,37 +449,22 @@ func _process(delta: float) -> void:
 	var t = _fall_progress * _fall_progress
 	var current_angle = t * _target_fall_angle
 	
-	# Rotation axis is perpendicular to fall direction and UP
-	var rot_axis = _fall_direction.cross(Vector3.UP).normalized()
-	if rot_axis.length_squared() < 0.01:
-		rot_axis = Vector3.RIGHT
-		
-	var fall_basis = Basis(rot_axis, current_angle)
-	if _visual_node:
-		_visual_node.transform.basis = fall_basis
-	if _voxel_trunk:
-		_voxel_trunk.transform.basis = fall_basis
-		
-		# Dynamic ground check during rotation: if tip or trunk reaches terrain, finish early
-		if _fall_progress > 0.35 and is_inside_tree():
-			var space_state = get_world_3d().direct_space_state
-			if space_state != null:
-				var cfg = SPECIES_CONFIG.get(species, SPECIES_CONFIG["birch"])
-				var tree_h: float = cfg["height"]
-				var tip_local = Vector3(0.0, tree_h * 0.85, 0.0)
-				var tip_world = _visual_node.global_transform * tip_local if _visual_node else global_position + Vector3(0, tree_h, 0)
-				var q = PhysicsRayQueryParameters3D.create(
-					Vector3(tip_world.x, tip_world.y + 1.5, tip_world.z),
-					Vector3(tip_world.x, tip_world.y - 1.5, tip_world.z)
-				)
-				q.collision_mask = 1 # Terrain
-				var hit = space_state.intersect_ray(q)
-				if not hit.is_empty():
-					if tip_world.y <= hit.position.y + 0.3:
-						_fall_progress = 1.0
-						_is_falling = false
-						_on_tree_felled_complete()
-						return
+	# World fall direction converted to the tree's yaw/scale frame. Rotate only
+	# the upper mesh around the cut, not the whole tree around its roots.
+	var local_direction := global_basis.inverse() * _fall_direction
+	local_direction.y = 0.0
+	var axis := Vector3.UP.cross(local_direction.normalized()).normalized()
+	if axis.length_squared() < 0.01: axis = Vector3.RIGHT
+	_fall_pivot.basis = Basis(axis,current_angle)
+	if _fall_progress > 0.35 and is_inside_tree():
+		var space_state := get_world_3d().direct_space_state
+		var tree_h: float = SPECIES_CONFIG.get(species,SPECIES_CONFIG["birch"])["height"]
+		var tip: Vector3 = _visual_node.global_transform * Vector3(0,tree_h*0.85,0)
+		var q := PhysicsRayQueryParameters3D.create(tip+Vector3.UP*1.5,tip-Vector3.UP*1.5,1)
+		var contact := space_state.intersect_ray(q)
+		if not contact.is_empty() and tip.y <= contact.position.y+0.3:
+			_is_falling = false
+			_on_tree_felled_complete()
 
 func _on_tree_felled_complete() -> void:
 	tree_felled.emit(species, global_position)
@@ -473,22 +472,12 @@ func _on_tree_felled_complete() -> void:
 	# Spawn Wood Logs safely on ground (3 round logs)
 	_spawn_logs()
 	
-	# Hide / remove fallen canopy after settling
-	var tween = create_tween()
-	var has_anim = false
-	if _visual_node:
-		tween.tween_property(_visual_node, "scale", Vector3.ZERO, 0.8)
-		has_anim = true
-	if _voxel_trunk:
-		if has_anim:
-			tween.parallel().tween_property(_voxel_trunk, "scale", Vector3.ZERO, 0.8)
-		else:
-			tween.tween_property(_voxel_trunk, "scale", Vector3.ZERO, 0.8)
-			has_anim = true
-	if has_anim:
+	# Leave the separately parented lower trunk completely untouched.
+	if _fall_pivot:
+		var tween := create_tween()
+		tween.tween_property(_fall_pivot,"scale",Vector3.ZERO,0.8)
 		tween.tween_callback(queue_free)
-	else:
-		queue_free()
+	else: queue_free()
 
 func _spawn_logs() -> void:
 	var log_script = load("res://scripts/props/LogPickup.gd")
