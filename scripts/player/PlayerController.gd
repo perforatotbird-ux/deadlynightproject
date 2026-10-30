@@ -123,7 +123,7 @@ const HOTBAR_CONFIG = [
 
 var belt_items: Array = ["", "", ""] # Item-ID shortcuts; items remain in the one authoritative backpack.
 var active_hotbar_slot: int = 0
-var _hotbar_icons: Array[Label] = []
+var _hotbar_icons: Array[TextureRect] = []
 var _is_lantern_on: bool = false
 var _lantern_light: SpotLight3D = null
 
@@ -563,14 +563,15 @@ func _setup_toolbelt_hud() -> void:
 		top_row.add_child(stat_lbl)
 		_hotbar_status_labels.append(stat_lbl)
 		
-		var icon_lbl = Label.new()
-		icon_lbl.text = item.icon
-		icon_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		icon_lbl.add_theme_font_size_override("font_size", 18)
+		var icon_lbl = TextureRect.new()
+		icon_lbl.texture = preload("res://scripts/ui/JournalArt.gd").texture(item.id) if i < 5 else null
+		icon_lbl.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon_lbl.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon_lbl.custom_minimum_size.y = 24
 		icon_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		vbox.add_child(icon_lbl)
 		_hotbar_icons.append(icon_lbl)
-		
+
 		var title_lbl = Label.new()
 		title_lbl.text = item.short_name
 		title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -713,7 +714,7 @@ func _refresh_belt_labels() -> void:
 			for x in inventory_slots:
 				if x != null and x.get("id", "") == belt_items[i]: count += int(x.get("count", 0))
 			_hotbar_status_labels[i+5].text = "×%d" % count if count > 0 else "—"
-			_hotbar_icons[i+5].text = {"camp_kit":"△", "firewood":"▰", "brush":"♧"}.get(type,"◇")
+			_hotbar_icons[i+5].texture = preload("res://scripts/ui/JournalArt.gd").texture(preload("res://scripts/ui/JournalArt.gd").item_key(item)) if not item.is_empty() else null
 			_hotbar_slot_buttons[i+5].tooltip_text = item.get("name", "Пустая ячейка")
 
 func _use_belt_item(index: int) -> void:
@@ -961,6 +962,7 @@ func _toggle_inventory() -> void:
 	_is_inventory_open = not _is_inventory_open
 	if _is_inventory_open:
 		_inv_layer.visible = true
+		_backpack_ui.call_deferred("resize")
 		_is_mouse_captured = false
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		_play_ui_sound("res://assets/sounds/level_01/ui/ui_inventory_open.wav")
@@ -1412,14 +1414,15 @@ func drop_selected_item(drop_all: bool = false) -> void:
 		return
 	drop_item(_selected_slot_index, drop_all)
 
-func drop_item(slot_idx: int, drop_all: bool = false) -> void:
+func drop_item(slot_idx: int, drop_all: bool = false, requested_amount: int = 1) -> void:
 	if is_instance_valid(survival) and not survival.job.is_empty(): return
 	if slot_idx < 0 or slot_idx >= MAX_SLOTS or inventory_slots[slot_idx] == null:
 		return
 		
 	var slot = inventory_slots[slot_idx]
+	if requested_amount < 1 or requested_amount > int(slot["count"]): return
 	if slot.get("type") != "log" and is_instance_valid(survival):
-		var amount = int(slot["count"]) if drop_all else 1
+		var amount = int(slot["count"]) if drop_all else requested_amount
 		var item = slot.duplicate(true)
 		item["count"] = 1
 		if survival.Items.transact(self,{slot["id"]:amount},[],slot_idx):
@@ -1434,7 +1437,7 @@ func drop_item(slot_idx: int, drop_all: bool = false) -> void:
 		return
 	var sp = slot.get("species", "birch")
 	var unit_w = slot.get("unit_weight", 4.0)
-	var to_drop = slot["count"] if drop_all else 1
+	var to_drop = slot["count"] if drop_all else requested_amount
 	
 	slot["count"] -= to_drop
 	backpack_weight = maxf(0.0, backpack_weight - unit_w * to_drop)
@@ -1493,104 +1496,15 @@ func _on_slot_clicked(slot_idx: int) -> void:
 	_refresh_inventory_ui()
 
 func _refresh_inventory_ui() -> void:
-	if not _inv_layer or not _inv_layer.visible:
-		return
-		
-	# 1. Update Weight Meter
-	_inv_weight_label.text = "ВЕС ГРУЗА: %.1f / %.1f кг" % [backpack_weight, max_backpack_kg]
+	if not _inv_layer or not _inv_layer.visible or not is_instance_valid(_backpack_ui): return
+	_inv_weight_label.text = "ГРУЗ  %.1f / %.1f кг" % [backpack_weight, max_backpack_kg]
 	_inv_weight_bar.value = backpack_weight
-	
-	var bar_fill = StyleBoxFlat.new()
-	bar_fill.corner_radius_top_left = 3
-	bar_fill.corner_radius_top_right = 3
-	bar_fill.corner_radius_bottom_left = 3
-	bar_fill.corner_radius_bottom_right = 3
-	
-	if backpack_weight > max_backpack_kg:
-		bar_fill.bg_color = Color(0.95, 0.25, 0.25) # Danger red
-		_inv_overweight_warning.text = "ВНИМАНИЕ: ПЕРЕГРУЗ (Скорость -30%)"
-	elif backpack_weight >= max_backpack_kg * 0.8:
-		bar_fill.bg_color = Color(0.95, 0.70, 0.20) # Warning amber
-		_inv_overweight_warning.text = "Почти заполнен"
-	else:
-		bar_fill.bg_color = Color(0.28, 0.72, 0.52) # Calm green
-		_inv_overweight_warning.text = ""
-	_inv_weight_bar.add_theme_stylebox_override("fill", bar_fill)
-	
-	# 2. Update 16 Slots
-	for i in range(MAX_SLOTS):
-		var btn = _inv_slot_buttons[i]
-		var item = inventory_slots[i]
-		var is_selected = (i == _selected_slot_index)
-		
-		# Styling for slot button
-		var sb = StyleBoxFlat.new()
-		sb.corner_radius_top_left = 4
-		sb.corner_radius_top_right = 4
-		sb.corner_radius_bottom_left = 4
-		sb.corner_radius_bottom_right = 4
-		sb.content_margin_left = 6
-		sb.content_margin_top = 6
-		sb.content_margin_right = 6
-		sb.content_margin_bottom = 6
-		
-		if is_selected:
-			sb.border_width_left = 2
-			sb.border_width_top = 2
-			sb.border_width_right = 2
-			sb.border_width_bottom = 2
-			sb.border_color = Color(1.0, 0.85, 0.25, 1.0) # Golden selection
-			sb.bg_color = Color(0.16, 0.19, 0.24, 0.95)
-		else:
-			sb.border_width_left = 1
-			sb.border_width_top = 1
-			sb.border_width_right = 1
-			sb.border_width_bottom = 1
-			sb.border_color = Color(0.25, 0.30, 0.35, 0.6)
-			sb.bg_color = Color(0.10, 0.12, 0.15, 0.85)
-			
-		btn.add_theme_stylebox_override("normal", sb)
-		
-		var hover_sb = sb.duplicate()
-		hover_sb.border_color = Color(0.6, 0.8, 1.0, 0.9) # Ice-blue hover
-		btn.add_theme_stylebox_override("hover", hover_sb)
-		
-		if item != null:
-			var sp_name = item.get("name", "Полено").replace(" полено", "").to_upper()
-			var count = item.get("count", 1)
-			var total_w = float(count) * item.get("unit_weight", 4.0)
-			btn.text = "%s\nx%d\n(%.1f кг)" % [sp_name, count, total_w]
-			btn.add_theme_color_override("font_color", item.get("color", Color.WHITE))
-			btn.add_theme_font_size_override("font_size", roundi(14 * _backpack_ui.ui_scale))
-		else:
-			btn.text = "—"
-			btn.add_theme_color_override("font_color", Color(0.3, 0.35, 0.4))
-			btn.add_theme_font_size_override("font_size", roundi(14 * _backpack_ui.ui_scale))
-			
-	# 3. Update Inspector Panel
-	if _selected_slot_index >= 0 and _selected_slot_index < MAX_SLOTS and inventory_slots[_selected_slot_index] != null:
-		var item = inventory_slots[_selected_slot_index]
-		_inv_empty_inspector_label.visible = false
-		_inv_inspector_box.visible = true
-		
-		_inv_details_title.text = item.get("name", "Предмет")
-		_inv_details_title.add_theme_color_override("font_color", item.get("color", Color(1.0, 0.9, 0.4)))
-		_inv_details_category.text = "Тип: " + {"log":"Бревно", "firewood":"Топливо", "brush":"Растопка", "stone":"Материал", "camp_kit":"Набор для размещения"}.get(item.get("type", ""), "Материал")
-		
-		var count = item.get("count", 1)
-		var unit_w = item.get("unit_weight", 4.0)
-		var total_w = float(count) * unit_w
-		_inv_details_stats.text = "Количество: %d · за шт.: %.1f кг\nОбщий вес: %.1f кг" % [count, unit_w, total_w]
-		if item.get("burn_time", "—") != "—": _inv_details_stats.text += "\nГорение: " + str(item.get("burn_time"))
+	_inv_overweight_warning.text = "ПЕРЕГРУЗ · скорость −30%" if backpack_weight > max_backpack_kg else ("Почти заполнен" if backpack_weight >= max_backpack_kg * 0.8 else "")
+	_backpack_ui.refresh_actions()
 
-		_inv_details_desc.text = item.get("description", "")
-		_inv_btn_drop_one.text = "Выбросить 1"
-		_inv_btn_drop_all.text = "Весь стак ×%d" % count
-	else:
-		_inv_empty_inspector_label.visible = true
-		_inv_inspector_box.visible = false
-
-	if is_instance_valid(_backpack_ui): _backpack_ui.refresh_actions()
+func drop_selected_amount(amount: int) -> void:
+	if amount < 1 or _selected_slot_index < 0 or _selected_slot_index >= MAX_SLOTS: return
+	drop_item(_selected_slot_index, false, amount)
 
 
 func _connect_settings_signals() -> void:

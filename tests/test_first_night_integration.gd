@@ -54,7 +54,7 @@ func run() -> void:
  p._add_to_backpack({"species":"birch","weight":4.0})
  await key(KEY_TAB)
  check(p._is_inventory_open and p._is_inventory_open,"Tab opens the actual backpack through real input")
- p._backpack_ui.tabs.current_tab=1;await settle()
+ p._backpack_ui.tabs.current_tab=1;p._backpack_ui.select_recipe("camp_kit");await settle()
  await capture("01_crafting_panel")
  await click(p._backpack_ui.buttons["kit"])
  check(s.Items.count(p.inventory_slots,"camp_kit")==1,"real mouse click reaches craft button")
@@ -69,7 +69,7 @@ func run() -> void:
  var f:Dictionary=s.fires[0];p.global_position=Vector3(ground.position.x,ground.position.y+0.1,ground.position.z+2.0)
  s.selected_fire=f["id"]
  s.cancel_job();s.open_backpack(f["id"]);p.select_hotbar_slot(1)
- p._backpack_ui.tabs.current_tab=1;await settle()
+ p._backpack_ui.tabs.current_tab=1;p._backpack_ui.select_recipe("split_birch");await settle()
  await capture("01b_selected_log")
  await click(p._backpack_ui.buttons["split"])
  check(s.job.get("kind")=="split" and p.active_hotbar_slot==0,"mouse split from backpack auto-equips axe")

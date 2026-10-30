@@ -195,7 +195,7 @@ func run() -> void:
  # Backpack-specific regressions and transaction abuse guards.
  reset_inventory();p._add_to_backpack({"species":"birch","weight":4.0});s.open_backpack()
  p._selected_slot_index=0;p._refresh_inventory_ui()
- check(p._backpack_ui.buttons["split"].visible and not p._backpack_ui.buttons["split"].disabled,"selected log exposes split in backpack")
+ check(p._backpack_ui.buttons["recipe_link"].visible and not p._backpack_ui.buttons["recipe_link"].disabled,"selected log exposes recipe link in backpack")
  p.select_hotbar_slot(3);check(s.begin_split(0),"split starts while matches were selected")
  p.drop_item(0);check(Items.count(p.inventory_slots,"log")==1,"cannot drop job input while splitting")
  check(not s.begin_split(0),"cannot start second job")

@@ -18,7 +18,7 @@ static func count(slots: Array, id: String) -> int:
  for s in slots:
   if s != null and (s.get("type","")==id or s.get("id","")==id): total += int(s.get("count",0))
  return total
-static func transact(player: Node, costs: Dictionary, outputs: Array = [], source_slot: int = -1) -> bool:
+static func transact(player: Node, costs: Dictionary, outputs: Array = [], source_slot: int = -1, preview: bool = false) -> bool:
  var slots: Array = player.inventory_slots.duplicate(true)
  for id in costs:
   if not (costs[id] is int or costs[id] is float) or float(costs[id])<=0 or float(costs[id])!=int(costs[id]):return false
@@ -44,6 +44,7 @@ static func transact(player: Node, costs: Dictionary, outputs: Array = [], sourc
    if slots[i]==null:
     slots[i]=output.duplicate(true);slots[i]["count"]=mini(left,10);left-=int(slots[i]["count"])
   if left>0:return false
+ if preview:return true # Same transaction validation, zero mutation and no UI callbacks.
  player.inventory_slots=slots
  refresh(player)
  return true

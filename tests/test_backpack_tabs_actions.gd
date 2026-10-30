@@ -65,7 +65,7 @@ func run() -> void:
  s.begin_placement();s.placement={"ok":true,"pos":[0,0,3]};check(s.confirm_placement(),"place kit for camp tests")
  check(p.belt_items[0]=="","consumed last kit clears shortcut")
  p.position=Vector3(0,0.1,1);s.open_backpack();await tab(1);p.select_hotbar_slot(1)
- await click(ui.buttons["split"]);check(s.job.get("kind")=="split","held split click in recipes starts job")
+ await click(ui.recipe_cards["split_birch"]);await click(ui.buttons["split"]);check(s.job.get("kind")=="split","held split click in recipes starts job")
  await shot("03_split");s.advance(10)
  check(Items.count(p.inventory_slots,"firewood")==3,"split yields three firewood pieces")
  var f:Dictionary=s.fires[0];s.open_backpack(f["id"]);await settle()
