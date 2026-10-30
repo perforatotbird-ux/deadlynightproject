@@ -174,6 +174,7 @@ func save_game(slot_id: String = "", save_type: String = "manual", custom_name: 
 		"inventory_slots": p_slots
 	}
 	
+	var survival_node = scene_root.get_node_or_null("SurvivalWorld") if scene_root else null
 	# World Data
 	var TreeChoppableClass = load("res://scripts/props/TreeChoppable.gd")
 	var felled_trees = {}
@@ -193,7 +194,8 @@ func save_game(slot_id: String = "", save_type: String = "manual", custom_name: 
 			
 	var w_data = {
 		"felled_tree_ids": felled_trees,
-		"dropped_logs": dropped_logs
+		"dropped_logs": dropped_logs,
+		"survival": survival_node.export_state() if survival_node else {}
 	}
 	
 	var pt_name = custom_name if custom_name != "" else current_playthrough_name
@@ -304,13 +306,16 @@ func load_game(slot_id: String) -> bool:
 	if current_scene == null and get_tree().root:
 		current_scene = get_tree().root.get_node_or_null("MapViewer")
 		
-	if current_scene == null or current_scene.name != "MapViewer":
-		print("[SaveManager] Changing scene to MapViewer.tscn for save payload application...")
-		get_tree().change_scene_to_file("res://scenes/viewer/MapViewer.tscn")
+	var target_name = "MineInterior" if data.get("world",{}).get("survival",{}).get("location", "forest") == "mine" else "MapViewer"
+	load("res://scripts/survival/SurvivalWorld.gd").travel.clear()
+	if current_scene == null or current_scene.name != target_name:
+		print("[SaveManager] Changing scene to %s for save payload application..." % target_name)
+		get_tree().change_scene_to_file("res://scenes/mine/MineInterior.tscn" if target_name=="MineInterior" else "res://scenes/viewer/MapViewer.tscn")
 		# Hook deferred application when scene loads
 		call_deferred("_apply_pending_load_when_ready")
 	else:
 		_apply_loaded_state(_pending_load_payload)
+		_pending_load_payload.clear()
 		load_completed.emit(slot_id, true)
 		
 	return true
@@ -373,6 +378,7 @@ func _apply_loaded_state(payload: Dictionary) -> void:
 		var slots = p_data.get("inventory_slots", [])
 		if player_node.get("inventory_slots") != null:
 			player_node.inventory_slots = slots.duplicate(true)
+			load("res://scripts/survival/SurvivalItems.gd").refresh(player_node)
 		if player_node.get("backpack_weight") != null:
 			player_node.backpack_weight = p_data.get("backpack_weight", 0.0)
 			
@@ -385,6 +391,10 @@ func _apply_loaded_state(payload: Dictionary) -> void:
 		if player_node.has_method("_update_hud_display"):
 			player_node._update_hud_display()
 			
+	var survival_node = scene_root.get_node_or_null("SurvivalWorld")
+	if survival_node:
+		survival_node.Items.refresh(player_node)
+		survival_node.import_state(w_data.get("survival",{}))
 	if world_node != null and world_node.has_method("restore_felled_stumps"):
 		world_node.restore_felled_stumps()
 	print("[SaveManager] Loaded game state successfully applied to active scene.")
@@ -417,6 +427,7 @@ func start_new_game(slot_id: String, playthrough_name: String, difficulty: Strin
 	if TreeChoppableClass != null:
 		TreeChoppableClass.felled_tree_ids.clear()
 		
+	load("res://scripts/survival/SurvivalWorld.gd").travel.clear()
 	# Switch to MapViewer.tscn
 	get_tree().change_scene_to_file("res://scenes/viewer/MapViewer.tscn")
 	

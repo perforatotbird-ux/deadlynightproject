@@ -23,6 +23,7 @@ func _ready() -> void:
 	_build_tunnel_geometry()
 	_setup_entrance_exit_trigger()
 	_spawn_player()
+	add_child(load("res://scripts/survival/SurvivalWorld.gd").new())
 	_fade_in()
 
 func _setup_fps_counter() -> void:
@@ -270,6 +271,7 @@ func _build_tunnel_geometry() -> void:
 	
 	# Entrance daylight spill
 	var entrance_light = DirectionalLight3D.new()
+	entrance_light.name = "EntranceDaylight"
 	entrance_light.position = Vector3(0.0, 2.0, 5.0)
 	entrance_light.rotation_degrees = Vector3(-15.0, 180.0, 0.0)
 	entrance_light.light_energy = 0.8
@@ -294,6 +296,7 @@ func _setup_entrance_exit_trigger() -> void:
 func _on_exit_body_entered(body: Node3D) -> void:
 	if body is CharacterBody3D:
 		_fade_out(func():
+			get_node("SurvivalWorld").prepare_travel()
 			get_tree().change_scene_to_file(return_to_exterior_scene)
 		)
 

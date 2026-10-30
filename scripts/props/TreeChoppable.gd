@@ -350,9 +350,11 @@ func _on_fracture_ready(lower: ArrayMesh, upper: ArrayMesh, cut_y: float) -> voi
 
 func _saved_felling() -> Dictionary:
 	var key := get_effective_id()
-	if felled_tree_ids.has(key): return felled_tree_ids[key]
+	if felled_tree_ids.has(key):
+		return felled_tree_ids[key] if felled_tree_ids[key] is Dictionary else {}
 	key = "pos_%d_%d_%d" % [roundi(global_position.x),roundi(global_position.y),roundi(global_position.z)]
-	return felled_tree_ids.get(key,{})
+	var info = felled_tree_ids.get(key,{})
+	return info if info is Dictionary else {}
 
 func _restore_remnant() -> void:
 	_restoring_remnant = true

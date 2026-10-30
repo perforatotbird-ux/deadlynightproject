@@ -248,7 +248,7 @@ func _run_all_tests() -> void:
 			var tree_restored = TreeChoppable.felled_tree_ids.has("test_birch_uuid_777")
 			var slot_restored = player.inventory_slots[0] != null and player.inventory_slots[0]["species"] == "oak"
 			var tool_restored = player.active_hotbar_slot == 1
-			var weight_restored = is_equal_approx(player.backpack_weight, 18.5)
+			var weight_restored = is_equal_approx(player.backpack_weight, 18.0) # inventory is authoritative: 2 × 9 kg; repair stale saved weight
 			
 			if dist_h < 0.1 and tree_restored and slot_restored and tool_restored and weight_restored:
 				print("PASS: Full state restored: position (dist_h=%.3f), tool=%d, weight=%.1f kg, tree_felled=%s, oak_logs=%d." % [

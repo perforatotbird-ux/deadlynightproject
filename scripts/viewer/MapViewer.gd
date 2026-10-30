@@ -38,6 +38,8 @@ func _ready() -> void:
 	
 	# Default to FIRST PERSON PLAYER on startup, press F1 for FreeFly
 	_set_fps_mode(true)
+	var survival = load("res://scripts/survival/SurvivalWorld.gd").new()
+	add_child(survival)
 	_setup_poi_teleport_ui()
 	_setup_fps_counter()
 	load("res://scripts/core/SettingsManager.gd").get_instance().call_deferred("apply_graphics_settings")

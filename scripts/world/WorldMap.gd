@@ -80,6 +80,8 @@ func _build_terrain_collisions(root: Node) -> void:
 	for m_node in meshes:
 		# Create trimesh collision for physical interaction
 		m_node.create_trimesh_collision()
+		for body in m_node.get_children():
+			if body is StaticBody3D:body.add_to_group("camp_ground")
 		count += 1
 	print("[WorldMap] Generated collision for %d terrain chunk meshes." % count)
 
@@ -338,7 +340,7 @@ func _spawn_tutorial_trees() -> void:
 				
 			var pos_id = "pos_%d_%d_%d" % [int(round(origin.x)), int(round(origin.y)), int(round(origin.z))]
 			if TreeChoppable.felled_tree_ids.has(tree_id) or TreeChoppable.felled_tree_ids.has(pos_id):
-				_ensure_saved_remnant(tree_id, origin)
+				_ensure_saved_remnant(tree_id, origin, sp)
 				continue
 				
 			var yaw = deg_to_rad(tree.get("yaw_deg", 0.0))
@@ -396,7 +398,7 @@ func _process(delta: float) -> void:
 					var pos_id = "pos_%d_%d_%d" % [int(round(origin.x)), int(round(origin.y)), int(round(origin.z))]
 					if TreeChoppable.felled_tree_ids.has(t_id) or TreeChoppable.felled_tree_ids.has(pos_id):
 						_set_mmi_tree_scale(t_id, 0.0)
-						_ensure_saved_remnant(t_id, origin)
+						_ensure_saved_remnant(t_id, origin, str(t.get("species","birch")))
 						continue
 					if not _dynamic_trees.has(t_id) and not _interactive_trees.has(t_id):
 						_activate_dynamic_tree(t, origin)
@@ -454,14 +456,15 @@ func _deactivate_dynamic_tree(t_id: String) -> void:
 			inst.queue_free()
 		_dynamic_trees.erase(t_id)
 
-func _ensure_saved_remnant(t_id: String, fallback_position: Vector3) -> void:
+func _ensure_saved_remnant(t_id: String, fallback_position: Vector3, fallback_species: String = "birch") -> void:
 	if _remnant_requested.has(t_id): return
 	for pending in get_children():
 		if pending is TreeChoppable and pending.tree_id==t_id and pending._restoring_remnant:
 			_remnant_requested[t_id]=true
 			return
 	var pos_id := "pos_%d_%d_%d" % [roundi(fallback_position.x),roundi(fallback_position.y),roundi(fallback_position.z)]
-	var info: Dictionary = TreeChoppable.felled_tree_ids.get(t_id,TreeChoppable.felled_tree_ids.get(pos_id,{}))
+	var stored_info = TreeChoppable.felled_tree_ids.get(t_id,TreeChoppable.felled_tree_ids.get(pos_id,{}))
+	var info: Dictionary = stored_info if stored_info is Dictionary else {"id":t_id,"species":fallback_species,"pos":[fallback_position.x,fallback_position.y,fallback_position.z]}
 	if info.is_empty(): return
 	for stump in get_tree().get_nodes_in_group("permanent_stumps"):
 		if stump.get_meta("tree_id","") == t_id:
@@ -492,7 +495,10 @@ func restore_felled_stumps() -> void:
 	if player == null:return
 	var seen: Dictionary={}
 	for key in TreeChoppable.felled_tree_ids:
-		var info: Dictionary=TreeChoppable.felled_tree_ids[key]
+		var stored_info=TreeChoppable.felled_tree_ids[key]
+		# Old slots used boolean flags without shape/position data. Keep the
+		# hidden tree; reconstruct its remnant lazily when its record is nearby.
+		var info: Dictionary=stored_info if stored_info is Dictionary else {"id":str(key)}
 		var t_id: String=info.get("id",key)
 		if t_id=="":t_id=key
 		if seen.has(t_id):continue
@@ -531,4 +537,6 @@ func _on_mine_entrance_entered(body: Node3D) -> void:
 		print("[WorldMap] Player entered Mine Entrance! Transitioning to MineInterior...")
 		var tree_ref = get_tree()
 		if tree_ref:
-			tree_ref.change_scene_to_file("res://scenes/mine/MineInterior.tscn")
+			var session = get_parent().get_node_or_null("SurvivalWorld")
+			if session: session.prepare_travel()
+			tree_ref.change_scene_to_file.call_deferred("res://scenes/mine/MineInterior.tscn")

@@ -189,6 +189,7 @@ var _speed_penalty_label: Label = null
 var _toolbelt_panel: PanelContainer = null
 var _hotbar_slot_buttons: Array[Button] = []
 var _hotbar_slot_labels: Array[Label] = []
+var _hotbar_status_labels: Array[Label] = []
 var _hotbar_hotkey_labels: Array[Label] = []
 var _tool_banner_label: Label = null
 var _tool_banner_tween: Tween = null
@@ -210,6 +211,7 @@ var _inv_btn_drop_all: Button = null
 var _inv_empty_inspector_label: Label = null
 var _inv_inspector_box: VBoxContainer = null
 var _pause_menu: Node = null
+var survival: Node = null
 
 func _ready() -> void:
 	_init_inventory_data()
@@ -268,8 +270,9 @@ func _setup_camera_and_viewmodel() -> void:
 	_raycast = RayCast3D.new()
 	_raycast.name = "InteractRay"
 	_raycast.target_position = Vector3(0.0, 0.0, -3.5)
-	_raycast.collision_mask = 2 | 4 | 8 # Layer 2: Trees, Layer 3/4: Logs, Props
+	_raycast.collision_mask = 1 | 2 | 4 | 8 # Layer 2: Trees, Layer 3/4: Logs, Props
 	_camera.add_child(_raycast)
+	_raycast.add_exception(self)
 	
 	# Viewmodel Hierarchy:
 	# _camera -> _axe_sway_pivot (sway & bobbing) -> _axe_anim_pivot (chop animations) -> model
@@ -548,6 +551,7 @@ func _setup_toolbelt_hud() -> void:
 		stat_lbl.add_theme_color_override("font_color", Color(0.55, 0.60, 0.65))
 		stat_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		top_row.add_child(stat_lbl)
+		_hotbar_status_labels.append(stat_lbl)
 		
 		var icon_lbl = Label.new()
 		icon_lbl.text = item.icon
@@ -720,6 +724,13 @@ func _ping_compass() -> void:
 	_show_tool_banner("ПОЛЕВОЙ КОМПАС: Азимут активен")
 
 func _strike_match() -> void:
+	if is_instance_valid(survival):
+		var fire = survival.nearby_fire()
+		if fire.is_empty():
+			survival.notify("Подойдите к подготовленному костру. [B] — создание костра")
+		else:
+			survival.open_panel(fire["id"])
+		return
 	_play_ui_sound("res://assets/sounds/level_01/ui/ui_click.wav")
 	_show_tool_banner("ОХОТНИЧЬИ СПИЧКИ: Вспышка пламени!")
 	if _lantern_light:
@@ -1006,6 +1017,11 @@ func _input(event: InputEvent) -> void:
 	if not _is_active or not _camera.current:
 		return
 		
+	# Survival owns modal/placement input before tools and movement.
+	if is_instance_valid(survival) and survival.handle_input(event):
+		get_viewport().set_input_as_handled()
+		return
+
 	# Keyboard Events (TAB toggles inventory!)
 	if event is InputEventKey and event.pressed and not event.echo:
 		if _event_matches_action(event, "inventory"):
@@ -1150,6 +1166,10 @@ func _toggle_inventory() -> void:
 func _physics_process(delta: float) -> void:
 	if not _is_active or not _camera.current:
 		return
+	if is_instance_valid(survival) and survival.health <= 0:
+		_cancel_chop()
+		velocity.x=0; velocity.z=0
+		return
 		
 	# Gravity & Ground snap with Coyote Time
 	if is_on_floor():
@@ -1226,6 +1246,9 @@ func _physics_process(delta: float) -> void:
 	else:
 		_speed_penalty_label.text = ""
 		
+	if is_instance_valid(survival):
+		if survival.energy < 10.0:base_spd = minf(base_spd,walk_speed)
+		if survival.warmth < 20.0:speed_multiplier *= 0.85
 	var final_speed = base_spd * speed_multiplier
 	
 	# Movement vector relative to character heading
@@ -1488,6 +1511,9 @@ func _try_interact() -> void:
 	# 1. Raycast check for pickup
 	if _raycast and _raycast.is_colliding():
 		var collider = _raycast.get_collider()
+		if collider and collider.has_method("survival_interact"):
+			collider.survival_interact()
+			return
 		if collider is LogPickupScript:
 			_collect_log(collider)
 			return
@@ -1505,6 +1531,15 @@ func _try_interact() -> void:
 					return
 
 func _collect_log(log_node: Node) -> void:
+	# Never delete a world item before verifying backpack capacity.
+	var has_room = false
+	for slot in inventory_slots:
+		if slot == null or (slot.get("type")=="log" and slot.get("species")==log_node.species and slot.get("count",0)<MAX_STACK):
+			has_room = true
+			break
+	if not has_room:
+		_show_tool_banner("Рюкзак заполнен: освободите ячейку")
+		return
 	var item_data = log_node.pickup()
 	_add_to_backpack(item_data)
 	_play_ui_sound("res://assets/sounds/level_01/props/log_pickup.wav")
@@ -1525,7 +1560,7 @@ func _add_to_backpack(item: Dictionary) -> void:
 	var target_slot_idx = -1
 	for i in range(MAX_SLOTS):
 		var s = inventory_slots[i]
-		if s != null and s.get("species") == sp and s.get("count", 0) < MAX_STACK:
+		if s != null and s.get("type")=="log" and s.get("species") == sp and s.get("count", 0) < MAX_STACK:
 			target_slot_idx = i
 			break
 			
@@ -1553,6 +1588,8 @@ func _add_to_backpack(item: Dictionary) -> void:
 				"color": info["color"]
 			}
 			
+	if target_slot_idx == -1:
+		return
 	# Always keep backpack_weight and backpack_items updated for tests/HUD
 	backpack_weight += weight
 	backpack_items.append(item)
@@ -1571,6 +1608,20 @@ func drop_item(slot_idx: int, drop_all: bool = false) -> void:
 		return
 		
 	var slot = inventory_slots[slot_idx]
+	if slot.get("type") != "log" and is_instance_valid(survival):
+		var amount = int(slot["count"]) if drop_all else 1
+		var item = slot.duplicate(true)
+		item["count"] = 1
+		if survival.Items.transact(self,{slot["id"]:amount}):
+			for i in amount:
+				var forward = -_camera.global_basis.z
+				forward.y = 0
+				var pos = global_position + forward.normalized()*1.3 + Vector3(i*0.15,0.1,0)
+				var q = PhysicsRayQueryParameters3D.create(pos+Vector3.UP*2,pos-Vector3.UP*3,1)
+				var hit = get_world_3d().direct_space_state.intersect_ray(q)
+				if not hit.is_empty():pos=hit.position
+				survival.drop_resource(item,pos)
+		return
 	var sp = slot.get("species", "birch")
 	var unit_w = slot.get("unit_weight", 4.0)
 	var to_drop = slot["count"] if drop_all else 1
@@ -1619,7 +1670,7 @@ func _update_inventory_hud() -> void:
 			total_logs += s.get("count", 0)
 			
 	if _backpack_label:
-		_backpack_label.text = "Рюкзак: %.1f / %.1f кг (%d поленьев)" % [
+		_backpack_label.text = "Рюкзак: %.1f / %.1f кг (%d предметов)" % [
 			backpack_weight, max_backpack_kg, total_logs
 		]
 
