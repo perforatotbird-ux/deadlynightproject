@@ -12,6 +12,11 @@ __pycache__/
 *.blend1
 *.blend2
 
+# Agent tooling output
+.workbuddy-ai/
+graphify-out/
+Docs/graphify-out/
+
 # OS / Temporary files
 *.tmp
 *.log

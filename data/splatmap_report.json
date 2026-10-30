@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-10-28T16:30:28Z",
+  "resolution": [
+    4096,
+    4096
+  ],
+  "coverage_percentage": {
+    "grass_meadows": 73.25,
+    "forest_floor": 15.0,
+    "rock_cliffs": 9.18,
+    "dirt_paths": 0.0,
+    "gravel_roads": 0.09,
+    "river_banks": 0.48,
+    "snow_patches": 1.99
+  },
+  "outputs": {
+    "splat_a": "data\\splat_a.png",
+    "splat_b": "data\\splat_b.png",
+    "albedo": "data\\terrain_albedo_4096.jpg",
+    "normal": "data\\terrain_normal_4096.png"
+  }
+}

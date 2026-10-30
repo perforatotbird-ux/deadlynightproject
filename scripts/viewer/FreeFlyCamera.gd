@@ -34,6 +34,7 @@ func _setup_hud() -> void:
 	panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	panel.position = Vector2(16, 52)
 	panel.custom_minimum_size = Vector2(340, 160)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	canvas.add_child(panel)
 	
 	var vbox = VBoxContainer.new()

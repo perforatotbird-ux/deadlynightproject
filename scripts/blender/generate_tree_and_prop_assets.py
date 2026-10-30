@@ -366,7 +366,7 @@ def build_tree_stump(species):
     return obj
 
 def build_wood_log(species):
-    """Generates pickable firewood log (len = 1.0m, r = 0.16m, split wedge)"""
+    """Generates authentic round log (бревно) cylinder (len = 1.0m, r = 0.18m)"""
     specs = {
         'birch': {'bark': (0.88, 0.86, 0.82, 1.0), 'cut': (0.96, 0.96, 0.86, 1.0)},
         'spruce': {'bark': (0.29, 0.22, 0.16, 1.0), 'cut': (0.82, 0.41, 0.12, 1.0)},
@@ -379,42 +379,37 @@ def build_wood_log(species):
     
     bm = bmesh.new()
     length = 1.0
-    r = 0.16
+    r = 0.18
+    n_seg = 12
     
-    # Half-cylinder split log
-    n_seg = 6
-    x_positions = [-length/2, length/2]
-    
+    z_positions = [-length / 2.0, length / 2.0]
     rings = []
-    for x in x_positions:
+    for z in z_positions:
         ring = []
-        # Center split edge
-        ring.append(bm.verts.new((x, 0, 0)))
-        for s in range(n_seg + 1):
-            a = s * (math.pi / n_seg) # 0 to pi arc
-            y = r * math.cos(a)
-            z = r * math.sin(a)
+        for s in range(n_seg):
+            a = s * (2.0 * math.pi / n_seg)
+            x = r * math.cos(a)
+            y = r * math.sin(a)
             ring.append(bm.verts.new((x, y, z)))
         rings.append(ring)
         
     r0, r1 = rings[0], rings[1]
     
-    # Bark curved surface
-    for s in range(1, n_seg + 1):
-        f = bm.faces.new([r0[s], r0[s+1], r1[s+1], r1[s]])
-        f.material_index = 0 # bark
+    # Bark cylindrical side faces
+    for s in range(n_seg):
+        s_next = (s + 1) % n_seg
+        f = bm.faces.new([r0[s], r0[s_next], r1[s_next], r1[s]])
+        f.material_index = 0 # Bark
+        f.smooth = True
         
-    # Split flat surface (bottom)
-    f_split = bm.faces.new([r0[0], r1[0], r1[1], r0[1]])
-    f_split.material_index = 1 # cut
-    f_split2 = bm.faces.new([r0[n_seg + 1], r1[n_seg + 1], r1[0], r0[0]])
-    f_split2.material_index = 1 # cut
-    
-    # End caps
+    # Flat cut end caps
     f_cap0 = bm.faces.new(list(reversed(r0)))
-    f_cap0.material_index = 1 # cut
+    f_cap0.material_index = 1 # Cut wood
+    f_cap0.smooth = False
+    
     f_cap1 = bm.faces.new(r1)
-    f_cap1.material_index = 1 # cut
+    f_cap1.material_index = 1 # Cut wood
+    f_cap1.smooth = False
     
     mesh = bpy.data.meshes.new(f"Mesh_Log_{species}")
     bm.to_mesh(mesh)
@@ -422,9 +417,7 @@ def build_wood_log(species):
     
     mesh.materials.append(mat_bark)
     mesh.materials.append(mat_cut)
-    for p in mesh.polygons:
-        p.use_smooth = False
-        
+    
     obj = bpy.data.objects.new(f"Log_{species}", mesh)
     bpy.context.scene.collection.objects.link(obj)
     return obj

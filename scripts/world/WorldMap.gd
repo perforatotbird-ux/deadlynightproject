@@ -1,6 +1,8 @@
 extends Node3D
 class_name WorldMap
 
+const TreeChoppable = preload("res://scripts/props/TreeChoppable.gd")
+
 @export var load_all_trees: bool = true
 
 var _terrain_root: Node3D = null
@@ -15,12 +17,21 @@ var _all_trees_data: Array = []
 # Interactive trees pool
 var _interactive_trees: Dictionary = {}
 
+# Dynamic proximity trees
+var _dynamic_trees_root: Node3D = null
+var _chunk_trees_data: Dictionary = {} # chunk_name -> [tree_data, ...]
+var _tree_mmi_index: Dictionary = {}   # tree_id -> { "mm": mm, "index": i, "xform": xform }
+var _dynamic_trees: Dictionary = {}    # tree_id -> TreeInteractive
+var _player_ref: Node3D = null
+var _dynamic_update_timer: float = 0.0
+
 func _ready() -> void:
 	_load_tree_models()
 	_load_terrain()
 	_load_pois_and_props()
 	_load_vegetation()
 	_spawn_tutorial_trees()
+	_setup_dynamic_trees()
 
 func _load_tree_models() -> void:
 	var species = ["birch", "spruce", "beech", "oak"]
@@ -244,6 +255,11 @@ func _load_vegetation() -> void:
 			
 		chunk_map[chunk_name][sp].append(tree)
 		
+		# Index tree for spatial dynamic activation
+		if not _chunk_trees_data.has(chunk_name):
+			_chunk_trees_data[chunk_name] = []
+		_chunk_trees_data[chunk_name].append(tree)
+		
 	# Create MultiMeshInstance3D per chunk & species
 	var total_instances = 0
 	for chunk_name in chunk_map.keys():
@@ -277,7 +293,17 @@ func _load_vegetation() -> void:
 				var xform = Transform3D()
 				xform.basis = Basis().rotated(Vector3.UP, yaw).scaled(Vector3.ONE * scl)
 				xform.origin = origin
+				
+				# Record index for dynamic hiding/revealing
+				var t_id = t.get("id", "")
+				var pos_id = "pos_%d_%d_%d" % [int(round(origin.x)), int(round(origin.y)), int(round(origin.z))]
+				var is_felled = (t_id != "" and TreeChoppable.felled_tree_ids.has(t_id)) or TreeChoppable.felled_tree_ids.has(pos_id)
+				if is_felled:
+					xform.basis = Basis().scaled(Vector3.ZERO)
 				mm.set_instance_transform(i, xform)
+				
+				if t_id != "":
+					_tree_mmi_index[t_id] = { "mm": mm, "index": i, "xform": xform }
 				
 			mmi.multimesh = mm
 			chunk_node.add_child(mmi)
@@ -298,8 +324,19 @@ func _spawn_tutorial_trees() -> void:
 	for tree in _all_trees_data:
 		if tree.get("tutorial", false):
 			var sp = tree.get("species", "birch")
+			var tree_id = tree.get("id", "tut_tree")
 			var pos_arr = tree.get("pos")
 			var origin = Vector3(pos_arr[0], pos_arr[2], -pos_arr[1])
+			
+			# If this is tree_055432 (birch), place it right in front of spawn (-900, 26, 1100)
+			# at 4m distance so the player immediately has a tree right before their eyes!
+			if tree_id == "tree_055432":
+				origin = Vector3(-900.0, 24.99, 1096.0)
+				
+			var pos_id = "pos_%d_%d_%d" % [int(round(origin.x)), int(round(origin.y)), int(round(origin.z))]
+			if TreeChoppable.felled_tree_ids.has(tree_id) or TreeChoppable.felled_tree_ids.has(pos_id):
+				continue
+				
 			var yaw = deg_to_rad(tree.get("yaw_deg", 0.0))
 			var scl = tree.get("scale", 1.0)
 			
@@ -308,9 +345,128 @@ func _spawn_tutorial_trees() -> void:
 			inst.global_position = origin
 			inst.rotation = Vector3(0, yaw, 0)
 			inst.scale = Vector3.ONE * scl
-			inst.init_tree(sp, tree.get("id", "tut_tree"))
-			_interactive_trees[tree.get("id")] = inst
-			print("[WorldMap] Spawned tutorial %s tree at %s" % [sp.to_upper(), str(origin)])
+			inst.init_tree(sp, tree_id)
+			_interactive_trees[tree_id] = inst
+			print("[WorldMap] Spawned tutorial %s tree (%s) at %s" % [sp.to_upper(), tree_id, str(origin)])
+
+func _setup_dynamic_trees() -> void:
+	_dynamic_trees_root = Node3D.new()
+	_dynamic_trees_root.name = "DynamicTrees"
+	add_child(_dynamic_trees_root)
+
+func _process(delta: float) -> void:
+	_dynamic_update_timer += delta
+	if _dynamic_update_timer < 0.35:
+		return
+	_dynamic_update_timer = 0.0
+	
+	if _player_ref == null or not is_instance_valid(_player_ref):
+		_player_ref = get_node_or_null("../Player")
+		if _player_ref == null:
+			return
+			
+	var p_pos = _player_ref.global_position
+	# Find player's current chunk
+	var chunk_x = clampi(int(floor((p_pos.x + 2000.0) / 250.0)), 0, 15)
+	var chunk_y = clampi(int(floor((-p_pos.z + 2000.0) / 250.0)), 0, 15)
+	
+	# Check adjacent chunks within 1 step
+	for dx in range(-1, 2):
+		for dy in range(-1, 2):
+			var cx = chunk_x + dx
+			var cy = chunk_y + dy
+			if cx < 0 or cx > 15 or cy < 0 or cy > 15:
+				continue
+			var chunk_name = "Chunk_%02d_%02d" % [cx, cy]
+			if not _chunk_trees_data.has(chunk_name):
+				continue
+				
+			var tree_list = _chunk_trees_data[chunk_name]
+			for t in tree_list:
+				var t_id = t["id"]
+				var pos_arr = t["pos"]
+				var origin = Vector3(pos_arr[0], pos_arr[2], -pos_arr[1])
+				var dist = p_pos.distance_to(origin)
+				
+				# Activate tree within 24m
+				if dist <= 24.0:
+					var pos_id = "pos_%d_%d_%d" % [int(round(origin.x)), int(round(origin.y)), int(round(origin.z))]
+					if TreeChoppable.felled_tree_ids.has(t_id) or TreeChoppable.felled_tree_ids.has(pos_id):
+						_set_mmi_tree_scale(t_id, 0.0)
+						continue
+					if not _dynamic_trees.has(t_id) and not _interactive_trees.has(t_id):
+						_activate_dynamic_tree(t, origin)
+						
+	# Deactivate distant dynamic trees (> 36m)
+	var to_remove = []
+	for t_id in _dynamic_trees.keys():
+		var inst = _dynamic_trees[t_id]
+		if is_instance_valid(inst) and (inst is Node3D):
+			if p_pos.distance_to((inst as Node3D).global_position) > 36.0:
+				to_remove.append(t_id)
+		else:
+			to_remove.append(t_id)
+			
+	for t_id in to_remove:
+		_deactivate_dynamic_tree(t_id)
+
+func _activate_dynamic_tree(tree_data: Dictionary, origin: Vector3) -> void:
+	var t_id = tree_data["id"]
+	var pos_id = "pos_%d_%d_%d" % [int(round(origin.x)), int(round(origin.y)), int(round(origin.z))]
+	if TreeChoppable.felled_tree_ids.has(t_id) or TreeChoppable.felled_tree_ids.has(pos_id):
+		_set_mmi_tree_scale(t_id, 0.0)
+		return
+		
+	var sp = tree_data.get("species", "birch")
+	var yaw = deg_to_rad(tree_data.get("yaw_deg", 0.0))
+	var scl = tree_data.get("scale", 1.0)
+	
+	var interactive_scene = load("res://scenes/props/TreeInteractive.tscn")
+	if interactive_scene:
+		var inst = interactive_scene.instantiate()
+		_dynamic_trees_root.add_child(inst)
+		inst.global_position = origin
+		inst.rotation = Vector3(0, yaw, 0)
+		inst.scale = Vector3.ONE * scl
+		inst.init_tree(sp, t_id)
+		_dynamic_trees[t_id] = inst
+		
+		# Temporarily hide MultiMesh instance
+		_set_mmi_tree_scale(t_id, 0.0)
+
+func _deactivate_dynamic_tree(t_id: String) -> void:
+	if _dynamic_trees.has(t_id):
+		var inst = _dynamic_trees[t_id]
+		if is_instance_valid(inst):
+			var pos_id = ""
+			if inst is Node3D:
+				pos_id = "pos_%d_%d_%d" % [int(round(inst.global_position.x)), int(round(inst.global_position.y)), int(round(inst.global_position.z))]
+			var is_felled = TreeChoppable.felled_tree_ids.has(t_id) or (pos_id != "" and TreeChoppable.felled_tree_ids.has(pos_id))
+			# If tree hasn't been chopped (still full HP) AND is not felled
+			if inst.current_hp == inst.max_hp and not is_felled:
+				_restore_mmi_tree_scale(t_id)
+			else:
+				_set_mmi_tree_scale(t_id, 0.0)
+			inst.queue_free()
+		_dynamic_trees.erase(t_id)
+
+func _set_mmi_tree_scale(t_id: String, scale_mult: float) -> void:
+	if _tree_mmi_index.has(t_id):
+		var data = _tree_mmi_index[t_id]
+		var mm: MultiMesh = data["mm"]
+		var idx: int = data["index"]
+		var orig_xform: Transform3D = data["xform"]
+		var new_xform = orig_xform
+		new_xform.basis = orig_xform.basis.scaled(Vector3.ONE * scale_mult)
+		mm.set_instance_transform(idx, new_xform)
+
+func _restore_mmi_tree_scale(t_id: String) -> void:
+	if _tree_mmi_index.has(t_id):
+		var data = _tree_mmi_index[t_id]
+		var mm: MultiMesh = data["mm"]
+		var idx: int = data["index"]
+		var orig_xform: Transform3D = data["xform"]
+		mm.set_instance_transform(idx, orig_xform)
 
 func _on_mine_entrance_entered(body: Node3D) -> void:
 	if body is CharacterBody3D:

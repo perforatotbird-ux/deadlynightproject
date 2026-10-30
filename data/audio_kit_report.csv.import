@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://b1h22wnbypmu2"
+
+[deps]
+
+files=["res://data/audio_kit_report.size.translation", "res://data/audio_kit_report.peak.translation", "res://data/audio_kit_report.rms.translation"]
+
+source_file="res://data/audio_kit_report.csv"
+dest_files=["res://data/audio_kit_report.size.translation", "res://data/audio_kit_report.peak.translation", "res://data/audio_kit_report.rms.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

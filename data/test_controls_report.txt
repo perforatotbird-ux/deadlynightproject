@@ -1,0 +1,6 @@
+PASSED: 6, FAILED: 0
+Player position: (-899.1687, 25.66498, 1094.205)
+Player camera current: true
+Player rotation: (0.0, 0.0, 0.0)
+Player prompt text: ''
+Backpack weight: 4.0

@@ -50,6 +50,7 @@ func _setup_fps_counter() -> void:
 	var panel = PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	panel.position = Vector2(16, 12)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	canvas.add_child(panel)
 	
 	_fps_label = Label.new()
@@ -78,7 +79,7 @@ func _set_fps_mode(fps: bool) -> void:
 	if _is_fps_mode:
 		# Sync player pos if switching from freefly
 		if free_fly_cam:
-			free_fly_cam.current = false
+			free_fly_cam.set_active(false)
 		if player:
 			player.set_active(true)
 		print("[MapViewer] Mode switched to: FIRST PERSON PLAYER")
@@ -90,7 +91,7 @@ func _set_fps_mode(fps: bool) -> void:
 				free_fly_cam.global_position = p_pos + Vector3(0, 2.5, 3)
 				free_fly_cam.look_at(p_pos + Vector3(0, 1.5, 0))
 		if free_fly_cam:
-			free_fly_cam.current = true
+			free_fly_cam.set_active(true)
 		print("[MapViewer] Mode switched to: FREE FLY CAMERA")
 
 func _setup_poi_teleport_ui() -> void:
@@ -102,26 +103,33 @@ func _setup_poi_teleport_ui() -> void:
 	panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	panel.position = Vector2(-220, 16)
 	panel.custom_minimum_size = Vector2(200, 300)
+	panel.mouse_filter = Control.MOUSE_FILTER_PASS
 	canvas.add_child(panel)
 	
 	var vbox = VBoxContainer.new()
+	vbox.mouse_filter = Control.MOUSE_FILTER_PASS
 	panel.add_child(vbox)
 	
 	var lbl = Label.new()
 	lbl.text = "POI FAST TRAVEL"
 	lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(lbl)
 	
 	var scroll = ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(190, 260)
+	scroll.mouse_filter = Control.MOUSE_FILTER_PASS
 	vbox.add_child(scroll)
 	
 	var btn_vbox = VBoxContainer.new()
+	btn_vbox.mouse_filter = Control.MOUSE_FILTER_PASS
 	scroll.add_child(btn_vbox)
 	
 	for poi_id in POI_LOCATIONS.keys():
 		var btn = Button.new()
 		btn.text = poi_id
+		btn.focus_mode = Control.FOCUS_NONE
+		btn.mouse_filter = Control.MOUSE_FILTER_PASS
 		btn.pressed.connect(func(): _teleport_to_poi(poi_id))
 		btn_vbox.add_child(btn)
 

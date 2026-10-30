@@ -1,0 +1,105 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/menu/MainMenu.gd" id="1_mainmenu"]
+[ext_resource type="PackedScene" path="res://scenes/menu/MenuBackdrop3D.tscn" id="2_backdrop"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_mainmenu")
+
+[node name="MenuBackdrop3D" parent="." instance=ExtResource("2_backdrop")]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+layer = 1
+
+[node name="RootMargin" type="MarginContainer" parent="CanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 64
+theme_override_constants/margin_top = 56
+theme_override_constants/margin_right = 64
+theme_override_constants/margin_bottom = 36
+
+[node name="MainHBox" type="HBoxContainer" parent="CanvasLayer/RootMargin"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="NavVBox" type="VBoxContainer" parent="CanvasLayer/RootMargin/MainHBox"]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="GameTitle" type="Label" parent="CanvasLayer/RootMargin/MainHBox/NavVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.96, 0.96, 1)
+theme_override_font_sizes/font_size = 46
+text = "DEADLY NIGHT"
+
+[node name="GameSubtitle" type="Label" parent="CanvasLayer/RootMargin/MainHBox/NavVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.62, 0.65, 1)
+theme_override_font_sizes/font_size = 14
+text = "ВЕСЕННИЙ ЛЕС · ШАХТА · ВЫЖИВАНИЕ"
+
+[node name="Spacer" type="Control" parent="CanvasLayer/RootMargin/MainHBox/NavVBox"]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+
+[node name="BtnContinue" type="Button" parent="CanvasLayer/RootMargin/MainHBox/NavVBox"]
+layout_mode = 2
+text = "  ▶  ПРОДОЛЖИТЬ"
+
+[node name="BtnNewGame" type="Button" parent="CanvasLayer/RootMargin/MainHBox/NavVBox"]
+layout_mode = 2
+text = "  ✚  НОВАЯ ИГРА"
+
+[node name="BtnLoadGame" type="Button" parent="CanvasLayer/RootMargin/MainHBox/NavVBox"]
+layout_mode = 2
+text = "  📂  ЗАГРУЗИТЬ ИГРУ"
+
+[node name="BtnSettings" type="Button" parent="CanvasLayer/RootMargin/MainHBox/NavVBox"]
+layout_mode = 2
+text = "  ⚙  НАСТРОЙКИ"
+
+[node name="BtnCredits" type="Button" parent="CanvasLayer/RootMargin/MainHBox/NavVBox"]
+layout_mode = 2
+text = "  ℹ  ТИТРЫ"
+
+[node name="BtnQuit" type="Button" parent="CanvasLayer/RootMargin/MainHBox/NavVBox"]
+layout_mode = 2
+text = "  ✖  ВЫХОД"
+
+[node name="BottomBar" type="HBoxContainer" parent="CanvasLayer/RootMargin"]
+layout_mode = 2
+size_flags_vertical = 8
+
+[node name="StatusLabel" type="Label" parent="CanvasLayer/RootMargin/BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.5, 0.58, 0.6, 1)
+theme_override_font_sizes/font_size = 12
+text = "Загрузка состояния сохранений..."
+
+[node name="VersionLabel" type="Label" parent="CanvasLayer/RootMargin/BottomBar"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.46, 0.48, 1)
+theme_override_font_sizes/font_size = 12
+text = "Deadly Night v0.4.7 Early Alpha · Godot 4.7"
+
+[node name="FadeRect" type="ColorRect" parent="CanvasLayer"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.02, 0.03, 0.03, 1)

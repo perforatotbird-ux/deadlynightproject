@@ -1,0 +1,1112 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "project": "Deadly Night — Level 01 Audio Manifest",
+  "version": "1.0",
+  "generated": "2026-10-28",
+  "root": "assets/sounds/level_01",
+  "doc": "Docs/audio_design_level1.md",
+  "buses": {
+    "Master": {
+      "volume_db": 0,
+      "effects": [
+        "AudioEffectLimiter"
+      ],
+      "parent": null
+    },
+    "Music": {
+      "volume_db": -8,
+      "parent": "Master"
+    },
+    "Ambience": {
+      "volume_db": -6,
+      "parent": "Master"
+    },
+    "World3D": {
+      "volume_db": -4,
+      "parent": "Master"
+    },
+    "World3D_Mine": {
+      "volume_db": 0,
+      "parent": "Master",
+      "effects": [
+        "AudioEffectReverb"
+      ],
+      "reverb": {
+        "room_size": 0.75,
+        "damping": 0.5,
+        "wet": 0.35,
+        "dry": 0.65
+      }
+    },
+    "Player": {
+      "volume_db": -2,
+      "parent": "Master"
+    },
+    "UI": {
+      "volume_db": -5,
+      "parent": "Master"
+    }
+  },
+  "voice_budget": {
+    "ambience": 6,
+    "footsteps": 2,
+    "axe": 3,
+    "world": 8,
+    "ui": 2,
+    "total_3d": 24
+  },
+  "events": [
+    {
+      "id": "AMB_FOREST_BED",
+      "category": "ambience",
+      "node": "AudioStreamPlayer",
+      "bus": "Ambience",
+      "loop": true,
+      "volume_db": -18,
+      "files": [
+        "ambience/amb_forest_bed.mp3"
+      ],
+      "mvp": true,
+      "note": "основной ровный слой; не менять громкость от позиции"
+    },
+    {
+      "id": "AMB_MEADOW_SPRING",
+      "category": "ambience",
+      "node": "AudioStreamPlayer3D",
+      "bus": "Ambience",
+      "loop": true,
+      "volume_db": -20,
+      "files": [
+        "ambience/amb_meadow_spring.ogg"
+      ],
+      "mvp": true,
+      "position_xy": [
+        -1500,
+        1300
+      ],
+      "max_distance": 90,
+      "unit_size": 12,
+      "note": "коньки и насекомые в траве — для MEADOW и опушки SPAWN"
+    },
+    {
+      "id": "AMB_WIND_CANOPY",
+      "category": "ambience",
+      "node": "AudioStreamPlayer",
+      "bus": "Ambience",
+      "loop": true,
+      "volume_db": -22,
+      "files": [
+        "ambience/amb_wind_canopy.wav"
+      ],
+      "mvp": true,
+      "note": "громкость модулируется высотой и открытостью места"
+    },
+    {
+      "id": "AMB_STREAM",
+      "category": "ambience",
+      "node": "AudioStreamPlayer3D",
+      "bus": "Ambience",
+      "loop": true,
+      "volume_db": -16,
+      "files": [
+        "ambience/amb_stream_loop.wav"
+      ],
+      "position_xy": [
+        795,
+        520
+      ],
+      "max_distance": 45,
+      "unit_size": 6,
+      "mvp": true
+    },
+    {
+      "id": "AMB_DRIP_BED",
+      "category": "ambience",
+      "node": "AudioStreamPlayer",
+      "bus": "Ambience",
+      "loop": true,
+      "volume_db": -24,
+      "files": [
+        "ambience/amb_drip_bed.wav"
+      ],
+      "mvp": true,
+      "only_in": "MineInterior",
+      "note": "капель; вместе с mine_roomtone_loop даёт объём"
+    },
+    {
+      "id": "AMB_RIVER",
+      "category": "ambience",
+      "node": "AudioStreamPlayer3D",
+      "bus": "Ambience",
+      "loop": true,
+      "volume_db": -14,
+      "files": [
+        "ambience/amb_water_lap.ogg"
+      ],
+      "mvp": true,
+      "emitters": [
+        {
+          "xy": [
+            925,
+            37
+          ],
+          "max_distance": 70,
+          "unit_size": 10
+        },
+        {
+          "xy": [
+            900,
+            0
+          ],
+          "max_distance": 70,
+          "unit_size": 10
+        },
+        {
+          "xy": [
+            100,
+            -1300
+          ],
+          "max_distance": 70,
+          "unit_size": 10
+        }
+      ],
+      "note": "петли реки нет; временно amb_water_lap (плеск у камней) с pitch 0.9",
+      "placeholder": true
+    },
+    {
+      "id": "AMB_MINE_OUTSIDE",
+      "category": "ambience",
+      "node": "AudioStreamPlayer3D",
+      "bus": "Ambience",
+      "loop": true,
+      "volume_db": -20,
+      "files": [],
+      "mvp": false,
+      "missing": "сборка: ветер + скрип дерева + дальняя капель (свести из имеющихся слоёв)",
+      "position_xy": [
+        1100,
+        1180
+      ],
+      "max_distance": 50,
+      "unit_size": 8
+    },
+    {
+      "id": "AMB_BIRDS_ONESHOT",
+      "category": "ambience",
+      "node": "AudioStreamPlayer3D",
+      "bus": "Ambience",
+      "loop": false,
+      "volume_db": -20,
+      "files": [],
+      "mvp": false,
+      "missing": "отдельные крики птиц (нарезка из amb_forest_bed либо Sonniss/Birds)",
+      "interval_s": [
+        6,
+        25
+      ],
+      "max_distance": 120
+    },
+    {
+      "id": "STEP_GRASS",
+      "category": "footstep",
+      "node": "AudioStreamPlayer",
+      "bus": "Player",
+      "surface": "grass",
+      "loop": false,
+      "volume_db": -14,
+      "pitch_range": [
+        0.94,
+        1.06
+      ],
+      "files": [
+        "footsteps/step_grass_01.wav",
+        "footsteps/step_grass_02.wav",
+        "footsteps/step_grass_03.wav",
+        "footsteps/step_grass_04.wav"
+      ],
+      "mvp": true
+    },
+    {
+      "id": "STEP_LITTER",
+      "category": "footstep",
+      "node": "AudioStreamPlayer",
+      "bus": "Player",
+      "surface": "litter",
+      "loop": false,
+      "volume_db": -15,
+      "pitch_range": [
+        0.94,
+        1.06
+      ],
+      "files": [
+        "footsteps/step_litter_01.wav",
+        "footsteps/step_litter_02.wav",
+        "footsteps/step_litter_03.wav",
+        "footsteps/step_litter_04.wav"
+      ],
+      "mvp": true
+    },
+    {
+      "id": "STEP_GRAVEL",
+      "category": "footstep",
+      "node": "AudioStreamPlayer",
+      "bus": "Player",
+      "surface": "gravel",
+      "loop": false,
+      "volume_db": -13,
+      "pitch_range": [
+        0.94,
+        1.06
+      ],
+      "files": [
+        "footsteps/step_gravel_01.wav",
+        "footsteps/step_gravel_02.wav",
+        "footsteps/step_gravel_03.wav",
+        "footsteps/step_gravel_04.wav"
+      ],
+      "mvp": true,
+      "note": "step_gravel_04.wav громче серии на ~10 дБ — задать ему volume_db -21"
+    },
+    {
+      "id": "STEP_DIRT",
+      "category": "footstep",
+      "node": "AudioStreamPlayer",
+      "bus": "Player",
+      "surface": "dirt",
+      "loop": false,
+      "volume_db": -15,
+      "pitch_range": [
+        0.88,
+        0.96
+      ],
+      "files": [
+        "footsteps/step_grass_01.wav",
+        "footsteps/step_grass_02.wav",
+        "footsteps/step_grass_03.wav",
+        "footsteps/step_grass_04.wav"
+      ],
+      "mvp": true,
+      "placeholder": true,
+      "note": "нет собственного набора — трава с пониженным питчем"
+    },
+    {
+      "id": "STEP_ROCK",
+      "category": "footstep",
+      "node": "AudioStreamPlayer",
+      "bus": "Player",
+      "surface": "rock",
+      "loop": false,
+      "volume_db": -13,
+      "pitch_range": [
+        0.94,
+        1.06
+      ],
+      "files": [
+        "footsteps/step_rock_01.wav",
+        "footsteps/step_rock_02.wav",
+        "footsteps/step_rock_03.wav",
+        "footsteps/step_rock_04.wav"
+      ],
+      "mvp": true,
+      "note": "step_rock_02.wav громче серии — задать ему volume_db -19"
+    },
+    {
+      "id": "STEP_WOOD",
+      "category": "footstep",
+      "node": "AudioStreamPlayer",
+      "bus": "Player",
+      "surface": "wood",
+      "loop": false,
+      "volume_db": -14,
+      "pitch_range": [
+        0.94,
+        1.06
+      ],
+      "files": [
+        "footsteps/step_wood_01.wav",
+        "footsteps/step_wood_02.wav",
+        "footsteps/step_wood_03.wav",
+        "footsteps/step_wood_04.wav"
+      ],
+      "mvp": true
+    },
+    {
+      "id": "STEP_MUD",
+      "category": "footstep",
+      "node": "AudioStreamPlayer",
+      "bus": "Player",
+      "surface": "mud",
+      "loop": false,
+      "volume_db": -15,
+      "pitch_range": [
+        0.94,
+        1.06
+      ],
+      "files": [
+        "footsteps/step_mud_01.wav",
+        "footsteps/step_mud_02.wav",
+        "footsteps/step_mud_03.wav",
+        "footsteps/step_mud_04.wav"
+      ],
+      "mvp": false,
+      "placeholder": true
+    },
+    {
+      "id": "STEP_WATER",
+      "category": "footstep",
+      "node": "AudioStreamPlayer",
+      "bus": "Player",
+      "surface": "water",
+      "loop": false,
+      "volume_db": -16,
+      "pitch_range": [
+        0.94,
+        1.06
+      ],
+      "files": [
+        "footsteps/step_water_splash.wav",
+        "footsteps/step_water_drop.wav"
+      ],
+      "mvp": true
+    },
+    {
+      "id": "STEP_MINE",
+      "category": "footstep",
+      "node": "AudioStreamPlayer",
+      "bus": "Player",
+      "surface": "mine",
+      "loop": false,
+      "volume_db": -15,
+      "pitch_range": [
+        0.8,
+        0.9
+      ],
+      "files": [
+        "footsteps/step_rock_01.wav",
+        "footsteps/step_rock_02.wav",
+        "footsteps/step_rock_03.wav",
+        "footsteps/step_rock_04.wav"
+      ],
+      "mvp": false,
+      "note": "камень с пониженным питчем + реверб шины World3D_Mine"
+    },
+    {
+      "id": "AXE_EQUIP",
+      "category": "axe",
+      "node": "AudioStreamPlayer",
+      "bus": "Player",
+      "loop": false,
+      "volume_db": -10,
+      "files": [
+        "axe/axe_equip.wav"
+      ],
+      "mvp": true
+    },
+    {
+      "id": "AXE_SWING",
+      "category": "axe",
+      "node": "AudioStreamPlayer",
+      "bus": "Player",
+      "loop": false,
+      "volume_db": -7,
+      "pitch_range": [
+        0.95,
+        1.05
+      ],
+      "files": [
+        "axe/axe_swing_real_01.wav",
+        "axe/axe_swing_real_02.wav",
+        "axe/axe_swing_real_03.wav",
+        "axe/axe_swing_real_04.wav",
+        "axe/axe_swing_real_05.wav",
+        "axe/axe_swing_real_06.wav",
+        "axe/axe_swing_real_07.wav",
+        "axe/axe_swing_real_08.wav"
+      ],
+      "mvp": true,
+      "note": "8 вариаций из Sonniss (loudnorm -18 LUFS); whoosh_1/2 из локального пака — резерв",
+      "placeholder": false,
+      "alt_files": [
+        "axe/axe_swing_01.wav",
+        "axe/axe_swing_02.wav"
+      ]
+    },
+    {
+      "id": "AXE_HIT_BIRCH",
+      "category": "axe",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D",
+      "loop": false,
+      "volume_db": -5,
+      "pitch_range": [
+        1.08,
+        1.12
+      ],
+      "files": [
+        "axe/axe_hit_wood_01.ogg"
+      ],
+      "mvp": true,
+      "note": "сухой, высокий, лёгкий"
+    },
+    {
+      "id": "AXE_HIT_SPRUCE",
+      "category": "axe",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D",
+      "loop": false,
+      "volume_db": -5,
+      "pitch_range": [
+        0.98,
+        1.02
+      ],
+      "files": [
+        "axe/axe_hit_wood_02.ogg"
+      ],
+      "mvp": true,
+      "note": "смолистый, средний"
+    },
+    {
+      "id": "AXE_HIT_BEECH",
+      "category": "axe",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D",
+      "loop": false,
+      "volume_db": -4,
+      "pitch_range": [
+        0.92,
+        0.96
+      ],
+      "files": [
+        "axe/axe_hit_wood_03.ogg"
+      ],
+      "mvp": true,
+      "note": "плотный, глухой"
+    },
+    {
+      "id": "AXE_HIT_OAK",
+      "category": "axe",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D",
+      "loop": false,
+      "volume_db": -3,
+      "pitch_range": [
+        0.84,
+        0.88
+      ],
+      "files": [
+        "axe/axe_hit_wood_03.ogg",
+        "axe/axe_hit_real_01.wav"
+      ],
+      "mvp": true,
+      "layered": true,
+      "note": "низкий питч + реальный деревянный удар из Sonniss"
+    },
+    {
+      "id": "AXE_CHIPS",
+      "category": "axe",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D",
+      "loop": false,
+      "volume_db": -12,
+      "pitch_range": [
+        0.95,
+        1.08
+      ],
+      "files": [
+        "axe/chips_drop.wav"
+      ],
+      "mvp": true
+    },
+    {
+      "id": "AXE_CRACK",
+      "category": "axe",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D",
+      "loop": false,
+      "volume_db": -8,
+      "pitch_range": [
+        0.95,
+        1.05
+      ],
+      "files": [
+        "axe/axe_crack_01.ogg",
+        "axe/axe_crack_02.ogg"
+      ],
+      "mvp": true,
+      "trigger": "stage_2_hp_le_35pct"
+    },
+    {
+      "id": "AXE_CREAK",
+      "category": "axe",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D",
+      "loop": false,
+      "volume_db": -7,
+      "pitch_range": [
+        0.88,
+        0.92
+      ],
+      "files": [
+        "axe/axe_crack_03.ogg",
+        "axe/axe_crack_04.ogg"
+      ],
+      "mvp": true,
+      "trigger": "stage_3_hp_le_10pct"
+    },
+    {
+      "id": "TREE_FALL",
+      "category": "axe",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D",
+      "loop": false,
+      "volume_db": -3,
+      "pitch_range": [
+        0.95,
+        1.05
+      ],
+      "files": [
+        "axe/tree_fall_combo.ogg"
+      ],
+      "mvp": true,
+      "duration_s": 2.67
+    },
+    {
+      "id": "TREE_BRANCH",
+      "category": "axe",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D",
+      "loop": false,
+      "volume_db": -10,
+      "pitch_range": [
+        0.9,
+        1.1
+      ],
+      "files": [
+        "axe/tree_fall_branch_01.ogg",
+        "axe/tree_fall_branch_02.ogg"
+      ],
+      "mvp": false
+    },
+    {
+      "id": "TREE_IMPACT",
+      "category": "axe",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D",
+      "loop": false,
+      "volume_db": -4,
+      "pitch_range": [
+        0.9,
+        1.0
+      ],
+      "files": [
+        "axe/ground_thud.wav"
+      ],
+      "mvp": true
+    },
+    {
+      "id": "STUMP_HIT",
+      "category": "axe",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D",
+      "loop": false,
+      "volume_db": -9,
+      "pitch_range": [
+        0.88,
+        0.94
+      ],
+      "files": [
+        "axe/wood_thunk.wav"
+      ],
+      "mvp": false
+    },
+    {
+      "id": "PLAYER_PANT",
+      "category": "player",
+      "node": "AudioStreamPlayer",
+      "bus": "Player",
+      "loop": true,
+      "volume_db": -24,
+      "files": [
+        "player/player_pant.wav"
+      ],
+      "mvp": true,
+      "note": "громкость привязать к выносливости; при перегрузе >25 кг — +6 дБ"
+    },
+    {
+      "id": "LOG_PICKUP",
+      "category": "axe",
+      "node": "AudioStreamPlayer",
+      "bus": "Player",
+      "loop": false,
+      "volume_db": -12,
+      "pitch_range": [
+        0.95,
+        1.05
+      ],
+      "files": [
+        "axe/log_pickup.wav"
+      ],
+      "mvp": true
+    },
+    {
+      "id": "LOG_TO_BACKPACK",
+      "category": "axe",
+      "node": "AudioStreamPlayer",
+      "bus": "Player",
+      "loop": false,
+      "volume_db": -13,
+      "pitch_range": [
+        0.95,
+        1.05
+      ],
+      "files": [
+        "axe/log_gather.wav"
+      ],
+      "mvp": true
+    },
+    {
+      "id": "BRIDGE_CREAK",
+      "category": "world",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D",
+      "loop": false,
+      "volume_db": -16,
+      "chance": 0.2,
+      "files": [
+        "props/bridge_creak.wav"
+      ],
+      "mvp": false
+    },
+    {
+      "id": "PORTAL_CREAK",
+      "category": "world",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D",
+      "loop": false,
+      "volume_db": -14,
+      "files": [
+        "props/portal_creak.wav"
+      ],
+      "mvp": true
+    },
+    {
+      "id": "CLOTH_RUSTLE",
+      "category": "world",
+      "node": "AudioStreamPlayer",
+      "bus": "Player",
+      "loop": false,
+      "volume_db": -18,
+      "pitch_range": [
+        0.95,
+        1.05
+      ],
+      "files": [
+        "props/cloth_01.wav",
+        "props/cloth_02.wav"
+      ],
+      "mvp": false
+    },
+    {
+      "id": "ROCK_FALL",
+      "category": "world",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D",
+      "loop": false,
+      "volume_db": -14,
+      "pitch_range": [
+        0.92,
+        1.05
+      ],
+      "files": [
+        "props/rock_fall_01.ogg",
+        "props/rock_fall_02.ogg",
+        "props/rock_fall_03.ogg",
+        "props/rock_fall_04.ogg",
+        "props/rock_fall_05.ogg",
+        "props/rock_fall_06.ogg",
+        "props/rock_fall_07.ogg",
+        "props/rock_fall_08.ogg",
+        "props/rock_fall_09.ogg"
+      ],
+      "mvp": false
+    },
+    {
+      "id": "WIND_GUST",
+      "category": "world",
+      "node": "AudioStreamPlayer",
+      "bus": "Ambience",
+      "loop": false,
+      "volume_db": -12,
+      "files": [
+        "ambience/amb_wind_canopy.wav"
+      ],
+      "mvp": false,
+      "note": "порыв = огибающая громкости на петле ветра, отдельный файл не нужен",
+      "interval_s": [
+        40,
+        90
+      ]
+    },
+    {
+      "id": "BUSH_RUSTLE",
+      "category": "world",
+      "node": "AudioStreamPlayer",
+      "bus": "Player",
+      "loop": false,
+      "volume_db": -17,
+      "pitch_range": [
+        0.78,
+        0.84
+      ],
+      "files": [
+        "props/cloth_02.wav"
+      ],
+      "mvp": false,
+      "placeholder": true
+    },
+    {
+      "id": "MINE_PORTAL_ENTER",
+      "category": "mine",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D",
+      "loop": false,
+      "volume_db": -12,
+      "files": [
+        "props/portal_creak.wav"
+      ],
+      "mvp": true,
+      "trigger": "Area3D в портале, fade 0.5 с"
+    },
+    {
+      "id": "MINE_COLLAPSE",
+      "category": "mine",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D_Mine",
+      "loop": false,
+      "volume_db": -16,
+      "files": [
+        "props/rock_fall_04.ogg"
+      ],
+      "mvp": false,
+      "once_per_session": true
+    },
+    {
+      "id": "AMB_MINE_INTERIOR",
+      "category": "ambience",
+      "node": "AudioStreamPlayer",
+      "bus": "Ambience",
+      "loop": true,
+      "volume_db": -26,
+      "files": [
+        "mine/mine_roomtone_loop.ogg"
+      ],
+      "mvp": true,
+      "only_in": "MineInterior"
+    },
+    {
+      "id": "MINE_RAIL_CLANK",
+      "category": "mine",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D_Mine",
+      "loop": false,
+      "volume_db": -15,
+      "chance": 0.3,
+      "files": [
+        "mine/rail_clank.wav",
+        "mine/metal_tap.wav"
+      ],
+      "mvp": true
+    },
+    {
+      "id": "MINE_METAL_HIT",
+      "category": "mine",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D_Mine",
+      "loop": false,
+      "volume_db": -12,
+      "pitch_range": [
+        0.95,
+        1.05
+      ],
+      "files": [
+        "mine/metal_hit_01.ogg",
+        "mine/metal_hit_02.ogg",
+        "mine/metal_hit_03.ogg",
+        "mine/metal_hit_04.ogg",
+        "mine/metal_hit_05.ogg",
+        "mine/metal_hit_06.ogg",
+        "mine/metal_thud.wav",
+        "mine/metal_scrape.wav"
+      ],
+      "mvp": false
+    },
+    {
+      "id": "MINE_METAL_FALL",
+      "category": "mine",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D_Mine",
+      "loop": false,
+      "volume_db": -10,
+      "pitch_range": [
+        0.92,
+        1.02
+      ],
+      "files": [
+        "mine/metal_fall_01.ogg",
+        "mine/metal_fall_02.ogg",
+        "mine/metal_fall_03.ogg",
+        "mine/metal_fall_04.ogg",
+        "mine/metal_fall_05.ogg"
+      ],
+      "mvp": false
+    },
+    {
+      "id": "MINE_TIMBER_CREAK",
+      "category": "mine",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D_Mine",
+      "loop": false,
+      "volume_db": -18,
+      "interval_s": [
+        20,
+        60
+      ],
+      "files": [
+        "mine/timber_creak.wav",
+        "mine/timber_screech.wav"
+      ],
+      "mvp": true
+    },
+    {
+      "id": "MINE_DRIP",
+      "category": "mine",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D_Mine",
+      "loop": false,
+      "volume_db": -20,
+      "interval_s": [
+        3,
+        9
+      ],
+      "pitch_range": [
+        0.9,
+        1.15
+      ],
+      "files": [
+        "footsteps/step_water_drop.wav"
+      ],
+      "mvp": true
+    },
+    {
+      "id": "MINE_FLOODED",
+      "category": "mine",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D_Mine",
+      "loop": true,
+      "volume_db": -18,
+      "files": [
+        "mine/flooded_water.wav"
+      ],
+      "mvp": false,
+      "position_along_adit_m": 60
+    },
+    {
+      "id": "MINE_LAMP",
+      "category": "mine",
+      "node": "AudioStreamPlayer3D",
+      "bus": "World3D_Mine",
+      "loop": false,
+      "volume_db": -12,
+      "files": [
+        "mine/lamp_light.wav"
+      ],
+      "mvp": false
+    },
+    {
+      "id": "UI_HOVER",
+      "category": "ui",
+      "node": "AudioStreamPlayer",
+      "bus": "UI",
+      "loop": false,
+      "volume_db": -12,
+      "files": [
+        "ui/ui_hover.wav"
+      ],
+      "mvp": false,
+      "note": "файл тише остальных на ~20 дБ — выровнять"
+    },
+    {
+      "id": "UI_CLICK",
+      "category": "ui",
+      "node": "AudioStreamPlayer",
+      "bus": "UI",
+      "loop": false,
+      "volume_db": -10,
+      "files": [
+        "ui/ui_click.wav"
+      ],
+      "mvp": true
+    },
+    {
+      "id": "UI_INVENTORY_OPEN",
+      "category": "ui",
+      "node": "AudioStreamPlayer",
+      "bus": "UI",
+      "loop": false,
+      "volume_db": -10,
+      "files": [
+        "ui/ui_inventory_open.wav"
+      ],
+      "mvp": true
+    },
+    {
+      "id": "UI_INVENTORY_CLOSE",
+      "category": "ui",
+      "node": "AudioStreamPlayer",
+      "bus": "UI",
+      "loop": false,
+      "volume_db": -10,
+      "files": [
+        "ui/ui_inventory_close.wav"
+      ],
+      "mvp": true
+    },
+    {
+      "id": "UI_PICKUP",
+      "category": "ui",
+      "node": "AudioStreamPlayer",
+      "bus": "UI",
+      "loop": false,
+      "volume_db": -10,
+      "pitch_range": [
+        0.97,
+        1.05
+      ],
+      "files": [
+        "ui/ui_pickup.wav"
+      ],
+      "mvp": true
+    },
+    {
+      "id": "UI_OVERWEIGHT",
+      "category": "ui",
+      "node": "AudioStreamPlayer",
+      "bus": "UI",
+      "loop": false,
+      "volume_db": -8,
+      "files": [
+        "ui/ui_overweight.wav"
+      ],
+      "mvp": true,
+      "note": "файл тише остальных на ~18 дБ — выровнять"
+    },
+    {
+      "id": "UI_OBJECTIVE",
+      "category": "ui",
+      "node": "AudioStreamPlayer",
+      "bus": "UI",
+      "loop": false,
+      "volume_db": -12,
+      "files": [
+        "ui/ui_objective.wav"
+      ],
+      "mvp": false
+    },
+    {
+      "id": "MUS_LEVEL_START",
+      "category": "music",
+      "node": "AudioStreamPlayer",
+      "bus": "Music",
+      "loop": false,
+      "volume_db": -16,
+      "files": [
+        "music/mus_level_start.wav"
+      ],
+      "mvp": false,
+      "placeholder": true
+    },
+    {
+      "id": "MUS_STING_MYSTERY",
+      "category": "music",
+      "node": "AudioStreamPlayer",
+      "bus": "Music",
+      "loop": false,
+      "volume_db": -14,
+      "files": [
+        "music/mus_sting_mystery.wav"
+      ],
+      "mvp": false,
+      "placeholder": true
+    },
+    {
+      "id": "MUS_MINE_INSIDE",
+      "category": "music",
+      "node": "AudioStreamPlayer",
+      "bus": "Music",
+      "loop": true,
+      "volume_db": -20,
+      "files": [
+        "music/mus_tension_drone.ogg"
+      ],
+      "mvp": false,
+      "placeholder": true
+    }
+  ],
+  "surface_detection": {
+    "mode": "splatmap_weight",
+    "fallback": "raycast_down_1_2m_collision_layer",
+    "default_surface": "grass",
+    "step_distance_m": {
+      "walk": 0.75,
+      "run": 1.5,
+      "crouch": 0.6
+    }
+  },
+  "ambience_emitters": [
+    {
+      "id": "AMB_STREAM",
+      "xy": [
+        795,
+        520
+      ],
+      "max_distance": 45,
+      "unit_size": 6
+    },
+    {
+      "id": "AMB_RIVER",
+      "xy": [
+        925,
+        37
+      ],
+      "max_distance": 70,
+      "unit_size": 10
+    },
+    {
+      "id": "AMB_RIVER",
+      "xy": [
+        900,
+        0
+      ],
+      "max_distance": 70,
+      "unit_size": 10
+    },
+    {
+      "id": "AMB_RIVER",
+      "xy": [
+        100,
+        -1300
+      ],
+      "max_distance": 70,
+      "unit_size": 10
+    },
+    {
+      "id": "AMB_MINE_OUTSIDE",
+      "xy": [
+        1100,
+        1180
+      ],
+      "max_distance": 50,
+      "unit_size": 8
+    }
+  ]
+}

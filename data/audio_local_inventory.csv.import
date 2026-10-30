@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://nvpfcyfokfsl"
+
+[deps]
+
+files=["res://data/audio_local_inventory.name.translation", "res://data/audio_local_inventory.ext.translation", "res://data/audio_local_inventory.size.translation", "res://data/audio_local_inventory.duration.translation", "res://data/audio_local_inventory.channels.translation", "res://data/audio_local_inventory.sample.translation", "res://data/audio_local_inventory.bit.translation"]
+
+source_file="res://data/audio_local_inventory.csv"
+dest_files=["res://data/audio_local_inventory.name.translation", "res://data/audio_local_inventory.ext.translation", "res://data/audio_local_inventory.size.translation", "res://data/audio_local_inventory.duration.translation", "res://data/audio_local_inventory.channels.translation", "res://data/audio_local_inventory.sample.translation", "res://data/audio_local_inventory.bit.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

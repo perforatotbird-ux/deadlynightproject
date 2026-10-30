@@ -1,0 +1,152 @@
+{
+  "timestamp": "2026-10-28T16:17:10Z",
+  "seed": 20261028,
+  "resolution": [
+    4096,
+    4096
+  ],
+  "world_size_m": [
+    4000.0,
+    4000.0
+  ],
+  "cell_size_m": 0.9766,
+  "elevation_min_m": 0.0,
+  "elevation_max_m": 400.0,
+  "elevation_mean_m": 64.29,
+  "elevation_std_m": 98.66,
+  "area_slope_gt_35_deg_pct": 8.55,
+  "poi_checks": {
+    "SPAWN": {
+      "name": "Поляна старта",
+      "target_z": 25.0,
+      "actual_z": 25.0,
+      "diff": 0.0,
+      "slope_deg": 0.0,
+      "grid_coord": [
+        3174,
+        1126
+      ]
+    },
+    "FORK": {
+      "name": "Развилка дороги",
+      "target_z": 60.0,
+      "actual_z": 93.5,
+      "diff": 33.5,
+      "slope_deg": 20.5,
+      "grid_coord": [
+        1843,
+        2662
+      ]
+    },
+    "BRIDGE": {
+      "name": "Мост через реку",
+      "target_z": 70.0,
+      "actual_z": 27.12,
+      "diff": -42.88,
+      "slope_deg": 4.2,
+      "grid_coord": [
+        2010,
+        2995
+      ]
+    },
+    "FORD": {
+      "name": "Брод через ручей",
+      "target_z": 85.0,
+      "actual_z": 55.76,
+      "diff": -29.24,
+      "slope_deg": 2.9,
+      "grid_coord": [
+        1515,
+        2862
+      ]
+    },
+    "WINDFALL": {
+      "name": "Бурелом",
+      "target_z": 45.0,
+      "actual_z": 22.08,
+      "diff": -22.92,
+      "slope_deg": 2.1,
+      "grid_coord": [
+        2355,
+        512
+      ]
+    },
+    "CLEARCUT": {
+      "name": "Старая вырубка",
+      "target_z": 70.0,
+      "actual_z": 62.72,
+      "diff": -7.28,
+      "slope_deg": 20.2,
+      "grid_coord": [
+        1126,
+        921
+      ]
+    },
+    "HUT": {
+      "name": "Лесная сторожка",
+      "target_z": 60.0,
+      "actual_z": 28.21,
+      "diff": -31.79,
+      "slope_deg": 10.0,
+      "grid_coord": [
+        1228,
+        1843
+      ]
+    },
+    "MEADOW": {
+      "name": "Горный луг",
+      "target_z": 120.0,
+      "actual_z": 12.75,
+      "diff": -107.25,
+      "slope_deg": 18.8,
+      "grid_coord": [
+        716,
+        512
+      ]
+    },
+    "MINE_YARD": {
+      "name": "Площадка шахты",
+      "target_z": 140.0,
+      "actual_z": 140.0,
+      "diff": 0.0,
+      "slope_deg": 0.0,
+      "grid_coord": [
+        839,
+        3174
+      ]
+    },
+    "MINE_ADIT": {
+      "name": "Вход в штольню",
+      "target_z": 143.0,
+      "actual_z": 215.63,
+      "diff": 72.63,
+      "slope_deg": 81.6,
+      "grid_coord": [
+        808,
+        3205
+      ]
+    },
+    "LOOKOUT": {
+      "name": "Скальный выступ",
+      "target_z": 230.0,
+      "actual_z": 367.85,
+      "diff": 137.85,
+      "slope_deg": 48.1,
+      "grid_coord": [
+        460,
+        2764
+      ]
+    },
+    "PEAK": {
+      "name": "Вершина Каменная голова",
+      "target_z": 380.0,
+      "actual_z": 380.0,
+      "diff": 0.0,
+      "slope_deg": 0.0,
+      "grid_coord": [
+        512,
+        3584
+      ]
+    }
+  }
+}

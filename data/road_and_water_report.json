@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-10-28T16:24:26Z",
+  "road_branches": {
+    "main": {
+      "length_m": 3029.1,
+      "max_slope_pct": 7.5
+    },
+    "east": {
+      "length_m": 1565.2,
+      "max_slope_pct": 7.5
+    },
+    "mine": {
+      "length_m": 1105.8,
+      "max_slope_pct": 7.5
+    }
+  },
+  "max_road_slope_overall_pct": 7.5,
+  "route_spawn_to_mine_length_m": 3187.5,
+  "masks": [
+    "data/masks/road_mask.png",
+    "data/masks/path_mask.png",
+    "data/masks/river_mask.png",
+    "data/masks/creek_mask.png",
+    "data/masks/bank_mask.png",
+    "data/masks/platform_mask.png"
+  ],
+  "heightmap_v2": {
+    "png": "data/heightmap_4096_v2.png",
+    "r16": "data/heightmap_4096_v2.r16",
+    "min_elevation_m": 0.0,
+    "max_elevation_m": 400.0,
+    "mean_elevation_m": 64.07
+  }
+}

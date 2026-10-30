@@ -1,0 +1,79 @@
+[
+  {
+    "file": "ambience/amb_meadow_spring.ogg",
+    "src": "AMBSwmp_Meadow Pipits calling many Insects humming Wind blowing through Grass_JSE_HoN_Stereo.wav"
+  },
+  {
+    "file": "mine/mine_roomtone_loop.ogg",
+    "src": "AMBRoom_Factory Loop Heavy Machinery Tonal Roomtone Dark Wind Vent_ESM_SGA3.wav"
+  },
+  {
+    "file": "music/mus_tension_drone.ogg",
+    "src": "DSGNSynth_Dark Loop Mystic Forest Tonal Steady Synth_ESM_SGA3.wav"
+  },
+  {
+    "file": "ambience/amb_water_lap.ogg",
+    "src": "WATRLap_Small Waves sloshing onto Rock Slabs at huge Glacial Lake _JSE_HoN_Quad.wav"
+  },
+  {
+    "file": "player/player_pant.wav",
+    "src": "HMNBrth_Panting Male 02 04_SNDBTS_VH.wav"
+  },
+  {
+    "file": "mine/metal_thud.wav",
+    "src": "DSGNImpt_Metal Hit Thud Thump Low Ring Geofon 1_The Noisery_Moaning Metal.wav"
+  },
+  {
+    "file": "mine/metal_scrape.wav",
+    "src": "DSGNTonl_Metal Scrape Low Tonal LFE 4_The Noisery_Moaning Metal.wav"
+  },
+  {
+    "file": "mine/timber_screech.wav",
+    "src": "DSGNTonl_Designed Metal Bowed Screech Tonal Reverb 7_The Noisery_Moaning Metal.wav"
+  },
+  {
+    "file": "axe/axe_hit_real_01.wav",
+    "src": "WEAPBlnt_Spear And Stick Impact, Wooden MKH 2_344 Audio_Medieval Weapons Vol 2.wav [9.34-9.73]",
+    "dur": 0.38
+  },
+  {
+    "file": "axe/axe_swing_real_01.wav",
+    "src": "SWSH_SWING IMPACTS Quick Heavy Weapon Swing To Thud Impact Var 01_DDUMAIS_MWP2.wav [0.00-0.93]",
+    "dur": 0.93
+  },
+  {
+    "file": "axe/axe_swing_real_02.wav",
+    "src": "SWSH_SWING IMPACTS Quick Heavy Weapon Swing To Thud Impact Var 01_DDUMAIS_MWP2.wav [3.02-3.96]",
+    "dur": 0.94
+  },
+  {
+    "file": "axe/axe_swing_real_03.wav",
+    "src": "SWSH_SWING IMPACTS Quick Heavy Weapon Swing To Thud Impact Var 01_DDUMAIS_MWP2.wav [6.07-6.79]",
+    "dur": 0.72
+  },
+  {
+    "file": "axe/axe_swing_real_04.wav",
+    "src": "SWSH_SWING IMPACTS Quick Heavy Weapon Swing To Thud Impact Var 01_DDUMAIS_MWP2.wav [9.06-9.67]",
+    "dur": 0.61
+  },
+  {
+    "file": "axe/axe_swing_real_05.wav",
+    "src": "SWSH_SWING IMPACTS Quick Heavy Weapon Swing To Thud Impact Var 01_DDUMAIS_MWP2.wav [12.07-12.65]",
+    "dur": 0.57
+  },
+  {
+    "file": "axe/axe_swing_real_06.wav",
+    "src": "SWSH_SWING IMPACTS Quick Heavy Weapon Swing To Thud Impact Var 01_DDUMAIS_MWP2.wav [15.05-15.65]",
+    "dur": 0.6
+  },
+  {
+    "file": "axe/axe_swing_real_07.wav",
+    "src": "SWSH_SWING IMPACTS Quick Heavy Weapon Swing To Thud Impact Var 01_DDUMAIS_MWP2.wav [18.05-18.59]",
+    "dur": 0.54
+  },
+  {
+    "file": "axe/axe_swing_real_08.wav",
+    "src": "SWSH_SWING IMPACTS Quick Heavy Weapon Swing To Thud Impact Var 01_DDUMAIS_MWP2.wav [21.01-21.91]",
+    "dur": 0.9
+  }
+]
