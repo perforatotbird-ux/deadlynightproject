@@ -1366,7 +1366,10 @@ func _try_chop() -> void:
 		var near_tree = _find_nearest_choppable_in_front(3.2)
 		if near_tree != null and near_tree.has_method("hit"):
 			target_tree = near_tree
-			hit_point = target_tree.global_position + Vector3(0.0, 1.3, 0.0)
+			# Preserve the player-facing side even when the center ray misses.
+			var toward_player: Vector3 = global_position - target_tree.global_position
+			toward_player.y = 0.0
+			hit_point = target_tree.global_position + toward_player.normalized() * 0.25 + Vector3(0.0, 1.3, 0.0)
 			
 	# Execute hit
 	if target_tree != null:

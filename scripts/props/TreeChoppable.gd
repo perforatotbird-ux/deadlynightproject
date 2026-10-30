@@ -104,14 +104,15 @@ func init_tree(p_species: String, p_id: String = "") -> void:
 
 func _setup_voxel_trunk() -> void:
 	if _voxel_trunk != null and is_instance_valid(_voxel_trunk):
+		_voxel_trunk.hide()
 		_voxel_trunk.queue_free()
 		
 	var cfg = SPECIES_CONFIG.get(species, SPECIES_CONFIG["birch"])
 	_voxel_trunk = VoxelTreeTrunkScript.new()
 	_voxel_trunk.name = "VoxelTrunk"
 	add_child(_voxel_trunk)
-	# Voxel radius slightly encases low-poly cylinder (+0.015m) so cuts are crisp and clean
-	_voxel_trunk.init_trunk(species, cfg["radius"] + 0.015, 3.2, 0.08)
+	# Bind damage to the authored bark instead of rendering an oversized shell.
+	_voxel_trunk.init_trunk(species, cfg["radius"], 3.2, 0.04)
 
 func _apply_species_config() -> void:
 	var cfg = SPECIES_CONFIG.get(species, SPECIES_CONFIG["birch"])
@@ -185,6 +186,7 @@ func _setup_particles() -> void:
 func _update_mesh_stage(stage: int) -> void:
 	_current_stage = stage
 	if _visual_node != null:
+		_visual_node.hide()
 		_visual_node.queue_free()
 		
 	var path = "res://assets/models/trees/tree_%s_stage_%d.glb" % [species, stage]
@@ -196,6 +198,39 @@ func _update_mesh_stage(stage: int) -> void:
 		if scene:
 			_visual_node = scene.instantiate()
 			add_child(_visual_node)
+			if _voxel_trunk:
+				_voxel_trunk.bind_visual(_visual_node)
+			_update_cut_collision()
+
+func _update_cut_collision() -> void:
+	if _visual_node == null:
+		return
+	var faces := PackedVector3Array()
+	# Only trunk/branch bark, never canopy: leaves must not block axe impacts.
+	for node in _visual_node.find_children("*", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		var xform := global_transform.affine_inverse() * mi.global_transform
+		for surface in mi.mesh.get_surface_count():
+			var mat := mi.get_active_material(surface)
+			if mat == null or not ("bark" in mat.resource_name.to_lower() or "wood_cut" in mat.resource_name.to_lower()):
+				continue
+			var arrays := mi.mesh.surface_get_arrays(surface)
+			var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
+			if indices.is_empty():
+				for v in verts: faces.append(xform * v)
+			else:
+				for i in indices: faces.append(xform * verts[i])
+	if faces.is_empty():
+		return
+	var shape := ConcavePolygonShape3D.new()
+	shape.set_faces(faces)
+	var col := get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if col:
+		col.position = Vector3.ZERO
+		col.set_deferred("shape", shape)
 
 func hit(damage: int, hit_point: Vector3, player_pos: Vector3) -> bool:
 	if _is_falling or current_hp <= 0:
@@ -210,6 +245,7 @@ func hit(damage: int, hit_point: Vector3, player_pos: Vector3) -> bool:
 	if _voxel_trunk:
 		var strike_dir = (hit_point - player_pos).normalized()
 		var carve_res = _voxel_trunk.carve(hit_point, strike_dir, damage)
+		_update_cut_collision()
 		if carve_res.get("severed", false):
 			is_severed = true
 	
