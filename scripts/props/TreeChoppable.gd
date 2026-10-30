@@ -30,6 +30,7 @@ var _audio_fall: AudioStreamPlayer3D = null
 
 # Particles
 var _particles: GPUParticles3D = null
+var _dust_particles: GPUParticles3D = null
 
 const SPECIES_CONFIG = {
 	"birch": {
@@ -154,34 +155,44 @@ func _setup_audio() -> void:
 		_audio_fall.stream = fall_stream
 
 func _setup_particles() -> void:
-	_particles = GPUParticles3D.new()
-	_particles.name = "WoodChips"
-	_particles.emitting = false
-	_particles.one_shot = true
-	_particles.explosiveness = 0.9
-	_particles.amount = 28
-	_particles.lifetime = 0.8
-	
-	var mat = ParticleProcessMaterial.new()
-	mat.direction = Vector3(0, 1, 0)
-	mat.spread = 45.0
-	mat.initial_velocity_min = 3.0
-	mat.initial_velocity_max = 6.0
-	mat.gravity = Vector3(0, -9.8, 0)
-	mat.scale_min = 0.05
-	mat.scale_max = 0.12
-	mat.color = chip_color
-	_particles.process_material = mat
-	
-	var box_mesh = BoxMesh.new()
-	box_mesh.size = Vector3(0.08, 0.04, 0.08)
-	var chip_mat = StandardMaterial3D.new()
-	chip_mat.albedo_color = chip_color
-	chip_mat.roughness = 0.8
-	box_mesh.material = chip_mat
-	_particles.draw_pass_1 = box_mesh
-	
-	add_child(_particles)
+	# Large splinters plus a denser spray of fine sawdust, no opaque smoke cloud.
+	_particles = _make_wood_burst("WoodChips", 96, 0.70, Vector3(0.025, 0.006, 0.013), 2.0, 4.8)
+	_dust_particles = _make_wood_burst("WoodSawdust", 160, 0.48, Vector3(0.004, 0.003, 0.004), 0.7, 2.4)
+
+func _make_wood_burst(node_name: String, count: int, life: float, size: Vector3, min_speed: float, max_speed: float) -> GPUParticles3D:
+	var emitter := GPUParticles3D.new()
+	emitter.name = node_name
+	emitter.emitting = false
+	emitter.one_shot = true
+	emitter.explosiveness = 1.0
+	emitter.amount = count
+	emitter.lifetime = life
+	emitter.randomness = 0.25
+	emitter.local_coords = false
+	emitter.visibility_aabb = AABB(Vector3(-5, -5, -5), Vector3(10, 10, 10))
+	var process := ParticleProcessMaterial.new()
+	process.direction = Vector3(0, 0.6, 1)
+	process.spread = 52.0
+	process.initial_velocity_min = min_speed
+	process.initial_velocity_max = max_speed
+	process.gravity = Vector3(0, -8.5, 0)
+	process.scale_min = 0.55
+	process.scale_max = 1.5
+	process.angular_velocity_min = -420.0
+	process.angular_velocity_max = 420.0
+	process.color = chip_color
+	emitter.process_material = process
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color.WHITE
+	material.roughness = 0.95
+	material.vertex_color_use_as_albedo = true
+	mesh.material = material
+	emitter.draw_pass_1 = mesh
+	emitter.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(emitter)
+	return emitter
 
 func _update_mesh_stage(stage: int) -> void:
 	_current_stage = stage
@@ -238,7 +249,7 @@ func hit(damage: int, hit_point: Vector3, player_pos: Vector3) -> bool:
 		
 	current_hp -= damage
 	_play_hit_sound()
-	_emit_chips(hit_point)
+	_emit_chips(hit_point, player_pos)
 	
 	# Carve voxel trunk strictly where the axe hits
 	var is_severed = false
@@ -276,22 +287,30 @@ func hit(damage: int, hit_point: Vector3, player_pos: Vector3) -> bool:
 	return false
 
 func _play_hit_sound() -> void:
-	var hits = [
-		"res://assets/sounds/level_01/axe/axe_hit_wood_01.ogg",
-		"res://assets/sounds/level_01/axe/axe_hit_wood_02.ogg",
-		"res://assets/sounds/level_01/axe/axe_hit_wood_03.ogg"
-	]
-	var pick = hits[randi() % hits.size()]
-	if ResourceLoader.exists(pick):
-		_audio_hit.stream = load(pick)
-		_audio_hit.pitch_scale = randf_range(0.92, 1.08)
+	# Exactly one fixed impact sample, emitted only here (not again on player).
+	var sound := "res://assets/sounds/level_01/axe/axe_hit_wood_01.ogg"
+	if ResourceLoader.exists(sound) and _audio_hit:
+		_audio_hit.stream = load(sound)
+		_audio_hit.pitch_scale = 1.0
 		_audio_hit.play()
 
-func _emit_chips(point: Vector3) -> void:
-	if _particles:
-		_particles.global_position = point
-		_particles.restart()
-		_particles.emitting = true
+func _emit_chips(point: Vector3, player_pos: Vector3) -> void:
+	var outward := point - global_position
+	outward.y = 0.0
+	if outward.length_squared() < 0.001:
+		outward = player_pos - global_position
+		outward.y = 0.0
+	outward = outward.normalized()
+	for emitter in [_particles, _dust_particles]:
+		if emitter == null:
+			continue
+		# Identity world basis prevents tree yaw/scale from turning spray inward.
+		emitter.global_transform = Transform3D(Basis.IDENTITY, point + outward * 0.025)
+		var process := emitter.process_material as ParticleProcessMaterial
+		process.direction = (outward + Vector3.UP * 0.45).normalized()
+		process.color = chip_color
+		emitter.restart()
+		emitter.emitting = true
 
 func _start_falling() -> void:
 	_is_falling = true

@@ -1,6 +1,12 @@
 extends CharacterBody3D
 class_name PlayerController
 
+const AxeArmRigScript = preload("res://scripts/player/AxeArmRig.gd")
+const AXE_REST_POS := Vector3(0.29, -0.29, -0.48)
+const AXE_REST_ROT := Vector3(-12.0, -18.0, -12.0)
+const AXE_WINDUP_TIME: float = 0.12
+const AXE_STROKE_TIME: float = 0.10
+
 const TreeChoppableScript = preload("res://scripts/props/TreeChoppable.gd")
 const LogPickupScript = preload("res://scripts/props/LogPickup.gd")
 const PauseMenuScript = preload("res://scripts/menu/PauseMenu.gd")
@@ -115,6 +121,8 @@ var _raycast: RayCast3D = null
 var _axe_sway_pivot: Node3D = null
 var _axe_anim_pivot: Node3D = null
 var _axe_model: Node3D = null
+var _axe_arm_rig: Node3D = null
+var _chop_tween: Tween = null
 
 # Audio Players
 var _audio_step: AudioStreamPlayer3D = null
@@ -133,7 +141,7 @@ var _target_camera_y: float = 1.6
 var _current_camera_y: float = 1.6
 var _step_timer: float = 0.0
 var _can_chop: bool = true
-var _chop_cooldown: float = 0.55
+var _chop_cooldown: float = 0.50
 var _is_active: bool = true
 var _is_mouse_captured: bool = true
 var _is_inventory_open: bool = false
@@ -217,6 +225,8 @@ func _init_inventory_data() -> void:
 
 func set_active(active: bool) -> void:
 	_is_active = active
+	if not active:
+		_cancel_chop()
 	if _camera:
 		_camera.current = active
 	if _hud_layer:
@@ -261,9 +271,9 @@ func _setup_camera_and_viewmodel() -> void:
 	
 	_axe_anim_pivot = Node3D.new()
 	_axe_anim_pivot.name = "AxeAnimPivot"
-	# Positioned in right hand, blade turned right 45° towards tree trunk
-	_axe_anim_pivot.position = Vector3(0.28, -0.24, -0.42)
-	_axe_anim_pivot.rotation_degrees = Vector3(-20.0, 45.0, 15.0)
+	# Grip is the animation origin: the head rotates around the hands.
+	_axe_anim_pivot.position = AXE_REST_POS
+	_axe_anim_pivot.rotation_degrees = AXE_REST_ROT
 	_axe_anim_pivot.scale = Vector3(0.75, 0.75, 0.75)
 	_axe_sway_pivot.add_child(_axe_anim_pivot)
 	
@@ -273,6 +283,12 @@ func _setup_camera_and_viewmodel() -> void:
 		if axe_scene:
 			_axe_model = axe_scene.instantiate()
 			_axe_anim_pivot.add_child(_axe_model)
+			_axe_model.position.y = -0.15
+
+	_axe_arm_rig = AxeArmRigScript.new()
+	_axe_arm_rig.name = "AxeArms"
+	_axe_sway_pivot.add_child(_axe_arm_rig)
+	_axe_arm_rig.setup(_axe_anim_pivot)
 
 	# Kerosene Storm Lantern SpotLight (Slot 2)
 	_lantern_light = SpotLight3D.new()
@@ -596,6 +612,9 @@ func _update_hotbar_ui() -> void:
 		_show_tool_banner("[%s] %s  ·  %s" % [cur.key, cur.name.to_upper(), cur.desc])
 
 func _update_equipped_tool() -> void:
+	_cancel_chop()
+	if _axe_arm_rig:
+		_axe_arm_rig.visible = active_hotbar_slot == 0
 	if _axe_anim_pivot == null:
 		return
 		
@@ -605,9 +624,8 @@ func _update_equipped_tool() -> void:
 			_lantern_light.visible = false
 		if _compass_label:
 			_compass_label.visible = false
-		var tw = create_tween()
-		_axe_anim_pivot.position.y = -0.42
-		tw.tween_property(_axe_anim_pivot, "position:y", -0.25, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		_axe_anim_pivot.position = AXE_REST_POS
+		_axe_anim_pivot.rotation_degrees = AXE_REST_ROT
 	elif active_hotbar_slot == 1: # Lantern
 		_axe_anim_pivot.visible = false
 		if _lantern_light:
@@ -992,6 +1010,7 @@ func _input(event: InputEvent) -> void:
 				_toggle_inventory()
 			elif _pause_menu != null:
 				_is_lmb_held = false
+				_cancel_chop()
 				_pause_menu.open_pause()
 			else:
 				_toggle_mouse_capture()
@@ -1105,6 +1124,7 @@ func _toggle_mouse_capture() -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func _toggle_inventory() -> void:
+	_cancel_chop()
 	_is_lmb_held = false
 	_is_inventory_open = not _is_inventory_open
 	if _is_inventory_open:
@@ -1332,19 +1352,16 @@ func _update_crosshair(highlighted: bool) -> void:
 		_crosshair_dot.color = Color(1.0, 0.88, 0.2, 1.0) if highlighted else Color(1.0, 1.0, 1.0, 0.7)
 
 func _try_chop() -> void:
-	if not _can_chop or _is_inventory_open:
+	if not _can_chop or _is_inventory_open or not _is_active or active_hotbar_slot != 0 or get_tree().paused:
 		return
-		
 	_can_chop = false
 	_play_swing_animation_and_sound()
-	
-	# Moment of hit impact (0.08s after swing starts)
-	if get_tree() != null:
-		await get_tree().create_timer(0.08).timeout
-	if not is_inside_tree():
-		_can_chop = true
+
+func _apply_chop_impact() -> void:
+	# Damage, particles and the ONE impact sound happen at blade contact, not
+	# on a separate timer that can outlive tool switches or cancelled swings.
+	if not is_inside_tree() or not _is_active or _is_inventory_open or active_hotbar_slot != 0 or get_tree().paused:
 		return
-	
 	var target_tree = null
 	var hit_point = Vector3.ZERO
 	
@@ -1376,11 +1393,6 @@ func _try_chop() -> void:
 		target_tree.hit(1, hit_point, global_position)
 		_trigger_hit_feedback()
 		
-	# Finish swing cooldown
-	if get_tree() != null:
-		await get_tree().create_timer(maxf(0.05, _chop_cooldown - 0.08)).timeout
-	_can_chop = true
-
 func _find_nearest_choppable_in_front(max_dist: float) -> Node:
 	var choppables = get_tree().get_nodes_in_group("choppable_trees")
 	if choppables.is_empty():
@@ -1406,47 +1418,60 @@ func _find_nearest_choppable_in_front(max_dist: float) -> Node:
 	return best_node
 
 func _play_swing_animation_and_sound() -> void:
-	# Audio: select real axe whoosh swing
-	var swings = [
-		"res://assets/sounds/level_01/axe/axe_swing_real_01.wav",
-		"res://assets/sounds/level_01/axe/axe_swing_real_02.wav",
-		"res://assets/sounds/level_01/axe/axe_swing_real_03.wav",
-		"res://assets/sounds/level_01/axe/axe_swing_01.wav"
-	]
-	var pick = swings[randi() % swings.size()]
-	if ResourceLoader.exists(pick):
-		_audio_swing.stream = load(pick)
-		_audio_swing.pitch_scale = randf_range(0.96, 1.04)
+	if _axe_anim_pivot == null:
+		_can_chop = true
+		return
+	if _chop_tween and _chop_tween.is_valid():
+		_chop_tween.kill()
+	var windup := Vector3(0.39, -0.06, -0.25)
+	var windup_rot := Vector3(42.0, -28.0, -34.0)
+	var contact := Vector3(0.035, -0.28, -0.67)
+	var contact_rot := Vector3(-66.0, 8.0, 16.0)
+	var follow := Vector3(-0.015, -0.41, -0.64)
+	var follow_rot := Vector3(-84.0, 6.0, 20.0)
+	_chop_tween = create_tween()
+	# Deliberate shoulder lift, then accelerated circular downstroke.
+	_chop_tween.tween_method(_sample_axe_arc.bind(AXE_REST_POS, Vector3(0.43, -0.16, -0.28), windup, AXE_REST_ROT, windup_rot), 0.0, 1.0, AXE_WINDUP_TIME).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_chop_tween.tween_callback(_play_axe_whoosh)
+	_chop_tween.tween_method(_sample_axe_arc.bind(windup, Vector3(0.33, 0.04, -0.78), contact, windup_rot, contact_rot), 0.0, 1.0, AXE_STROKE_TIME).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_chop_tween.tween_callback(_apply_chop_impact)
+	_chop_tween.tween_method(_sample_axe_arc.bind(contact, Vector3(-0.025, -0.34, -0.70), follow, contact_rot, follow_rot), 0.0, 1.0, 0.055).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_chop_tween.tween_interval(0.025)
+	_chop_tween.tween_method(_sample_axe_arc.bind(follow, Vector3(0.30, -0.46, -0.36), AXE_REST_POS, follow_rot, AXE_REST_ROT), 0.0, 1.0, 0.18).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_chop_tween.tween_interval(maxf(0.0, _chop_cooldown - 0.48))
+	_chop_tween.tween_callback(func(): _can_chop = true)
+
+func _sample_axe_arc(t: float, start: Vector3, control: Vector3, finish: Vector3, start_rot: Vector3, finish_rot: Vector3) -> void:
+	var u := 1.0 - t
+	_axe_anim_pivot.position = u * u * start + 2.0 * u * t * control + t * t * finish
+	_axe_anim_pivot.rotation_degrees = start_rot.lerp(finish_rot, t)
+	if _axe_arm_rig:
+		_axe_arm_rig.update_pose()
+
+func _play_axe_whoosh() -> void:
+	var sound := "res://assets/sounds/level_01/axe/axe_swing_real_01.wav"
+	if ResourceLoader.exists(sound) and _audio_swing:
+		_audio_swing.stream = load(sound)
+		_audio_swing.pitch_scale = 1.08
 		_audio_swing.play()
-		
-	# The Long Dark style physical axe chop swing
+
+func _cancel_chop() -> void:
+	if _chop_tween and _chop_tween.is_valid():
+		_chop_tween.kill()
+	_chop_tween = null
+	_can_chop = true
+	_is_lmb_held = false
+	if _audio_swing:
+		_audio_swing.stop()
 	if _axe_anim_pivot:
-		var tween = create_tween()
-		# 1. Fast wind-up (0.05s) - pull up and back
-		tween.tween_property(_axe_anim_pivot, "rotation_degrees", Vector3(-10.0, 60.0, 25.0), 0.05).set_trans(Tween.TRANS_QUAD)
-		tween.parallel().tween_property(_axe_anim_pivot, "position", Vector3(0.30, -0.18, -0.38), 0.05)
-		# 2. Powerful downward chop stroke (0.09s) - slash across screen towards reticle and trunk
-		tween.tween_property(_axe_anim_pivot, "rotation_degrees", Vector3(-55.0, 20.0, -25.0), 0.09).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-		tween.parallel().tween_property(_axe_anim_pivot, "position", Vector3(0.12, -0.32, -0.48), 0.09)
-		# 3. Smooth recovery back to ready stance (0.28s)
-		tween.tween_property(_axe_anim_pivot, "rotation_degrees", Vector3(-20.0, 45.0, 15.0), 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		tween.parallel().tween_property(_axe_anim_pivot, "position", Vector3(0.28, -0.24, -0.42), 0.28)
+		_axe_anim_pivot.position = AXE_REST_POS
+		_axe_anim_pivot.rotation_degrees = AXE_REST_ROT
+	if _axe_arm_rig:
+		_axe_arm_rig.update_pose()
 
 func _trigger_hit_feedback() -> void:
-	# Camera impact micro-dip
+	# The tree owns the impact sound. Do not layer a second player thud on it.
 	_camera_shake = 1.2
-	
-	# Impact thud audio
-	var hits = [
-		"res://assets/sounds/level_01/axe/axe_hit_real_01.wav",
-		"res://assets/sounds/level_01/axe/axe_hit_wood_01.ogg",
-		"res://assets/sounds/level_01/axe/wood_thunk.wav"
-	]
-	var pick = hits[randi() % hits.size()]
-	if ResourceLoader.exists(pick):
-		_audio_hit.stream = load(pick)
-		_audio_hit.pitch_scale = randf_range(0.94, 1.06)
-		_audio_hit.play()
 
 func _try_interact() -> void:
 	if _is_inventory_open:
@@ -1724,5 +1749,5 @@ func _is_action_down(action: String) -> bool:
 	return SettingsManagerScript.get_instance().is_binding_pressed(action)
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
-		_is_lmb_held = false
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_PAUSED:
+		_cancel_chop()
