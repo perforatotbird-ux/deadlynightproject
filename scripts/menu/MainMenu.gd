@@ -16,9 +16,11 @@ const SaveManager = preload("res://scripts/core/SaveManager.gd")
 @onready var _fade_rect: ColorRect = $CanvasLayer/FadeRect
 
 var _latest_slot_id: String = ""
+var _active_subscreen: Control = null
+var _transitioning: bool = false
 
 func _ready() -> void:
-	anchors_preset = Control.PRESET_FULL_RECT
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_style_menu_buttons()
 	_update_save_states()
 	
@@ -98,40 +100,59 @@ func _on_continue_pressed() -> void:
 	_fade_and_execute(func():
 		var sm = SaveManager.get_instance()
 		if sm:
-			sm.load_game(_latest_slot_id)
+			if not sm.load_game(_latest_slot_id):
+				_transitioning = false
+				_fade_rect.hide()
+				_fade_rect.modulate.a = 0.0
+				_on_subscreen_closed()
+				_status_label.text = "Не удалось загрузить последнее сохранение. Выберите другой слот в меню загрузки."
 		else:
 			get_tree().change_scene_to_file("res://scenes/viewer/MapViewer.tscn")
 	)
 
 func _on_new_game_pressed() -> void:
+	if is_instance_valid(_active_subscreen):
+		return
 	var new_game_scene = load("res://scenes/menu/NewGameScreen.tscn")
 	if new_game_scene:
 		var screen = new_game_scene.instantiate()
-		add_child(screen)
-		screen.closed.connect(_on_subscreen_closed)
+		_open_subscreen(screen)
 
 func _on_load_game_pressed() -> void:
+	if is_instance_valid(_active_subscreen):
+		return
 	var load_scene = load("res://scenes/menu/LoadGameScreen.tscn")
 	if load_scene:
 		var screen = load_scene.instantiate()
-		add_child(screen)
-		screen.closed.connect(_on_subscreen_closed)
+		_open_subscreen(screen)
 
 func _on_settings_pressed() -> void:
+	if is_instance_valid(_active_subscreen):
+		return
 	var settings_scene = load("res://scenes/menu/SettingsScreen.tscn")
 	if settings_scene:
 		var screen = settings_scene.instantiate()
-		add_child(screen)
-		screen.closed.connect(_on_subscreen_closed)
+		_open_subscreen(screen)
 
 func _on_credits_pressed() -> void:
+	if is_instance_valid(_active_subscreen):
+		return
 	var credits_scene = load("res://scenes/menu/CreditsScreen.tscn")
 	if credits_scene:
 		var screen = credits_scene.instantiate()
-		add_child(screen)
-		screen.closed.connect(_on_subscreen_closed)
+		_open_subscreen(screen)
+
+func _open_subscreen(screen: Control) -> void:
+	_active_subscreen = screen
+	for button in [_btn_continue, _btn_new_game, _btn_load_game, _btn_settings, _btn_credits, _btn_quit]:
+		button.disabled = true
+	$CanvasLayer.add_child(screen)
+	screen.closed.connect(_on_subscreen_closed)
 
 func _on_subscreen_closed() -> void:
+	_active_subscreen = null
+	for button in [_btn_new_game, _btn_settings, _btn_credits, _btn_quit]:
+		button.disabled = false
 	_update_save_states()
 	if not _btn_continue.disabled:
 		_btn_continue.grab_focus()
@@ -145,6 +166,10 @@ func _on_quit_pressed() -> void:
 	)
 
 func _fade_and_execute(callback: Callable) -> void:
+	if _transitioning:
+		return
+	_transitioning = true
+	_fade_rect.mouse_filter = Control.MOUSE_FILTER_STOP
 	_fade_rect.visible = true
 	var tw = create_tween()
 	tw.tween_property(_fade_rect, "modulate:a", 1.0, 0.45)

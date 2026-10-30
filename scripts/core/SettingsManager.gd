@@ -80,6 +80,7 @@ const DEFAULTS: Dictionary = {
 var _config_data: Dictionary = {}
 
 static var _instance: Node = null
+var _initialized: bool = false
 
 static func get_instance():
 	if _instance == null:
@@ -95,6 +96,9 @@ func _enter_tree() -> void:
 		_instance = self
 
 func _ready() -> void:
+	if _initialized:
+		return
+	_initialized = true
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_init_default_data()
 	load_from_disk()
@@ -159,10 +163,11 @@ func save_to_disk() -> bool:
 func save_settings() -> bool:
 	return save_to_disk()
 
-func reset_to_defaults() -> void:
+func reset_to_defaults(persist: bool = true) -> void:
 	_init_default_data()
 	apply_all_settings()
-	save_to_disk()
+	if persist:
+		save_to_disk()
 
 func apply_all_settings() -> void:
 	apply_graphics_settings()
@@ -198,7 +203,28 @@ func apply_graphics_settings() -> void:
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if vsync == 1 else DisplayServer.VSYNC_DISABLED)
 
 	Engine.max_fps = max_fps
+	if is_inside_tree() and get_tree().current_scene:
+		_apply_scene_graphics(get_tree().current_scene, g)
 	graphics_changed.emit()
+
+func _apply_scene_graphics(node: Node, graphics: Dictionary) -> void:
+	var quality: int = clampi(int(graphics.get("shadow_quality", 2)), 0, 2)
+	var distance_index: int = clampi(int(graphics.get("view_distance", 2)), 0, 2)
+	if node is Camera3D:
+		node.far = [1500.0, 2500.0, 4000.0][distance_index]
+	if node is Light3D:
+		if not node.has_meta("settings_original_shadow"):
+			node.set_meta("settings_original_shadow", node.shadow_enabled)
+		node.shadow_enabled = quality > 0 and node.get_meta("settings_original_shadow")
+		if node is DirectionalLight3D:
+			if not node.has_meta("settings_original_shadow_distance"):
+				node.set_meta("settings_original_shadow_distance", node.directional_shadow_max_distance)
+			var original: float = node.get_meta("settings_original_shadow_distance")
+			node.directional_shadow_max_distance = original * (0.5 if quality == 1 else 1.0)
+	if node is WorldEnvironment and node.environment:
+		node.environment.fog_enabled = graphics.get("fog_enabled", true)
+	for child in node.get_children():
+		_apply_scene_graphics(child, graphics)
 
 func apply_audio_settings() -> void:
 	var a = _config_data.get("audio", DEFAULTS["audio"])
@@ -225,12 +251,33 @@ func get_bus_volume_linear(bus_name: String) -> float:
 		return db_to_linear(db)
 	return get_setting("audio", bus_name.to_lower() + "_volume", 0.8)
 
+func preview_bus_volume_linear(bus_name: String, linear_vol: float) -> void:
+	_set_bus_vol(bus_name, linear_vol)
+
 func set_bus_volume_linear(bus_name: String, linear_vol: float) -> void:
 	var key = bus_name.to_lower() + "_volume"
 	set_setting("audio", key, clampf(linear_vol, 0.0, 1.0))
 	_set_bus_vol(bus_name, linear_vol)
 
+func event_matches_action(event: InputEventKey, action: String) -> bool:
+	var bindings: Dictionary = get_setting("controls", "keybindings", {})
+	var code: int = int(bindings.get(action, KEY_NONE))
+	return code != KEY_NONE and (event.physical_keycode == code or (event.physical_keycode == 0 and event.keycode == code))
+
+func is_binding_pressed(action: String) -> bool:
+	var bindings: Dictionary = get_setting("controls", "keybindings", {})
+	var code: int = int(bindings.get(action, KEY_NONE))
+	return code != KEY_NONE and (Input.is_action_pressed(action) or Input.is_physical_key_pressed(code) or Input.is_key_pressed(code))
+
 func apply_controls_settings() -> void:
+	var bindings: Dictionary = get_setting("controls", "keybindings", {})
+	for action in bindings:
+		if not InputMap.has_action(action):
+			InputMap.add_action(action)
+		InputMap.action_erase_events(action)
+		var event = InputEventKey.new()
+		event.physical_keycode = int(bindings[action])
+		InputMap.action_add_event(action, event)
 	controls_changed.emit()
 
 func apply_gameplay_settings() -> void:

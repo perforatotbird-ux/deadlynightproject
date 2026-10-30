@@ -44,6 +44,8 @@ func _load_tree_models() -> void:
 				var mesh_inst = _find_mesh_instance(inst)
 				if mesh_inst and mesh_inst.mesh:
 					_tree_meshes[sp] = mesh_inst.mesh
+				# Cache the resource, not an orphaned scene instance on every menu/game cycle.
+				inst.free()
 
 func _find_mesh_instance(node: Node) -> MeshInstance3D:
 	if node is MeshInstance3D:

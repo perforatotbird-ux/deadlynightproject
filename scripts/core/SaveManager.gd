@@ -30,6 +30,7 @@ var _is_saving_in_progress: bool = false
 var _rolling_autosave_idx: int = 1
 
 static var _instance: Node = null
+var _initialized: bool = false
 
 static func get_instance():
 	if _instance == null:
@@ -45,6 +46,9 @@ func _enter_tree() -> void:
 		_instance = self
 
 func _ready() -> void:
+	if _initialized:
+		return
+	_initialized = true
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_ensure_saves_dir()
 

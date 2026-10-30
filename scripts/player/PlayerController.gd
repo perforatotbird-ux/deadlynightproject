@@ -125,6 +125,9 @@ var _audio_ui: AudioStreamPlayer = null
 # Physics & State
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity", 9.8)
 var _camera_pitch: float = 0.0
+var _base_fov: float = 75.0
+var _camera_bobbing_enabled: bool = true
+var _hud_enabled: bool = true
 var _is_crouching: bool = false
 var _target_camera_y: float = 1.6
 var _current_camera_y: float = 1.6
@@ -200,6 +203,7 @@ func _ready() -> void:
 	_setup_inventory_ui()
 	_setup_pause_menu()
 	_connect_save_manager_signals()
+	_connect_settings_signals()
 	_is_mouse_captured = true
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -216,7 +220,7 @@ func set_active(active: bool) -> void:
 	if _camera:
 		_camera.current = active
 	if _hud_layer:
-		_hud_layer.visible = active
+		_hud_layer.visible = active and _hud_enabled
 	if _inv_layer and not active:
 		_inv_layer.visible = false
 		_is_inventory_open = false
@@ -971,12 +975,14 @@ func _setup_inventory_ui() -> void:
 	btn_box.add_child(_inv_btn_drop_all)
 
 func _input(event: InputEvent) -> void:
+	if get_tree().paused:
+		return
 	if not _is_active or not _camera.current:
 		return
 		
 	# Keyboard Events (TAB toggles inventory!)
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_TAB:
+		if _event_matches_action(event, "inventory"):
 			get_viewport().set_input_as_handled()
 			_toggle_inventory()
 			return
@@ -985,6 +991,7 @@ func _input(event: InputEvent) -> void:
 			if _is_inventory_open:
 				_toggle_inventory()
 			elif _pause_menu != null:
+				_is_lmb_held = false
 				_pause_menu.open_pause()
 			else:
 				_toggle_mouse_capture()
@@ -993,21 +1000,22 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			_trigger_quicksave()
 			return
-		elif event.keycode == KEY_F1:
+		elif _event_matches_action(event, "toggle_camera"):
 			if not _is_inventory_open:
 				request_toggle_controller.emit()
 			return
-		elif event.keycode == KEY_E:
+		elif _event_matches_action(event, "interact"):
 			if not _is_inventory_open:
 				_try_interact()
 			return
-		elif event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE:
+		elif _event_matches_action(event, "jump"):
 			if not _is_inventory_open:
 				_jump_buffer_timer = 0.20
-		elif event.keycode >= KEY_1 and event.keycode <= KEY_5:
-			if not _is_inventory_open:
-				select_hotbar_slot(event.keycode - KEY_1)
-				return
+		elif not _is_inventory_open:
+			for index in range(5):
+				if _event_matches_action(event, "hotbar_%d" % (index + 1)):
+					select_hotbar_slot(index)
+					return
 			
 	# If inventory is open, mouse is for UI clicking only (do not rotate camera!)
 	if _is_inventory_open:
@@ -1127,7 +1135,7 @@ func _physics_process(delta: float) -> void:
 		
 	# Jump buffer decay & input polling
 	_jump_buffer_timer = maxf(0.0, _jump_buffer_timer - delta)
-	if Input.is_key_pressed(KEY_SPACE) or Input.is_physical_key_pressed(KEY_SPACE):
+	if _is_action_down("jump"):
 		_jump_buffer_timer = 0.20
 		
 	# If inventory is open, player stands still
@@ -1139,29 +1147,33 @@ func _physics_process(delta: float) -> void:
 		return
 
 	# Continuous Auto-Chop with Axe when LMB is held down
-	if (_is_lmb_held or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)) and active_hotbar_slot == 0 and _can_chop and not _is_inventory_open:
+	if _is_lmb_held and active_hotbar_slot == 0 and _can_chop and not _is_inventory_open:
 		_try_chop()
 		
 	# Crouch logic (Ctrl or C)
-	_is_crouching = Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_C)
+	_is_crouching = _is_action_down("crouch")
+	# Keep the legacy C alias only while crouch uses its default key.
+	var binds: Dictionary = SettingsManagerScript.get_instance().get_setting("controls", "keybindings", {})
+	if binds.get("crouch", KEY_CTRL) == KEY_CTRL:
+		_is_crouching = _is_crouching or Input.is_physical_key_pressed(KEY_C)
 	_target_camera_y = 1.0 if _is_crouching else 1.6
 	_current_camera_y = lerpf(_current_camera_y, _target_camera_y, delta * 10.0)
 	_camera_pivot.position.y = _current_camera_y
 	
 	# Movement input (WASD - with physical scancode fallback for non-Latin layouts)
 	var input_dir = Vector2.ZERO
-	if Input.is_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_W):
+	if _is_action_down("move_forward"):
 		input_dir.y -= 1.0
-	if Input.is_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_S):
+	if _is_action_down("move_backward"):
 		input_dir.y += 1.0
-	if Input.is_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_A):
+	if _is_action_down("move_left"):
 		input_dir.x -= 1.0
-	if Input.is_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_D):
+	if _is_action_down("move_right"):
 		input_dir.x += 1.0
 	input_dir = input_dir.normalized()
 	
 	# Speed calculation
-	var is_sprint_key = Input.is_key_pressed(KEY_SHIFT) or Input.is_physical_key_pressed(KEY_SHIFT)
+	var is_sprint_key = _is_action_down("sprint")
 	var is_sprinting = (is_sprint_key or _is_sprint_jumping) and input_dir.length_squared() > 0.0 and not _is_crouching
 	var base_spd = walk_speed
 	if _is_crouching:
@@ -1201,7 +1213,7 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	
 	# The Long Dark Dynamic FOV kick on sprint
-	var target_fov = 82.0 if is_sprinting else 75.0
+	var target_fov = minf(_base_fov + 7.0, 110.0) if is_sprinting else _base_fov
 	_camera.fov = lerpf(_camera.fov, target_fov, delta * 6.0)
 	
 	# Update viewmodel sway, bobbing and camera shake
@@ -1220,6 +1232,14 @@ func _physics_process(delta: float) -> void:
 		_compass_label.visible = false
 
 func _update_viewmodel_sway(delta: float, h_speed: float) -> void:
+	if not _camera_bobbing_enabled:
+		if _axe_sway_pivot:
+			_axe_sway_pivot.position = Vector3.ZERO
+			_axe_sway_pivot.rotation = Vector3.ZERO
+		_mouse_delta = Vector2.ZERO
+		_camera_shake = 0.0
+		_camera_pivot.rotation.x = _camera_pitch
+		return
 	if _axe_sway_pivot == null:
 		return
 		
@@ -1671,3 +1691,35 @@ func _refresh_inventory_ui() -> void:
 	else:
 		_inv_empty_inspector_label.visible = true
 		_inv_inspector_box.visible = false
+
+
+func _connect_settings_signals() -> void:
+	var sm = SettingsManagerScript.get_instance()
+	if not sm.controls_changed.is_connected(_apply_player_settings):
+		sm.controls_changed.connect(_apply_player_settings)
+	if not sm.gameplay_changed.is_connected(_apply_player_settings):
+		sm.gameplay_changed.connect(_apply_player_settings)
+	_apply_player_settings()
+
+func _apply_player_settings() -> void:
+	var sm = SettingsManagerScript.get_instance()
+	_base_fov = float(sm.get_setting("controls", "fov", 75.0))
+	_camera_bobbing_enabled = bool(sm.get_setting("controls", "camera_bobbing", true))
+	_hud_enabled = bool(sm.get_setting("gameplay", "hud_visible", true))
+	var bindings: Dictionary = sm.get_setting("controls", "keybindings", {})
+	for index in range(_hotbar_hotkey_labels.size()):
+		_hotbar_hotkey_labels[index].text = OS.get_keycode_string(int(bindings.get("hotbar_%d" % (index + 1), KEY_1 + index)))
+	if _camera:
+		_camera.fov = _base_fov
+	if _hud_layer:
+		_hud_layer.visible = _is_active and _hud_enabled
+
+func _event_matches_action(event: InputEventKey, action: String) -> bool:
+	return SettingsManagerScript.get_instance().event_matches_action(event, action)
+
+func _is_action_down(action: String) -> bool:
+	return SettingsManagerScript.get_instance().is_binding_pressed(action)
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		_is_lmb_held = false

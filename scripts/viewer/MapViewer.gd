@@ -40,6 +40,7 @@ func _ready() -> void:
 	_set_fps_mode(true)
 	_setup_poi_teleport_ui()
 	_setup_fps_counter()
+	load("res://scripts/core/SettingsManager.gd").get_instance().call_deferred("apply_graphics_settings")
 
 func _setup_fps_counter() -> void:
 	var canvas = CanvasLayer.new()

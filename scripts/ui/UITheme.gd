@@ -124,8 +124,43 @@ static func play_ui_sound(path: String) -> void:
 	var tree = Engine.get_main_loop() as SceneTree
 	if tree and tree.root:
 		var p = AudioStreamPlayer.new()
+		p.process_mode = Node.PROCESS_MODE_ALWAYS
 		p.stream = stream
 		p.bus = "SFX" if AudioServer.get_bus_index("SFX") >= 0 else "Master"
 		tree.root.add_child(p)
 		p.play()
 		p.finished.connect(p.queue_free)
+
+
+static func has_modal_dialog(owner: Node) -> bool:
+	if not owner.is_inside_tree():
+		return false
+	for dialog in owner.get_tree().get_nodes_in_group("menu_confirmation"):
+		if is_instance_valid(dialog) and not dialog.is_queued_for_deletion() and owner.is_ancestor_of(dialog):
+			return true
+	return false
+
+
+static func trap_focus(owner: Control) -> void:
+	# Keep keyboard/gamepad focus in the visible overlay, not in the menu behind it.
+	var controls: Array[Control] = []
+	_collect_focusable(owner, controls)
+	for index in range(controls.size()):
+		var control = controls[index]
+		var previous = controls[(index - 1 + controls.size()) % controls.size()]
+		var following = controls[(index + 1) % controls.size()]
+		control.focus_previous = control.get_path_to(previous)
+		control.focus_next = control.get_path_to(following)
+		control.focus_neighbor_top = control.focus_previous
+		control.focus_neighbor_bottom = control.focus_next
+
+static func _collect_focusable(node: Node, result: Array[Control]) -> void:
+	if node is Window:
+		return # Popup windows manage their own focus.
+	if node is Control:
+		if not node.is_visible_in_tree():
+			return
+		if node.focus_mode != Control.FOCUS_NONE and not (node is BaseButton and node.disabled):
+			result.append(node)
+	for child in node.get_children(true):
+		_collect_focusable(child, result)

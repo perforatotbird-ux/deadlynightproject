@@ -32,20 +32,20 @@ func _ready() -> void:
 func _build_ui() -> void:
 	_root_control = Control.new()
 	_root_control.name = "RootPauseControl"
-	_root_control.anchors_preset = Control.PRESET_FULL_RECT
+	_root_control.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root_control.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root_control.visible = false
 	add_child(_root_control)
 
 	# Scrim overlay
 	var scrim = ColorRect.new()
-	scrim.anchors_preset = Control.PRESET_FULL_RECT
+	scrim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	scrim.color = Color(0.02, 0.03, 0.04, 0.78)
 	scrim.mouse_filter = Control.MOUSE_FILTER_STOP
 	_root_control.add_child(scrim)
 	
 	_root_center = CenterContainer.new()
-	_root_center.anchors_preset = Control.PRESET_FULL_RECT
+	_root_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root_control.add_child(_root_center)
 	
 	_main_panel = PanelContainer.new()
@@ -164,8 +164,8 @@ func resume_game() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	resumed.emit()
 
-func _input(event: InputEvent) -> void:
-	if not visible:
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not visible or UITheme.has_modal_dialog(self) or is_instance_valid(_active_subscreen):
 		return
 		
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -198,9 +198,16 @@ func _on_load_game_pressed() -> void:
 	if load_scene:
 		_active_subscreen = load_scene.instantiate()
 		_active_subscreen.process_mode = Node.PROCESS_MODE_ALWAYS
+		_main_panel.hide()
 		add_child(_active_subscreen)
+		_active_subscreen.loaded.connect(func():
+			_active_subscreen = null
+			_main_panel.show()
+			resume_game()
+		)
 		_active_subscreen.closed.connect(func():
 			_active_subscreen = null
+			_main_panel.show()
 			_btn_load_game.grab_focus()
 		)
 
@@ -211,9 +218,11 @@ func _on_settings_pressed() -> void:
 	if settings_scene:
 		_active_subscreen = settings_scene.instantiate()
 		_active_subscreen.process_mode = Node.PROCESS_MODE_ALWAYS
+		_main_panel.hide()
 		add_child(_active_subscreen)
 		_active_subscreen.closed.connect(func():
 			_active_subscreen = null
+			_main_panel.show()
 			_btn_settings.grab_focus()
 		)
 

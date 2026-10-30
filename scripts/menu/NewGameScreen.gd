@@ -42,22 +42,26 @@ var _diff_desc_label: Label = null
 var _btn_start: Button = null
 
 func _ready() -> void:
-	anchors_preset = Control.PRESET_FULL_RECT
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_build_ui()
+	_refresh_focus.call_deferred()
 	_update_slot_choices()
 	_select_difficulty(1)
+
+func _refresh_focus() -> void:
+	UITheme.trap_focus(self)
 
 func _build_ui() -> void:
 	# Dark Frosted Scrim
 	var scrim = ColorRect.new()
-	scrim.anchors_preset = Control.PRESET_FULL_RECT
+	scrim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	scrim.color = Color(0.02, 0.03, 0.03, 0.85)
 	scrim.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(scrim)
 	
 	var center = CenterContainer.new()
-	center.anchors_preset = Control.PRESET_FULL_RECT
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 	
 	var panel = PanelContainer.new()
@@ -240,6 +244,8 @@ func _on_cancel() -> void:
 	queue_free()
 
 func _input(event: InputEvent) -> void:
+	if UITheme.has_modal_dialog(self):
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ESCAPE:
 			get_viewport().set_input_as_handled()

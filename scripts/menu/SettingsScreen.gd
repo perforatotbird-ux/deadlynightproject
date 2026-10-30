@@ -8,6 +8,9 @@ const SettingsManager = preload("res://scripts/core/SettingsManager.gd")
 signal closed
 
 var _tab_container: TabContainer = null
+var _main_panel: PanelContainer = null
+var _draft_keybindings: Dictionary = {}
+var _rollback_active: bool = false
 var _btn_apply: Button = null
 var _btn_defaults: Button = null
 var _btn_back: Button = null
@@ -52,37 +55,44 @@ var _rollback_seconds_left: int = 10
 var _rollback_dialog: ConfirmDialog = null
 
 func _ready() -> void:
-	anchors_preset = Control.PRESET_FULL_RECT
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_build_ui()
+	_refresh_focus.call_deferred()
 	_load_current_values()
+	get_viewport().size_changed.connect(_resize_panel)
+	_resize_panel()
+	_btn_back.grab_focus()
+
+func _refresh_focus() -> void:
+	UITheme.trap_focus(self)
 
 func _build_ui() -> void:
 	var scrim = ColorRect.new()
-	scrim.anchors_preset = Control.PRESET_FULL_RECT
+	scrim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	scrim.color = Color(0.02, 0.03, 0.03, 0.88)
 	scrim.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(scrim)
 	
 	var center = CenterContainer.new()
-	center.anchors_preset = Control.PRESET_FULL_RECT
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 	
-	var main_panel = PanelContainer.new()
-	main_panel.custom_minimum_size = Vector2(860, 600)
-	main_panel.add_theme_stylebox_override("panel", UITheme.create_panel_stylebox(UITheme.COLOR_BG_DARK, UITheme.COLOR_BORDER_SUBTLE, 8))
-	center.add_child(main_panel)
+	_main_panel = PanelContainer.new()
+	_main_panel.name = "SettingsPanel"
+	_main_panel.add_theme_stylebox_override("panel", UITheme.create_panel_stylebox(UITheme.COLOR_BG_DARK, UITheme.COLOR_BORDER_SUBTLE, 8))
+	center.add_child(_main_panel)
 	
 	var root_vbox = VBoxContainer.new()
 	root_vbox.add_theme_constant_override("separation", 14)
-	main_panel.add_child(root_vbox)
+	_main_panel.add_child(root_vbox)
 	
 	# Header
 	var top_box = HBoxContainer.new()
 	root_vbox.add_child(top_box)
 	
 	var title = Label.new()
-	title.text = "ПАРАМЕТРЫ  ·  НАСТРОЙКИ СИСТЕМЫ"
+	title.text = "НАСТРОЙКИ"
 	title.add_theme_font_size_override("font_size", 20)
 	title.add_theme_color_override("font_color", UITheme.COLOR_ACCENT_GOLD)
 	top_box.add_child(title)
@@ -92,6 +102,9 @@ func _build_ui() -> void:
 	
 	# Tabs
 	_tab_container = TabContainer.new()
+	_tab_container.name = "SettingsTabs"
+	_tab_container.tab_changed.connect(func(_index): _refresh_focus.call_deferred())
+	_tab_container.clip_contents = true
 	_tab_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_tab_container.add_theme_font_size_override("font_size", 14)
 	root_vbox.add_child(_tab_container)
@@ -135,15 +148,30 @@ func _build_ui() -> void:
 	_btn_apply.pressed.connect(_on_apply_pressed)
 	action_box.add_child(_btn_apply)
 
-func _build_graphics_tab() -> void:
+func _resize_panel() -> void:
+	if _main_panel:
+		var available = get_viewport_rect().size - Vector2(48, 48)
+		_main_panel.custom_minimum_size = Vector2(minf(860, available.x), minf(600, available.y))
+
+func _create_tab(title: String) -> VBoxContainer:
 	var scroll = ScrollContainer.new()
-	scroll.name = "Графика"
+	scroll.name = title
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
 	_tab_container.add_child(scroll)
-	
-	var vbox = VBoxContainer.new()
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.add_theme_constant_override("separation", 14)
-	scroll.add_child(vbox)
+	var margin = MarginContainer.new()
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for side in ["left", "top", "right", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 16)
+	scroll.add_child(margin)
+	var content = VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation", 14)
+	margin.add_child(content)
+	return content
+
+func _build_graphics_tab() -> void:
+	var vbox = _create_tab("Графика")
 	
 	# Window Mode
 	_opt_window_mode = _create_option_row(vbox, "Режим экрана:", SettingsManager.WINDOW_MODES)
@@ -168,10 +196,7 @@ func _build_graphics_tab() -> void:
 	_opt_view_dist = _create_option_row(vbox, "Дальность прорисовки мира:", ["Близкая (1.5 км)", "Средняя (2.5 км)", "Дальняя (4.0 км)"])
 
 func _build_audio_tab() -> void:
-	var vbox = VBoxContainer.new()
-	vbox.name = "Звук"
-	vbox.add_theme_constant_override("separation", 16)
-	_tab_container.add_child(vbox)
+	var vbox = _create_tab("Звук")
 	
 	var r1 = _create_slider_row(vbox, "Общая громкость (Master):")
 	_slider_master = r1["slider"]
@@ -179,7 +204,7 @@ func _build_audio_tab() -> void:
 	_slider_master.value_changed.connect(func(v):
 		_lbl_master.text = "%d%%" % int(v * 100)
 		var sm = SettingsManager.get_instance()
-		if sm: sm.set_bus_volume_linear("Master", v)
+		if sm: sm.preview_bus_volume_linear("Master", v)
 	)
 	
 	var r2 = _create_slider_row(vbox, "Громкость музыки (Music):")
@@ -188,7 +213,7 @@ func _build_audio_tab() -> void:
 	_slider_music.value_changed.connect(func(v):
 		_lbl_music.text = "%d%%" % int(v * 100)
 		var sm = SettingsManager.get_instance()
-		if sm: sm.set_bus_volume_linear("Music", v)
+		if sm: sm.preview_bus_volume_linear("Music", v)
 	)
 	
 	var r3 = _create_slider_row(vbox, "Звуковые эффекты (SFX):")
@@ -197,7 +222,7 @@ func _build_audio_tab() -> void:
 	_slider_sfx.value_changed.connect(func(v):
 		_lbl_sfx.text = "%d%%" % int(v * 100)
 		var sm = SettingsManager.get_instance()
-		if sm: sm.set_bus_volume_linear("SFX", v)
+		if sm: sm.preview_bus_volume_linear("SFX", v)
 	)
 	
 	var r4 = _create_slider_row(vbox, "Окружение леса (Ambience):")
@@ -206,18 +231,11 @@ func _build_audio_tab() -> void:
 	_slider_amb.value_changed.connect(func(v):
 		_lbl_amb.text = "%d%%" % int(v * 100)
 		var sm = SettingsManager.get_instance()
-		if sm: sm.set_bus_volume_linear("Ambience", v)
+		if sm: sm.preview_bus_volume_linear("Ambience", v)
 	)
 
 func _build_controls_tab() -> void:
-	var scroll = ScrollContainer.new()
-	scroll.name = "Управление"
-	_tab_container.add_child(scroll)
-	
-	var vbox = VBoxContainer.new()
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.add_theme_constant_override("separation", 14)
-	scroll.add_child(vbox)
+	var vbox = _create_tab("Управление")
 	
 	# Mouse Sensitivity
 	var r_sens = _create_slider_row(vbox, "Чувствительность мыши:", 0.0005, 0.0060, 0.0001)
@@ -247,7 +265,8 @@ func _build_controls_tab() -> void:
 	vbox.add_child(kb_lbl)
 	
 	var kb_grid = GridContainer.new()
-	kb_grid.columns = 2
+	kb_grid.columns = 1
+	kb_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	kb_grid.add_theme_constant_override("h_separation", 16)
 	kb_grid.add_theme_constant_override("v_separation", 8)
 	vbox.add_child(kb_grid)
@@ -257,16 +276,24 @@ func _build_controls_tab() -> void:
 		{"action": "move_backward", "name": "Движение назад"},
 		{"action": "move_left", "name": "Шаг влево"},
 		{"action": "move_right", "name": "Шаг вправо"},
+		{"action": "jump", "name": "Прыжок"},
 		{"action": "sprint", "name": "Бег (Спринт)"},
 		{"action": "crouch", "name": "Присед"},
 		{"action": "interact", "name": "Действие / Подобрать"},
-		{"action": "inventory", "name": "Открыть рюкзак"}
+		{"action": "inventory", "name": "Открыть рюкзак"},
+		{"action": "hotbar_1", "name": "Топор"},
+		{"action": "hotbar_2", "name": "Фонарь"},
+		{"action": "hotbar_3", "name": "Компас"},
+		{"action": "hotbar_4", "name": "Спички"},
+		{"action": "hotbar_5", "name": "Нож"},
+		{"action": "toggle_camera", "name": "Камера отладки"}
 	]
 	
 	for bd in bind_defs:
 		var act = bd["action"]
 		var row = HBoxContainer.new()
-		row.custom_minimum_size = Vector2(380, 32)
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.custom_minimum_size = Vector2(0, 38)
 		kb_grid.add_child(row)
 		
 		var l = Label.new()
@@ -284,10 +311,7 @@ func _build_controls_tab() -> void:
 		_keybind_buttons[act] = btn
 
 func _build_gameplay_tab() -> void:
-	var vbox = VBoxContainer.new()
-	vbox.name = "Игра"
-	vbox.add_theme_constant_override("separation", 16)
-	_tab_container.add_child(vbox)
+	var vbox = _create_tab("Игра")
 	
 	_chk_hud = _create_checkbox_row(vbox, "Отображать элементы интерфейса выживания (HUD)")
 	
@@ -301,12 +325,15 @@ func _create_option_row(parent: Control, label_text: String, options: Array) -> 
 	
 	var lbl = Label.new()
 	lbl.text = label_text
-	lbl.custom_minimum_size = Vector2(280, 30)
+	lbl.custom_minimum_size = Vector2(220, 30)
+	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl.add_theme_color_override("font_color", UITheme.COLOR_TEXT_PRIMARY)
 	hbox.add_child(lbl)
 	
 	var opt = OptionButton.new()
-	opt.custom_minimum_size = Vector2(280, 32)
+	opt.custom_minimum_size = Vector2(240, 34)
+	opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for i in range(options.size()):
 		opt.add_item(options[i], i)
 	hbox.add_child(opt)
@@ -315,6 +342,8 @@ func _create_option_row(parent: Control, label_text: String, options: Array) -> 
 func _create_checkbox_row(parent: Control, label_text: String) -> CheckBox:
 	var cb = CheckBox.new()
 	cb.text = label_text
+	cb.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	cb.tooltip_text = label_text
 	cb.custom_minimum_size = Vector2(0, 34)
 	cb.add_theme_color_override("font_color", UITheme.COLOR_TEXT_PRIMARY)
 	parent.add_child(cb)
@@ -327,7 +356,9 @@ func _create_slider_row(parent: Control, label_text: String, min_v: float = 0.0,
 	
 	var lbl = Label.new()
 	lbl.text = label_text
-	lbl.custom_minimum_size = Vector2(280, 30)
+	lbl.custom_minimum_size = Vector2(220, 30)
+	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl.add_theme_color_override("font_color", UITheme.COLOR_TEXT_PRIMARY)
 	hbox.add_child(lbl)
 	
@@ -335,7 +366,7 @@ func _create_slider_row(parent: Control, label_text: String, min_v: float = 0.0,
 	slider.min_value = min_v
 	slider.max_value = max_v
 	slider.step = step
-	slider.custom_minimum_size = Vector2(240, 30)
+	slider.custom_minimum_size = Vector2(180, 30)
 	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.add_child(slider)
 	
@@ -374,19 +405,19 @@ func _load_current_values() -> void:
 	
 	# Audio
 	var mv = sm.get_bus_volume_linear("Master")
-	_slider_master.value = mv
+	_slider_master.set_value_no_signal(mv)
 	_lbl_master.text = "%d%%" % int(mv * 100)
 	
 	var mu = sm.get_bus_volume_linear("Music")
-	_slider_music.value = mu
+	_slider_music.set_value_no_signal(mu)
 	_lbl_music.text = "%d%%" % int(mu * 100)
 	
 	var sf = sm.get_bus_volume_linear("SFX")
-	_slider_sfx.value = sf
+	_slider_sfx.set_value_no_signal(sf)
 	_lbl_sfx.text = "%d%%" % int(sf * 100)
 	
 	var am = sm.get_bus_volume_linear("Ambience")
-	_slider_amb.value = am
+	_slider_amb.set_value_no_signal(am)
 	_lbl_amb.text = "%d%%" % int(am * 100)
 	
 	# Controls
@@ -399,6 +430,7 @@ func _load_current_values() -> void:
 	_lbl_fov.text = "%d°" % int(fov)
 	_chk_bobbing.button_pressed = sm.get_setting("controls", "camera_bobbing", true)
 	
+	_draft_keybindings = sm.get_setting("controls", "keybindings", {}).duplicate(true)
 	_update_keybind_button_labels()
 	
 	# Gameplay
@@ -414,26 +446,38 @@ func _load_current_values() -> void:
 func _update_keybind_button_labels() -> void:
 	var sm = SettingsManager.get_instance()
 	if sm == null: return
-	var binds = sm.get_setting("controls", "keybindings", {})
+	var binds = _draft_keybindings
 	for act in _keybind_buttons.keys():
 		var btn = _keybind_buttons[act]
 		var kc = binds.get(act, KEY_NONE)
 		btn.text = OS.get_keycode_string(kc) if kc != KEY_NONE else "Не задано"
 
 func _start_rebinding(action: String, btn: Button) -> void:
+	_update_keybind_button_labels()
 	_awaiting_action = action
 	btn.text = "[Нажмите...]"
 	btn.add_theme_color_override("font_color", UITheme.COLOR_ACCENT_GOLD)
 
 func _input(event: InputEvent) -> void:
+	if UITheme.has_modal_dialog(self):
+		return
 	if _awaiting_action != "":
 		if event is InputEventKey and event.pressed and not event.echo:
 			get_viewport().set_input_as_handled()
-			var sm = SettingsManager.get_instance()
-			if sm:
-				var binds = sm.get_setting("controls", "keybindings", {})
-				binds[_awaiting_action] = event.keycode
-				sm.set_setting("controls", "keybindings", binds)
+			if event.keycode == KEY_ESCAPE:
+				_awaiting_action = ""
+				_update_keybind_button_labels()
+				return
+			var key = event.physical_keycode if event.physical_keycode != 0 else event.keycode
+			# F5 remains the global quick-save shortcut; do not silently create conflicts.
+			if key == KEY_F5:
+				_keybind_buttons[_awaiting_action].text = "F5 зарезервирована"
+				return
+			for action in _draft_keybindings:
+				if action != _awaiting_action and _draft_keybindings[action] == key:
+					_keybind_buttons[_awaiting_action].text = "Клавиша занята"
+					return
+			_draft_keybindings[_awaiting_action] = key
 			_awaiting_action = ""
 			_update_keybind_button_labels()
 			return
@@ -462,6 +506,10 @@ func _on_apply_pressed() -> void:
 	
 	var mode_changed = (new_mode != old_mode or new_res.x != old_rx or new_res.y != old_ry)
 	
+	sm.set_setting("controls", "keybindings", _draft_keybindings.duplicate(true))
+	for entry in [["Master", _slider_master], ["Music", _slider_music], ["SFX", _slider_sfx], ["Ambience", _slider_amb]]:
+		sm.set_bus_volume_linear(entry[0], entry[1].value)
+
 	# Save updated values into sm
 	sm.set_setting("graphics", "window_mode", new_mode)
 	sm.set_setting("graphics", "resolution_x", new_res.x)
@@ -481,13 +529,16 @@ func _on_apply_pressed() -> void:
 	sm.set_setting("gameplay", "autosave_interval_min", auto_intervals[_opt_autosave.selected])
 	
 	sm.apply_all_settings()
-	sm.save_to_disk()
-	
-	# If resolution changed, show countdown confirmation
+	# Persist a display change only after confirmation, not during the unsafe trial.
 	if mode_changed and DisplayServer.get_name() != "headless":
 		_start_resolution_confirmation(old_mode, Vector2i(old_rx, old_ry))
+	else:
+		sm.save_to_disk()
 
 func _start_resolution_confirmation(old_mode: int, old_res: Vector2i) -> void:
+	if _rollback_active:
+		return
+	_rollback_active = true
 	_prev_mode = old_mode
 	_prev_resolution = old_res
 	_rollback_seconds_left = 10
@@ -503,22 +554,32 @@ func _start_resolution_confirmation(old_mode: int, old_res: Vector2i) -> void:
 	_rollback_timer.timeout.connect(func():
 		_rollback_seconds_left -= 1
 		if is_instance_valid(_rollback_dialog):
-			_rollback_dialog.setup("Подтверждение параметров экрана", "Применить новые параметры экрана?\nВозврат к предыдущим через %d сек..." % _rollback_seconds_left, "Сохранить", "Вернуть назад")
+			_rollback_dialog.set_message("Применить новые параметры экрана?\nВозврат к предыдущим через %d сек..." % _rollback_seconds_left)
 		if _rollback_seconds_left <= 0:
 			_revert_resolution()
 	)
 	
 	_rollback_dialog.confirmed.connect(func():
-		if is_instance_valid(_rollback_timer):
-			_rollback_timer.queue_free()
+		_clear_resolution_confirmation()
+		var sm = SettingsManager.get_instance()
+		if sm: sm.save_to_disk()
 	)
 	_rollback_dialog.cancelled.connect(func():
 		_revert_resolution()
 	)
 
-func _revert_resolution() -> void:
+func _clear_resolution_confirmation() -> void:
+	_rollback_active = false
 	if is_instance_valid(_rollback_timer):
+		_rollback_timer.stop()
 		_rollback_timer.queue_free()
+	if is_instance_valid(_rollback_dialog):
+		_rollback_dialog.queue_free()
+
+func _revert_resolution(refresh_ui: bool = true) -> void:
+	if not _rollback_active:
+		return
+	_clear_resolution_confirmation()
 	var sm = SettingsManager.get_instance()
 	if sm:
 		sm.set_setting("graphics", "window_mode", _prev_mode)
@@ -526,17 +587,36 @@ func _revert_resolution() -> void:
 		sm.set_setting("graphics", "resolution_y", _prev_resolution.y)
 		sm.apply_graphics_settings()
 		sm.save_to_disk()
-		_load_current_values()
+		if refresh_ui:
+			_load_current_values()
 
 func _on_defaults_pressed() -> void:
 	var dlg = ConfirmDialog.prompt(self, "Сброс настроек", "Сбросить все параметры к заводским значениям по умолчанию?", "Сбросить", "Отмена", true)
 	dlg.confirmed.connect(func():
 		var sm = SettingsManager.get_instance()
 		if sm:
-			sm.reset_to_defaults()
+			var old_mode: int = sm.get_setting("graphics", "window_mode", 0)
+			var old_res = Vector2i(sm.get_setting("graphics", "resolution_x", 1280), sm.get_setting("graphics", "resolution_y", 720))
+			sm.reset_to_defaults(false)
 			_load_current_values()
+			var display_changed = old_mode != 0 or old_res != Vector2i(1280, 720)
+			if display_changed and DisplayServer.get_name() != "headless":
+				_start_resolution_confirmation(old_mode, old_res)
+			else:
+				sm.save_to_disk()
 	)
 
+func _exit_tree() -> void:
+	if _rollback_active:
+		_revert_resolution(false)
+	var sm = SettingsManager.get_instance()
+	if sm: sm.apply_audio_settings()
+
 func _on_back_pressed() -> void:
+	if _rollback_active:
+		_revert_resolution()
+	_awaiting_action = ""
+	var sm = SettingsManager.get_instance()
+	if sm: sm.apply_audio_settings()
 	closed.emit()
 	queue_free()

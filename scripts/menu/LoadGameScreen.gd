@@ -6,6 +6,7 @@ const ConfirmDialog = preload("res://scripts/ui/ConfirmDialog.gd")
 const SaveManager = preload("res://scripts/core/SaveManager.gd")
 
 signal closed
+signal loaded
 
 var _list_container: VBoxContainer = null
 var _detail_panel: PanelContainer = null
@@ -21,21 +22,25 @@ var _save_data_list: Array[Dictionary] = []
 var _selected_idx: int = -1
 
 func _ready() -> void:
-	anchors_preset = Control.PRESET_FULL_RECT
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_build_ui()
+	_refresh_focus.call_deferred()
 	_refresh_list()
+
+func _refresh_focus() -> void:
+	UITheme.trap_focus(self)
 
 func _build_ui() -> void:
 	# Scrim
 	var scrim = ColorRect.new()
-	scrim.anchors_preset = Control.PRESET_FULL_RECT
+	scrim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	scrim.color = Color(0.02, 0.03, 0.03, 0.88)
 	scrim.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(scrim)
 	
 	var center = CenterContainer.new()
-	center.anchors_preset = Control.PRESET_FULL_RECT
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 	
 	var main_panel = PanelContainer.new()
@@ -110,6 +115,7 @@ func _build_ui() -> void:
 	_detail_title.text = "Выберите сохранение"
 	_detail_title.add_theme_font_size_override("font_size", 16)
 	_detail_title.add_theme_color_override("font_color", UITheme.COLOR_ACCENT_GOLD)
+	_detail_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_detail_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	d_header.add_child(_detail_title)
 	
@@ -175,10 +181,12 @@ func _build_ui() -> void:
 
 func _refresh_list() -> void:
 	for child in _list_container.get_children():
+		_list_container.remove_child(child)
 		child.queue_free()
 	_save_cards.clear()
 	_save_data_list.clear()
 	_selected_idx = -1
+	_refresh_focus.call_deferred()
 	
 	var sm = SaveManager.get_instance()
 	if sm:
@@ -215,6 +223,8 @@ func _refresh_list() -> void:
 		
 		var name_lbl = Label.new()
 		name_lbl.text = data.get("playthrough_name", "Выживание")
+		name_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		name_lbl.tooltip_text = name_lbl.text
 		name_lbl.add_theme_font_size_override("font_size", 14)
 		name_lbl.add_theme_color_override("font_color", UITheme.COLOR_TEXT_PRIMARY)
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -304,6 +314,7 @@ func _select_save_slot(idx: int) -> void:
 	info_text += "• Вес рюкзака: %.1f / 25.0 кг\n" % data.get("backpack_weight", 0.0)
 	info_text += "• Предметов в инвентаре: %d шт.\n" % data.get("items_count", 0)
 	
+	_detail_info_lbl.add_theme_color_override("font_color", UITheme.COLOR_TEXT_PRIMARY)
 	_detail_info_lbl.text = info_text
 
 func _on_load_pressed() -> void:
@@ -311,9 +322,12 @@ func _on_load_pressed() -> void:
 		return
 	var slot_id = _save_data_list[_selected_idx].get("slot_id", "")
 	var sm = SaveManager.get_instance()
-	if sm:
-		sm.load_game(slot_id)
-	queue_free()
+	if sm and sm.load_game(slot_id):
+		loaded.emit()
+		queue_free()
+	else:
+		_detail_info_lbl.text = "Не удалось загрузить сохранение. Файл отсутствует или повреждён. Выберите другой слот."
+		_detail_info_lbl.add_theme_color_override("font_color", UITheme.COLOR_DANGER)
 
 func _on_delete_pressed() -> void:
 	if _selected_idx < 0 or _selected_idx >= _save_data_list.size():
@@ -336,6 +350,8 @@ func _on_back_pressed() -> void:
 	queue_free()
 
 func _input(event: InputEvent) -> void:
+	if UITheme.has_modal_dialog(self):
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ESCAPE:
 			get_viewport().set_input_as_handled()

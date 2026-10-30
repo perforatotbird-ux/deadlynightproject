@@ -10,11 +10,14 @@ var _title_label: Label = null
 var _message_label: Label = null
 var _btn_confirm: Button = null
 var _btn_cancel: Button = null
+var _resolved: bool = false
 
 func _ready() -> void:
-	anchors_preset = Control.PRESET_FULL_RECT
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	add_to_group("menu_confirmation")
 	_build_ui()
+	UITheme.trap_focus(self)
 
 func setup(title: String, message: String, confirm_txt: String = "Подтвердить", cancel_txt: String = "Отмена", is_danger: bool = false) -> void:
 	if _title_label:
@@ -32,14 +35,14 @@ func setup(title: String, message: String, confirm_txt: String = "Подтвер
 func _build_ui() -> void:
 	# Dark backdrop scrim
 	var scrim = ColorRect.new()
-	scrim.anchors_preset = Control.PRESET_FULL_RECT
+	scrim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	scrim.color = Color(0.02, 0.03, 0.03, 0.82)
 	scrim.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(scrim)
 	
 	# Centered Dialog Panel
 	var center = CenterContainer.new()
-	center.anchors_preset = Control.PRESET_FULL_RECT
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 	
 	var panel = PanelContainer.new()
@@ -92,17 +95,35 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			_on_cancel()
 
+func set_message(message: String) -> void:
+	_message_label.text = message
+
 func _on_confirm() -> void:
+	if _resolved: return
+	_resolved = true
 	confirmed.emit()
 	queue_free()
 
 func _on_cancel() -> void:
+	if _resolved: return
+	_resolved = true
 	cancelled.emit()
 	queue_free()
 
 static func prompt(parent: Node, title: String, message: String, confirm_txt: String = "Подтвердить", cancel_txt: String = "Отмена", is_danger: bool = false):
 	var script = load("res://scripts/ui/ConfirmDialog.gd")
 	var dlg = script.new()
-	parent.add_child(dlg)
+	# A dedicated layer keeps confirmations above both main-menu and pause canvases.
+	var layer = CanvasLayer.new()
+	layer.layer = 200
+	layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	parent.add_child(layer)
+	var previous_focus = parent.get_viewport().gui_get_focus_owner()
+	layer.add_child(dlg)
+	dlg.tree_exited.connect(func():
+		if is_instance_valid(previous_focus) and previous_focus.is_visible_in_tree():
+			previous_focus.grab_focus()
+		layer.queue_free()
+	)
 	dlg.setup(title, message, confirm_txt, cancel_txt, is_danger)
 	return dlg
