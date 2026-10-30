@@ -1,7 +1,7 @@
 extends SceneTree
 var failures:=0
 var passes:=0
-var output_dir:="/data/first-night-previews"
+var output_dir:="/data/backpack-craft-previews"
 var graphical:=false
 func _initialize() -> void:call_deferred("run")
 func check(ok: bool, text: String) -> void:
@@ -52,13 +52,13 @@ func run() -> void:
  for id in ["stone","brush","flint","pyrite"]:
   var item=s.Items.item(id);item["count"]=6 if id in ["stone","brush"] else 1;s.Items.transact(p,{},[item])
  p._add_to_backpack({"species":"birch","weight":4.0})
- await key(KEY_B)
- check(s.ui.is_open() and p._is_inventory_open,"B opens survival modal through real input")
+ await key(KEY_TAB)
+ check(p._is_inventory_open and p._is_inventory_open,"Tab opens the actual backpack through real input")
  await capture("01_crafting_panel")
- await click(s.ui.buttons["kit"])
+ await click(p._backpack_ui.buttons["kit"])
  check(s.Items.count(p.inventory_slots,"camp_kit")==1,"real mouse click reaches craft button")
  await key(KEY_ESCAPE)
- check(not s.ui.is_open() and not p._is_inventory_open,"Escape closes modal and releases player")
+ check(not p._is_inventory_open and not p._is_inventory_open,"Escape closes backpack and releases player")
  var target:Vector3=p.global_position+Vector3(3,0,2)
  var ground=p.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(target+Vector3.UP*5,target-Vector3.UP*5,1))
  check(not ground.is_empty() and ground.collider.is_in_group("camp_ground"),"authored terrain tagged as valid ground")
@@ -67,14 +67,19 @@ func run() -> void:
  check(s.confirm_placement(),"place fire in real forest")
  var f:Dictionary=s.fires[0];p.global_position=Vector3(ground.position.x,ground.position.y+0.1,ground.position.z+2.0)
  s.selected_fire=f["id"]
- s.cancel_job()
+ s.cancel_job();s.open_backpack(f["id"]);p.select_hotbar_slot(1)
  for i in p.inventory_slots.size():
-  if p.inventory_slots[i]!=null and p.inventory_slots[i].get("type")=="log":s.begin_split(i);break
+  if p.inventory_slots[i]!=null and p.inventory_slots[i].get("type")=="log":
+   await click(p._inv_slot_buttons[i]);break
+ await capture("01b_selected_log")
+ await click(p._backpack_ui.buttons["split"])
+ check(s.job.get("kind")=="split" and p.active_hotbar_slot==0,"mouse split from backpack auto-equips axe")
+ await capture("01c_split_progress")
  s.advance(10)
  for i in p.inventory_slots.size():
   if p.inventory_slots[i]!=null and p.inventory_slots[i].get("type")=="firewood":s.add_fuel(f["id"],i);break
- s.open_panel(f["id"]);await capture("02_ready_to_ignite")
- s.begin_ignition(f["id"],"match");s.job["success"]=true;s.advance(2);s.close_panel()
+ s.open_backpack(f["id"]);await capture("02_ready_to_ignite")
+ s.begin_ignition(f["id"],"match");s.job["success"]=true;s.advance(2);s.close_backpack()
  check(f["state"]=="burning","real forest camp successfully burns")
  s.clock=20.5*3600;s.weather="clear";s.weather_until=s.clock+100000;s._update_lighting()
  p.rotation=Vector3.ZERO;p._camera_pitch=-0.32;p._camera_pivot.rotation.x=-0.32
@@ -83,12 +88,12 @@ func run() -> void:
  p.global_position=s.shelter.global_position+Vector3(0,0.2,1.2);p.rotation=Vector3.ZERO;p._camera_pivot.rotation.x=-0.25;p.select_hotbar_slot(1);p._toggle_lantern()
  check(s.safe_shelter(),"player enters actual physical shelter")
  await capture("04_shelter_interior")
- s.open_panel("","rest");await capture("05_rest_panel")
+ s.open_backpack("","rest");await capture("05_rest_panel")
  if graphical:
-  root.size=Vector2i(800,600);await settle();s.ui._resize();await capture("06_small_window")
-  check(s.ui.panel.get_global_rect().end.x<=root.get_visible_rect().size.x and s.ui.panel.get_global_rect().end.y<=root.get_visible_rect().size.y,"modal fits smaller window")
+  root.size=Vector2i(800,600);await settle();p._backpack_ui.resize();await capture("06_small_window")
+  check(p._inv_root_panel.get_global_rect().end.x<=root.get_visible_rect().size.x and p._inv_root_panel.get_global_rect().end.y<=root.get_visible_rect().size.y,"modal fits smaller window")
   root.size=Vector2i(1280,720);await settle()
- s.close_panel()
+ s.close_backpack()
  # Save/load while in the real scene, including an in-progress split/ignition already covered by units.
  var sm=load("res://scripts/core/SaveManager.gd").get_instance()
  s.matches=2;check(sm.save_game("slot_first_night_full","manual","Integration"),"full-scene SaveManager writes")

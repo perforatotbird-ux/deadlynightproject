@@ -5,12 +5,12 @@ const DEFINITIONS = {
  "stone": {"name":"Камень", "unit_weight":0.35, "description":"Для каменного кольца костра. Обычный камень не даёт огневой искры."},
  "flint": {"name":"Кремень", "unit_weight":0.2, "description":"Искровой камень: ударять о пирит над сухим хворостом."},
  "pyrite": {"name":"Пирит", "unit_weight":0.2, "description":"В паре с кремнем позволяет высекать искры без спичек."},
- "camp_kit": {"name":"Набор костра", "unit_weight":2.58, "description":"6 камней и 4 хвороста. Разместить через [B] на ровной открытой земле."}
+ "camp_kit": {"name":"Набор костра", "unit_weight":2.58, "description":"6 камней и 4 хвороста. Выберите набор в рюкзаке и нажмите «Разместить» на ровной открытой земле."}
 }
 static func item(id: String, species: String = "", unit_weight: float = -1.0) -> Dictionary:
  var d: Dictionary = DEFINITIONS.get(id, {}).duplicate(true)
  if id == "firewood":
-  d = {"burn_time":"%d мин" % {"birch":30,"spruce":36,"beech":50,"oak":60}.get(species,30), "name":"Поленце (%s)" % species, "unit_weight":unit_weight, "description":"Расколотое топором бревно. Топливо для костра.", "species":species}
+  d = {"burn_time":"%d мин" % {"birch":30,"spruce":36,"beech":50,"oak":60}.get(species,30), "name":"Поленце (%s)" % {"birch":"берёза","spruce":"ель","beech":"бук","oak":"дуб"}.get(species,species), "unit_weight":unit_weight, "description":"Расколотое топором бревно. Топливо для костра.", "species":species}
  d.merge({"id": id if species=="" else id+"_"+species, "type":id, "count":1, "color":Color(0.87,0.79,0.61), "burn_time":"—", "heat":"—"})
  return d
 static func count(slots: Array, id: String) -> int:
@@ -18,18 +18,22 @@ static func count(slots: Array, id: String) -> int:
  for s in slots:
   if s != null and (s.get("type","")==id or s.get("id","")==id): total += int(s.get("count",0))
  return total
-static func transact(player: Node, costs: Dictionary, outputs: Array = []) -> bool:
+static func transact(player: Node, costs: Dictionary, outputs: Array = [], source_slot: int = -1) -> bool:
  var slots: Array = player.inventory_slots.duplicate(true)
  for id in costs:
+  if not (costs[id] is int or costs[id] is float) or float(costs[id])<=0 or float(costs[id])!=int(costs[id]):return false
   if count(slots,id)<int(costs[id]):return false
   var left := int(costs[id])
-  for i in slots.size():
+  var indices:=range(slots.size())
+  if source_slot>=0 and source_slot<slots.size():indices.erase(source_slot);indices.push_front(source_slot)
+  for i in indices:
    var s = slots[i]
    if s==null or (s.get("type","")!=id and s.get("id","")!=id):continue
    var n := mini(left,int(s["count"]));s["count"]-=n;left-=n
    if s["count"]==0:slots[i]=null
    if left==0:break
  for output in outputs:
+  if not output is Dictionary or not output.has("id") or int(output.get("count",1))<=0 or not is_finite(float(output.get("unit_weight",0))) or float(output.get("unit_weight",0))<0 or float(output.get("count",1))!=int(output.get("count",1)):return false
   var left := int(output.get("count",1))
   for s in slots:
    if s!=null and s.get("id")==output["id"] and is_equal_approx(float(s.get("unit_weight",0)),float(output.get("unit_weight",0))):

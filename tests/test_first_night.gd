@@ -52,6 +52,7 @@ func run() -> void:
  for i in p.inventory_slots.size():
   if p.inventory_slots[i]!=null and p.inventory_slots[i].get("type")=="log":slot=i;break
  var before:float=p.backpack_weight
+ s.open_backpack()
  check(s.begin_split(slot),"begin axe split")
  s.advance(9.99)
  check(Items.count(p.inventory_slots,"log")==1 and Items.count(p.inventory_slots,"firewood")==0,"no output before 10 real seconds")
@@ -63,7 +64,7 @@ func run() -> void:
   if p.inventory_slots[i]!=null and p.inventory_slots[i].get("type")=="log":slot=i;break
  check(s.begin_split(slot),"begin cancellable split")
  s.advance(2);s.cancel_job();check(Items.count(p.inventory_slots,"log")==1,"cancel keeps unconsumed log")
- p.active_hotbar_slot=1;check(not s.begin_split(slot),"splitting requires selected axe");p.active_hotbar_slot=0
+ p.active_hotbar_slot=1;check(s.begin_split(slot) and p.active_hotbar_slot==0,"split automatically equips axe from toolbelt");s.cancel_job()
  var fuel_slot:=-1
  for i in p.inventory_slots.size():
   if p.inventory_slots[i]!=null and p.inventory_slots[i].get("type")=="firewood":fuel_slot=i;break
@@ -139,6 +140,7 @@ func run() -> void:
  var backup:Array=p.inventory_slots.duplicate(true)
  for i in p.inventory_slots.size():p.inventory_slots[i]={"id":"junk_%d"%i,"type":"junk","count":10,"unit_weight":1}
  p.inventory_slots[0]={"id":"log_birch","type":"log","species":"birch","count":2,"unit_weight":4.0}
+ s.open_backpack()
  check(s.begin_split(0),"split may begin with a full backpack")
  s.advance(10)
  check(Items.count(p.inventory_slots,"log")==2 and Items.count(p.inventory_slots,"firewood")==0,"failed split output rolls back consumed input")
@@ -178,7 +180,7 @@ func run() -> void:
  paused=false;s.set_process(false)
  # Real wall-clock 10-second split, including pause, no animation.
  reset_inventory();p._add_to_backpack({"species":"birch","weight":4.0});p.active_hotbar_slot=0;s.health=100;s.warmth=80;s.weather="clear";s.weather_until=s.clock+100000
- s.open_panel();check(s.begin_split(0),"real-time split starts")
+ s.open_backpack();check(s.begin_split(0),"real-time split starts")
  s.set_process(true)
  var started:=Time.get_ticks_msec()
  await create_timer(0.2).timeout
@@ -190,5 +192,29 @@ func run() -> void:
  var duration:float=(Time.get_ticks_msec()-started)/1000.0
  s.set_process(false)
  check(duration>=10.15 and duration<12.0 and Items.count(p.inventory_slots,"firewood")==3,"actual elapsed split = %.2fs including 0.2s paused"%duration)
+ # Backpack-specific regressions and transaction abuse guards.
+ reset_inventory();p._add_to_backpack({"species":"birch","weight":4.0});s.open_backpack()
+ p._selected_slot_index=0;p._refresh_inventory_ui()
+ check(p._backpack_ui.buttons["split"].visible and not p._backpack_ui.buttons["split"].disabled,"selected log exposes split in backpack")
+ p.select_hotbar_slot(3);check(s.begin_split(0),"split starts while matches were selected")
+ p.drop_item(0);check(Items.count(p.inventory_slots,"log")==1,"cannot drop job input while splitting")
+ check(not s.begin_split(0),"cannot start second job")
+ s.close_backpack();check(s.job.is_empty() and not p._is_inventory_open and not p._inv_layer.visible,"closing backpack cancels job and actual UI")
+ check(not s.begin_split(0),"split cannot start outside backpack")
+ var fingerprint:=str(p.inventory_slots)
+ check(not Items.transact(p,{"log":-1}) and str(p.inventory_slots)==fingerprint,"negative recipe costs rejected atomically")
+ var bad:=Items.item("stone");bad["count"]=-1
+ check(not Items.transact(p,{},[bad]) and str(p.inventory_slots)==fingerprint,"negative output rejected atomically")
+ bad["count"]=1;bad["unit_weight"]=-1
+ check(not Items.transact(p,{},[bad]) and str(p.inventory_slots)==fingerprint,"negative output mass rejected")
+ reset_inventory();add("stone",2)
+ p.inventory_slots[5]=p.inventory_slots[0].duplicate(true);p.inventory_slots[5]["count"]=3;Items.refresh(p)
+ check(Items.transact(p,{"stone":1},[],5) and p.inventory_slots[0]["count"]==2 and p.inventory_slots[5]["count"]==2,"transaction consumes selected stack, not first identical stack")
+ var pickup=s.Pickup.new();pickup.session=s;pickup.item_data=Items.item("brush");pickup.resource_id="double_pickup_test";arena.add_child(pickup)
+ var count_before:int=Items.count(p.inventory_slots,"brush")
+ pickup.survival_interact();pickup.survival_interact()
+ check(Items.count(p.inventory_slots,"brush")==count_before+1,"duplicate same-frame pickup cannot duplicate resource")
+ s.open_backpack();p._backpack_ui.refresh_actions()
+ check(not FileAccess.file_exists("res://scripts/survival/SurvivalUI.gd"),"standalone craft menu removed from project")
  print("FIRST NIGHT SUMMARY: %d PASS, %d FAIL" % [passes,failures])
- s.close_panel();arena.free();await process_frame;quit(1 if failures>0 else 0)
+ s.close_backpack();arena.free();await process_frame;quit(1 if failures>0 else 0)

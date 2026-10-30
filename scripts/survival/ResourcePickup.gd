@@ -2,6 +2,7 @@ extends StaticBody3D
 var item_data: Dictionary = {}
 var resource_id: String = ""
 var session: Node
+var collected:=false
 func _ready() -> void:
  collision_layer=4;collision_mask=0
  var mat := StandardMaterial3D.new()
@@ -18,8 +19,9 @@ func _ready() -> void:
  var col:=CollisionShape3D.new();var box:=BoxShape3D.new();box.size=Vector3(0.55,0.25,0.55);col.shape=box;col.position.y=0.12;add_child(col)
 func get_interact_text() -> String:return "[E] Собрать: "+item_data.get("name","Ресурс")
 func survival_interact() -> void:
- if not is_instance_valid(session):return
+ if collected or not is_instance_valid(session) or session.health<=0:return
  if session.Items.transact(session.player,{},[item_data]):
+  collected=true
   session.picked[resource_id]=true;session.resources.erase(resource_id);collision_layer=0;queue_free()
   session.notify("Собрано: "+item_data["name"])
  else:session.notify("Рюкзак заполнен: освободите ячейку")

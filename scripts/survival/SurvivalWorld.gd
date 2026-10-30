@@ -5,7 +5,7 @@ const Fire = preload("res://scripts/survival/FireModel.gd")
 const Pickup = preload("res://scripts/survival/ResourcePickup.gd")
 const FireVisual = preload("res://scripts/survival/Campfire.gd")
 const Shelter = preload("res://scripts/survival/Shelter.gd")
-const UI = preload("res://scripts/survival/SurvivalUI.gd")
+const UI = preload("res://scripts/survival/SurvivalHUD.gd")
 const TIME_SCALE := 60.0
 const SPLIT_SECONDS := 10.0
 const CAMP_COST := {"stone":6,"brush":4}
@@ -34,7 +34,7 @@ var selected_fire := ""
 var placing := false
 var preview: MeshInstance3D
 var placement: Dictionary = {}
-var message := "[B] Выживание · Собирайте хворост и камни · Стоянка к северо-западу от поляны"
+var message := "[Tab] Выживание · Собирайте хворост и камни · Стоянка к северо-западу от поляны"
 var message_time := 15.0
 var _scan := 0.0
 var _visual_tick := 0.0
@@ -168,32 +168,26 @@ func nearby_fire() -> Dictionary:
   var d:=player.global_position.distance_to(_v3(f["pos"]))
   if d<dist and _fire_in_reach(f):dist=d;best=f
  return best
-func open_panel(fire_id: String = "", page: String = "camp") -> void:
+func open_backpack(fire_id: String = "", page: String = "camp") -> void:
  if placing or health<=0:return
  selected_fire=fire_id
+ if not player._is_inventory_open:player._toggle_inventory()
+ player._backpack_ui.refresh_actions()
+ if page=="rest":player._backpack_ui.call_deferred("focus_rest")
+ elif fire_id!="":player._backpack_ui.call_deferred("focus_fire")
+func close_backpack() -> void:
+ cancel_job()
  if player._is_inventory_open:player._toggle_inventory()
- player._cancel_chop();player._is_inventory_open=true
- Input.mouse_mode=Input.MOUSE_MODE_VISIBLE
- ui.open(page)
-func close_panel() -> void:
- cancel_job();ui.close();player._is_inventory_open=false
- player._is_lmb_held=false;Input.mouse_mode=Input.MOUSE_MODE_CAPTURED
 func handle_input(event: InputEvent) -> bool:
- if ui.is_open():
-  if event is InputEventKey and event.pressed and not event.echo and event.keycode in [KEY_ESCAPE,KEY_B,KEY_TAB]:close_panel();return true
-  # Leave mouse events unhandled so the GUI receives clicks. Player already
-  # blocks tools/look while _is_inventory_open.
-  return false
  if placing:
   if event is InputEventKey and event.pressed and event.keycode==KEY_ESCAPE:cancel_placement();return true
   if event is InputEventMouseButton and event.pressed:
    if event.button_index==MOUSE_BUTTON_LEFT:confirm_placement();return true
    if event.button_index==MOUSE_BUTTON_RIGHT:cancel_placement();return true
   return event is InputEventMouseButton
- if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode==KEY_B:
-  var f:=nearby_fire();open_panel(f.get("id",""));return true
  return false
 func make_kit() -> bool:
+ if health<=0:return false
  if not job.is_empty():return false
  var ok:=Items.transact(player,CAMP_COST,[Items.item("camp_kit")])
  notify("Набор костра собран. Теперь разместите его." if ok else "Нужно 6 камней, 4 хвороста и место в рюкзаке")
@@ -202,7 +196,8 @@ func begin_split(slot_index: int) -> bool:
  if not job.is_empty() or slot_index<0 or slot_index>=player.inventory_slots.size():return false
  var s=player.inventory_slots[slot_index]
  if s==null or s.get("type")!="log":return false
- if player.active_hotbar_slot!=0:notify("Сначала возьмите топор: [1]");return false
+ if health<=0 or not player._is_inventory_open:return false
+ player.select_hotbar_slot(0)
  job={"kind":"split","elapsed":0.0,"duration":SPLIT_SECONDS,"slot":slot_index,"item_id":s["id"],"weight":s["unit_weight"],"species":s["species"],"origin":_arr(player.global_position)}
  player._cancel_chop();ui.refresh();return true
 func add_fuel(id: String, slot_index: int) -> bool:
@@ -254,9 +249,9 @@ func _finish_job() -> void:
   "split":
    var index:=int(done["slot"])
    var s=player.inventory_slots[index] if index>=0 and index<player.inventory_slots.size() else null
-   if s==null or s.get("id")!=done["item_id"]:notify("Бревно перемещено: раскол отменён");return
+   if s==null or s.get("id")!=done["item_id"] or not is_equal_approx(float(s.get("unit_weight",0)),float(done["weight"])):notify("Бревно перемещено: раскол отменён");return
    var output:=Items.item("firewood",done["species"],float(done["weight"])/3.0);output["count"]=3
-   notify("Бревно расколото: 3 поленца" if Items.transact(player,{done["item_id"]:1},[output]) else "Не хватает места: бревно сохранено")
+   notify("Бревно расколото: 3 поленца" if Items.transact(player,{done["item_id"]:1},[output],index) else "Не хватает места: бревно сохранено")
   "ignite":
    var f:=find_fire(done["fire"])
    if not f.is_empty() and _fire_in_reach(f) and f["fuel"]>0 and done["success"]:f["state"]="burning";notify("Костёр разгорелся")
@@ -265,8 +260,9 @@ func _finish_job() -> void:
  ui.refresh()
 
 func begin_placement() -> void:
+ if placing or not job.is_empty() or health<=0:return
  if location!="forest" or Items.count(player.inventory_slots,"camp_kit")==0:notify("Сначала соберите набор костра");return
- close_panel();placing=true
+ close_backpack();placing=true
  preview=MeshInstance3D.new();var c:=CylinderMesh.new();c.top_radius=0.65;c.bottom_radius=0.65;c.height=0.06;preview.mesh=c
  var m:=StandardMaterial3D.new();m.transparency=BaseMaterial3D.TRANSPARENCY_ALPHA;m.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED;preview.material_override=m;get_parent().add_child(preview)
  notify("ЛКМ — поставить · ПКМ / Esc — отмена. Нужна ровная открытая земля.")
@@ -330,7 +326,7 @@ func _stream_resources() -> void:
     if picked.has(id):continue
     var pos:=Vector3(x*24+random.randf_range(2,22),player.global_position.y,z*24+random.randf_range(2,22))
     var hit=player.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(pos+Vector3.UP*70,pos-Vector3.UP*90,1))
-    if hit.is_empty() or hit.normal.y<0.8:continue
+    if hit.is_empty() or hit.normal.y<0.8 or not hit.collider.is_in_group("camp_ground"):continue
     # Avoid authored cabin floor/roof: scatter only terrain, never structures.
     if is_instance_valid(shelter) and Vector2(pos.x-shelter.global_position.x,pos.z-shelter.global_position.z).length()<3.5:continue
     _spawn_pickup(Items.item(types[i]),id,hit.position)
@@ -353,7 +349,7 @@ func export_state() -> Dictionary:
  var state:={"version":1,"clock":clock,"weather":weather,"weather_until":weather_until,"wetness":wetness,"warmth":warmth,"energy":energy,"health":health,"matches":matches,"active_tool":player.active_hotbar_slot,"lantern_on":player._is_lantern_on,"fires":fires.duplicate(true),"picked":picked.duplicate(),"dropped":dropped.duplicate(true),"job":job.duplicate(true),"rng_state":str(rng.state),"location":location,"door_closed":shelter.door_closed if is_instance_valid(shelter) else _saved_door_closed,"exterior_felled":_old_felled,"exterior_logs":_old_logs,"mine_logs":_mine_logs}
  return state
 func import_state(state: Dictionary) -> void:
- close_panel();cancel_placement()
+ close_backpack();cancel_placement()
  clock=float(state.get("clock",16*3600));weather=state.get("weather","clear");weather_until=float(state.get("weather_until",clock+7200))
  wetness=clampf(float(state.get("wetness",0)),0,100);warmth=clampf(float(state.get("warmth",80)),0,100);energy=clampf(float(state.get("energy",100)),0,100);health=clampf(float(state.get("health",100)),0,100);matches=maxi(0,int(state.get("matches",12)))
  player._is_lantern_on=bool(state.get("lantern_on",false));player.select_hotbar_slot(int(state.get("active_tool",player.active_hotbar_slot)))
@@ -374,11 +370,11 @@ func import_state(state: Dictionary) -> void:
  var saved_job:Dictionary=state.get("job",{}).duplicate(true)
  if not saved_job.is_empty():
   job=saved_job
-  open_panel(job.get("fire",""),"rest" if job.get("kind")=="rest" else "camp")
+  open_backpack(job.get("fire",""),"rest" if job.get("kind")=="rest" else "camp")
  _update_lighting();ui.refresh()
 func prepare_travel() -> void:
  if _transitioning:return
- _transitioning=true;close_panel();cancel_placement()
+ _transitioning=true;close_backpack();cancel_placement()
  var felled:Dictionary=load("res://scripts/props/TreeChoppable.gd").felled_tree_ids.duplicate(true)
  var logs:Array=[]
  if location=="forest":

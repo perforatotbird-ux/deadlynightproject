@@ -6,4 +6,4 @@ func get_interact_text() -> String:
  return "[E] Отдых · требуется закрытая дверь"
 func survival_interact() -> void:
  if kind=="door":shelter.toggle_door()
- else:shelter.session.open_panel("","rest")
+ else:shelter.session.open_backpack("","rest")

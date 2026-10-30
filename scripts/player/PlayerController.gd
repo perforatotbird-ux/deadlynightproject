@@ -237,6 +237,9 @@ func set_active(active: bool) -> void:
 	_is_active = active
 	if not active:
 		_cancel_chop()
+		if is_instance_valid(survival):
+			survival.cancel_job()
+			survival.cancel_placement()
 	if _camera:
 		_camera.current = active
 	if _hud_layer:
@@ -727,9 +730,9 @@ func _strike_match() -> void:
 	if is_instance_valid(survival):
 		var fire = survival.nearby_fire()
 		if fire.is_empty():
-			survival.notify("Подойдите к подготовленному костру. [B] — создание костра")
+			survival.notify("Подойдите к подготовленному костру. [Tab] — создание костра")
 		else:
-			survival.open_panel(fire["id"])
+			survival.open_backpack(fire["id"])
 		return
 	_play_ui_sound("res://assets/sounds/level_01/ui/ui_click.wav")
 	_show_tool_banner("ОХОТНИЧЬИ СПИЧКИ: Вспышка пламени!")
@@ -747,269 +750,11 @@ func _use_knife() -> void:
 	_play_ui_sound("res://assets/sounds/level_01/axe/axe_swing_01.wav")
 	_show_tool_banner("ОХОТНИЧИЙ НОЖ: Готов к снятию бересты и крафту")
 
+var _backpack_ui: Node
 func _setup_inventory_ui() -> void:
-	_inv_layer = CanvasLayer.new()
-	_inv_layer.name = "InventoryLayer"
-	_inv_layer.layer = 110
-	_inv_layer.visible = false
-	add_child(_inv_layer)
-	
-	# Fullscreen Dark Frosted Scrim
-	var scrim = ColorRect.new()
-	scrim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	scrim.color = Color(0.04, 0.05, 0.07, 0.78)
-	scrim.mouse_filter = Control.MOUSE_FILTER_STOP
-	_inv_layer.add_child(scrim)
-	
-	# Center Inventory Panel
-	_inv_root_panel = PanelContainer.new()
-	_inv_root_panel.name = "InventoryPanel"
-	_inv_root_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_inv_root_panel.custom_minimum_size = Vector2(920, 560)
-	_inv_root_panel.position = Vector2(-460, -280)
-	
-	var panel_sb = StyleBoxFlat.new()
-	panel_sb.bg_color = Color(0.09, 0.11, 0.13, 0.96)
-	panel_sb.border_width_left = 2
-	panel_sb.border_width_top = 2
-	panel_sb.border_width_right = 2
-	panel_sb.border_width_bottom = 2
-	panel_sb.border_color = Color(0.35, 0.40, 0.46, 0.85)
-	panel_sb.corner_radius_top_left = 6
-	panel_sb.corner_radius_top_right = 6
-	panel_sb.corner_radius_bottom_left = 6
-	panel_sb.corner_radius_bottom_right = 6
-	panel_sb.shadow_size = 24
-	panel_sb.shadow_color = Color(0, 0, 0, 0.8)
-	panel_sb.content_margin_left = 24
-	panel_sb.content_margin_top = 20
-	panel_sb.content_margin_right = 24
-	panel_sb.content_margin_bottom = 20
-	_inv_root_panel.add_theme_stylebox_override("panel", panel_sb)
-	_inv_layer.add_child(_inv_root_panel)
-	
-	var main_vbox = VBoxContainer.new()
-	main_vbox.add_theme_constant_override("separation", 14)
-	_inv_root_panel.add_child(main_vbox)
-	
-	# --- 1. HEADER ---
-	var header_hbox = HBoxContainer.new()
-	main_vbox.add_child(header_hbox)
-	
-	var header_title = Label.new()
-	header_title.text = "РЮКЗАК ВЫЖИВАНИЯ"
-	header_title.add_theme_font_size_override("font_size", 22)
-	header_title.add_theme_color_override("font_color", Color(0.92, 0.95, 0.98))
-	header_hbox.add_child(header_title)
-	
-	var header_spacer = Control.new()
-	header_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header_hbox.add_child(header_spacer)
-	
-	var header_close_hint = Label.new()
-	header_close_hint.text = "[TAB] или [ESC] — Закрыть"
-	header_close_hint.add_theme_font_size_override("font_size", 14)
-	header_close_hint.add_theme_color_override("font_color", Color(0.65, 0.70, 0.75))
-	header_hbox.add_child(header_close_hint)
-	
-	# --- 2. WEIGHT CAPACITY BAR ---
-	var weight_box = VBoxContainer.new()
-	weight_box.add_theme_constant_override("separation", 4)
-	main_vbox.add_child(weight_box)
-	
-	var weight_lbl_row = HBoxContainer.new()
-	weight_box.add_child(weight_lbl_row)
-	
-	_inv_weight_label = Label.new()
-	_inv_weight_label.text = "ВЕС ГРУЗА: 0.0 / 25.0 кг"
-	_inv_weight_label.add_theme_font_size_override("font_size", 14)
-	_inv_weight_label.add_theme_color_override("font_color", Color(0.85, 0.88, 0.92))
-	weight_lbl_row.add_child(_inv_weight_label)
-	
-	var weight_spacer = Control.new()
-	weight_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	weight_lbl_row.add_child(weight_spacer)
-	
-	_inv_overweight_warning = Label.new()
-	_inv_overweight_warning.text = ""
-	_inv_overweight_warning.add_theme_font_size_override("font_size", 13)
-	_inv_overweight_warning.add_theme_color_override("font_color", Color(1.0, 0.35, 0.35))
-	weight_lbl_row.add_child(_inv_overweight_warning)
-	
-	_inv_weight_bar = ProgressBar.new()
-	_inv_weight_bar.min_value = 0.0
-	_inv_weight_bar.max_value = 25.0
-	_inv_weight_bar.value = 0.0
-	_inv_weight_bar.show_percentage = false
-	_inv_weight_bar.custom_minimum_size = Vector2(0, 8)
-	
-	var bar_bg = StyleBoxFlat.new()
-	bar_bg.bg_color = Color(0.14, 0.16, 0.19)
-	bar_bg.corner_radius_top_left = 3
-	bar_bg.corner_radius_top_right = 3
-	bar_bg.corner_radius_bottom_left = 3
-	bar_bg.corner_radius_bottom_right = 3
-	_inv_weight_bar.add_theme_stylebox_override("background", bar_bg)
-	
-	var bar_fill = StyleBoxFlat.new()
-	bar_fill.bg_color = Color(0.28, 0.72, 0.52) # Calm survival green
-	bar_fill.corner_radius_top_left = 3
-	bar_fill.corner_radius_top_right = 3
-	bar_fill.corner_radius_bottom_left = 3
-	bar_fill.corner_radius_bottom_right = 3
-	_inv_weight_bar.add_theme_stylebox_override("fill", bar_fill)
-	weight_box.add_child(_inv_weight_bar)
-	
-	# Horizontal Separator line
-	var sep = HSeparator.new()
-	sep.add_theme_constant_override("separation", 10)
-	main_vbox.add_child(sep)
-	
-	# --- 3. BODY (SLOTS GRID ON LEFT, ITEM INSPECTOR ON RIGHT) ---
-	var body_hbox = HBoxContainer.new()
-	body_hbox.add_theme_constant_override("separation", 24)
-	body_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	main_vbox.add_child(body_hbox)
-	
-	# Left: 4x4 Grid of Slots (16 Slots)
-	var grid_panel = PanelContainer.new()
-	grid_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var grid_sb = StyleBoxFlat.new()
-	grid_sb.bg_color = Color(0.06, 0.07, 0.09, 0.65)
-	grid_sb.border_width_left = 1
-	grid_sb.border_width_top = 1
-	grid_sb.border_width_right = 1
-	grid_sb.border_width_bottom = 1
-	grid_sb.border_color = Color(0.2, 0.24, 0.28, 0.6)
-	grid_sb.corner_radius_top_left = 4
-	grid_sb.corner_radius_top_right = 4
-	grid_sb.corner_radius_bottom_left = 4
-	grid_sb.corner_radius_bottom_right = 4
-	grid_sb.content_margin_left = 14
-	grid_sb.content_margin_top = 14
-	grid_sb.content_margin_right = 14
-	grid_sb.content_margin_bottom = 14
-	grid_panel.add_theme_stylebox_override("panel", grid_sb)
-	body_hbox.add_child(grid_panel)
-	
-	var grid = GridContainer.new()
-	grid.columns = 4
-	grid.add_theme_constant_override("h_separation", 10)
-	grid.add_theme_constant_override("v_separation", 10)
-	grid_panel.add_child(grid)
-	
-	_inv_slot_buttons.clear()
-	for i in range(MAX_SLOTS):
-		var btn = Button.new()
-		btn.custom_minimum_size = Vector2(100, 92)
-		btn.focus_mode = Control.FOCUS_NONE
-		btn.mouse_filter = Control.MOUSE_FILTER_PASS
-		btn.clip_text = true
-		
-		# Slot index binding
-		var slot_idx = i
-		btn.pressed.connect(func(): _on_slot_clicked(slot_idx))
-		grid.add_child(btn)
-		_inv_slot_buttons.append(btn)
-		
-	# Right: Item Details Panel
-	var details_panel = PanelContainer.new()
-	details_panel.custom_minimum_size = Vector2(340, 0)
-	var det_sb = StyleBoxFlat.new()
-	det_sb.bg_color = Color(0.06, 0.07, 0.09, 0.85)
-	det_sb.border_width_left = 1
-	det_sb.border_width_top = 1
-	det_sb.border_width_right = 1
-	det_sb.border_width_bottom = 1
-	det_sb.border_color = Color(0.25, 0.30, 0.35, 0.7)
-	det_sb.corner_radius_top_left = 4
-	det_sb.corner_radius_top_right = 4
-	det_sb.corner_radius_bottom_left = 4
-	det_sb.corner_radius_bottom_right = 4
-	det_sb.content_margin_left = 18
-	det_sb.content_margin_top = 18
-	det_sb.content_margin_right = 18
-	det_sb.content_margin_bottom = 18
-	details_panel.add_theme_stylebox_override("panel", det_sb)
-	body_hbox.add_child(details_panel)
-	
-	var det_vbox = VBoxContainer.new()
-	det_vbox.add_theme_constant_override("separation", 12)
-	det_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	details_panel.add_child(det_vbox)
-	
-	_inv_empty_inspector_label = Label.new()
-	_inv_empty_inspector_label.text = "Выберите ячейку рюкзака для просмотра свойств предмета."
-	_inv_empty_inspector_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_inv_empty_inspector_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_inv_empty_inspector_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_inv_empty_inspector_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_inv_empty_inspector_label.add_theme_color_override("font_color", Color(0.5, 0.55, 0.6))
-	det_vbox.add_child(_inv_empty_inspector_label)
-	
-	_inv_inspector_box = VBoxContainer.new()
-	_inv_inspector_box.add_theme_constant_override("separation", 10)
-	_inv_inspector_box.visible = false
-	det_vbox.add_child(_inv_inspector_box)
-	
-	_inv_details_title = Label.new()
-	_inv_details_title.text = "Берёзовое полено"
-	_inv_details_title.add_theme_font_size_override("font_size", 18)
-	_inv_details_title.add_theme_color_override("font_color", Color(1.0, 0.88, 0.35))
-	_inv_inspector_box.add_child(_inv_details_title)
-	
-	_inv_details_category = Label.new()
-	_inv_details_category.text = "Категория: Топливо / Материал"
-	_inv_details_category.add_theme_font_size_override("font_size", 12)
-	_inv_details_category.add_theme_color_override("font_color", Color(0.65, 0.70, 0.75))
-	_inv_inspector_box.add_child(_inv_details_category)
-	
-	var det_sep = HSeparator.new()
-	_inv_inspector_box.add_child(det_sep)
-	
-	_inv_details_stats = Label.new()
-	_inv_details_stats.text = "В стаке: x1\nВес за шт.: 4.0 кг\nОбщий вес: 4.0 кг\nВремя горения: 1.5 ч"
-	_inv_details_stats.add_theme_font_size_override("font_size", 13)
-	_inv_details_stats.add_theme_color_override("font_color", Color(0.88, 0.90, 0.94))
-	_inv_inspector_box.add_child(_inv_details_stats)
-	
-	var desc_panel = PanelContainer.new()
-	var desc_sb = StyleBoxFlat.new()
-	desc_sb.bg_color = Color(0.04, 0.05, 0.06, 0.8)
-	desc_sb.content_margin_left = 10
-	desc_sb.content_margin_top = 8
-	desc_sb.content_margin_right = 10
-	desc_sb.content_margin_bottom = 8
-	desc_panel.add_theme_stylebox_override("panel", desc_sb)
-	_inv_inspector_box.add_child(desc_panel)
-	
-	_inv_details_desc = Label.new()
-	_inv_details_desc.text = "Сухая древесина для костра."
-	_inv_details_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_inv_details_desc.add_theme_font_size_override("font_size", 12)
-	_inv_details_desc.add_theme_color_override("font_color", Color(0.72, 0.75, 0.80))
-	desc_panel.add_child(_inv_details_desc)
-	
-	var act_spacer = Control.new()
-	act_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_inv_inspector_box.add_child(act_spacer)
-	
-	# Action buttons (Drop 1 / Drop All)
-	var btn_box = VBoxContainer.new()
-	btn_box.add_theme_constant_override("separation", 6)
-	_inv_inspector_box.add_child(btn_box)
-	
-	_inv_btn_drop_one = Button.new()
-	_inv_btn_drop_one.text = "Выбросить 1 шт."
-	_inv_btn_drop_one.focus_mode = Control.FOCUS_NONE
-	_inv_btn_drop_one.pressed.connect(func(): drop_selected_item(false))
-	btn_box.add_child(_inv_btn_drop_one)
-	
-	_inv_btn_drop_all = Button.new()
-	_inv_btn_drop_all.text = "Выбросить весь стак"
-	_inv_btn_drop_all.focus_mode = Control.FOCUS_NONE
-	_inv_btn_drop_all.pressed.connect(func(): drop_selected_item(true))
-	btn_box.add_child(_inv_btn_drop_all)
+	_backpack_ui = preload("res://scripts/ui/BackpackUI.gd").new()
+	add_child(_backpack_ui)
+	_backpack_ui.build(self)
 
 func _input(event: InputEvent) -> void:
 	if get_tree().paused:
@@ -1148,6 +893,7 @@ func _toggle_mouse_capture() -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func _toggle_inventory() -> void:
+	if is_instance_valid(survival) and survival.placing: survival.cancel_placement()
 	_cancel_chop()
 	_is_lmb_held = false
 	_is_inventory_open = not _is_inventory_open
@@ -1159,6 +905,7 @@ func _toggle_inventory() -> void:
 		_refresh_inventory_ui()
 	else:
 		_inv_layer.visible = false
+		if is_instance_valid(survival): survival.cancel_job()
 		_is_mouse_captured = true
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		_play_ui_sound("res://assets/sounds/level_01/ui/ui_inventory_close.wav")
@@ -1604,6 +1351,7 @@ func drop_selected_item(drop_all: bool = false) -> void:
 	drop_item(_selected_slot_index, drop_all)
 
 func drop_item(slot_idx: int, drop_all: bool = false) -> void:
+	if is_instance_valid(survival) and not survival.job.is_empty(): return
 	if slot_idx < 0 or slot_idx >= MAX_SLOTS or inventory_slots[slot_idx] == null:
 		return
 		
@@ -1612,7 +1360,7 @@ func drop_item(slot_idx: int, drop_all: bool = false) -> void:
 		var amount = int(slot["count"]) if drop_all else 1
 		var item = slot.duplicate(true)
 		item["count"] = 1
-		if survival.Items.transact(self,{slot["id"]:amount}):
+		if survival.Items.transact(self,{slot["id"]:amount},[],slot_idx):
 			for i in amount:
 				var forward = -_camera.global_basis.z
 				forward.y = 0
@@ -1678,6 +1426,7 @@ func _update_inventory_hud() -> void:
 
 func _on_slot_clicked(slot_idx: int) -> void:
 	_selected_slot_index = slot_idx
+	_backpack_ui.show_selection()
 	_play_ui_sound("res://assets/sounds/level_01/ui/ui_click.wav")
 	_refresh_inventory_ui()
 
@@ -1750,11 +1499,11 @@ func _refresh_inventory_ui() -> void:
 			var total_w = float(count) * item.get("unit_weight", 4.0)
 			btn.text = "%s\nx%d\n(%.1f кг)" % [sp_name, count, total_w]
 			btn.add_theme_color_override("font_color", item.get("color", Color.WHITE))
-			btn.add_theme_font_size_override("font_size", 12)
+			btn.add_theme_font_size_override("font_size", roundi(14 * _backpack_ui.ui_scale))
 		else:
 			btn.text = "—"
 			btn.add_theme_color_override("font_color", Color(0.3, 0.35, 0.4))
-			btn.add_theme_font_size_override("font_size", 14)
+			btn.add_theme_font_size_override("font_size", roundi(14 * _backpack_ui.ui_scale))
 			
 	# 3. Update Inspector Panel
 	if _selected_slot_index >= 0 and _selected_slot_index < MAX_SLOTS and inventory_slots[_selected_slot_index] != null:
@@ -1764,13 +1513,13 @@ func _refresh_inventory_ui() -> void:
 		
 		_inv_details_title.text = item.get("name", "Предмет")
 		_inv_details_title.add_theme_color_override("font_color", item.get("color", Color(1.0, 0.9, 0.4)))
-		_inv_details_category.text = "Категория: Топливо / Материал"
+		_inv_details_category.text = "Тип: " + {"log":"Бревно", "firewood":"Топливо", "brush":"Растопка", "stone":"Материал", "camp_kit":"Набор для размещения"}.get(item.get("type", ""), "Материал")
 		
 		var count = item.get("count", 1)
 		var unit_w = item.get("unit_weight", 4.0)
 		var total_w = float(count) * unit_w
 		_inv_details_stats.text = "В стаке: x%d шт.\nВес за шт.: %.1f кг\nОбщий вес: %.1f кг\nВремя горения: %s\nТеплоотдача: %s" % [
-			count, unit_w, total_w, item.get("burn_time", "1.5 ч"), item.get("heat", "+18 °C")
+			count, unit_w, total_w, item.get("burn_time", "—"), item.get("heat", "—")
 		]
 		_inv_details_desc.text = item.get("description", "")
 		_inv_btn_drop_one.text = "Выбросить 1 шт. (%.1f кг)" % unit_w
@@ -1778,6 +1527,8 @@ func _refresh_inventory_ui() -> void:
 	else:
 		_inv_empty_inspector_label.visible = true
 		_inv_inspector_box.visible = false
+
+	if is_instance_valid(_backpack_ui): _backpack_ui.refresh_actions()
 
 
 func _connect_settings_signals() -> void:

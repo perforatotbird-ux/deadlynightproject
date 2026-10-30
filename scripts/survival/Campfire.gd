@@ -36,7 +36,7 @@ func sync_visual() -> void:
 func _process(_dt: float) -> void:sync_visual()
 func get_interact_text() -> String:
  return "[E] Костёр · %s · топливо %.0f мин" % [{"unlit":"не разожжён","burning":"горит","embers":"угли","cold":"остыл"}.get(data["state"],""),float(data["fuel"])/60]
-func survival_interact() -> void:session.open_panel(data["id"])
+func survival_interact() -> void:session.open_backpack(data["id"])
 
 func ignition_fx(method: String) -> void:
  var particles:=GPUParticles3D.new();particles.one_shot=true;particles.amount=16 if method=="spark" else 5;particles.lifetime=0.4;particles.position=Vector3(0,0.3,0)
