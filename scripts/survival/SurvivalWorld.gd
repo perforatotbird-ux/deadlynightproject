@@ -28,6 +28,7 @@ var dropped: Array = []
 var fire_nodes: Array = []
 var shelter: Node3D
 var ui: CanvasLayer
+var atmosphere: Node3D
 var job: Dictionary = {}
 var rng := RandomNumberGenerator.new()
 var selected_fire := ""
@@ -58,6 +59,7 @@ func _ready() -> void:
  location="mine" if get_parent().name=="MineInterior" else "forest"
  ui=UI.new();ui.session=self;add_child(ui)
  if location=="forest":_create_shelter();_setup_weather_fx()
+ atmosphere=preload("res://scripts/atmosphere/AtmosphereDirector.gd").new();atmosphere.session=self;add_child(atmosphere)
  if not travel.is_empty():
   var payload:=travel;travel={}
   player.inventory_slots=payload["inventory"].duplicate(true)
@@ -80,7 +82,9 @@ func notify(text: String) -> void:
 func _process(delta: float) -> void:
  if not is_instance_valid(player):return
  if not player._is_active:return
+ var sleeping:bool=job.get("kind")=="rest"
  advance(delta)
+ atmosphere.advance(delta,sleeping)
  if location=="forest":
   _scan-=delta
   if _scan<=0:_scan=0.7;_stream_resources()
@@ -359,7 +363,7 @@ func drop_resource(item: Dictionary, pos: Vector3) -> void:
  _spawn_pickup(item,id,pos)
 
 func export_state() -> Dictionary:
- var state:={"version":1,"clock":clock,"weather":weather,"weather_until":weather_until,"wetness":wetness,"warmth":warmth,"energy":energy,"health":health,"matches":matches,"active_tool":player.active_hotbar_slot,"belt_items":player.belt_items.duplicate(),"lantern_on":player._is_lantern_on,"fires":fires.duplicate(true),"picked":picked.duplicate(),"dropped":dropped.duplicate(true),"job":job.duplicate(true),"rng_state":str(rng.state),"location":location,"door_closed":shelter.door_closed if is_instance_valid(shelter) else _saved_door_closed,"exterior_felled":_old_felled,"exterior_logs":_old_logs,"mine_logs":_mine_logs}
+ var state:={"version":1,"atmosphere":atmosphere.export_state(),"clock":clock,"weather":weather,"weather_until":weather_until,"wetness":wetness,"warmth":warmth,"energy":energy,"health":health,"matches":matches,"active_tool":player.active_hotbar_slot,"belt_items":player.belt_items.duplicate(),"lantern_on":player._is_lantern_on,"fires":fires.duplicate(true),"picked":picked.duplicate(),"dropped":dropped.duplicate(true),"job":job.duplicate(true),"rng_state":str(rng.state),"location":location,"door_closed":shelter.door_closed if is_instance_valid(shelter) else _saved_door_closed,"exterior_felled":_old_felled,"exterior_logs":_old_logs,"mine_logs":_mine_logs}
  return state
 func import_state(state: Dictionary) -> void:
  close_backpack();cancel_placement()
@@ -387,10 +391,11 @@ func import_state(state: Dictionary) -> void:
   job=saved_job
   if job.get("kind")=="rest":player._backpack_ui.sleep_hours.value=clampi(int(job.get("hours",job.get("duration",1))),1,12)
   open_backpack(job.get("fire",""),"rest" if job.get("kind")=="rest" else "camp")
+ atmosphere.import_state(state.get("atmosphere",{}))
  _update_lighting();ui.refresh()
 func prepare_travel() -> void:
  if _transitioning:return
- _transitioning=true;close_backpack();cancel_placement()
+ _transitioning=true;close_backpack();cancel_placement();atmosphere.suspend()
  var felled:Dictionary=load("res://scripts/props/TreeChoppable.gd").felled_tree_ids.duplicate(true)
  var logs:Array=[]
  if location=="forest":
