@@ -98,6 +98,7 @@ func run() -> void:
  s.shelter.set_door(false);check(not s.safe_shelter() and s.covered(),"roof protection separate from closed-door warmth")
  check(not s.begin_rest(),"cannot sleep with open door")
  s.shelter.set_door(true);s.warmth=80;s.energy=30;s.weather="clear";s.weather_until=s.clock+100000
+ s.open_sleep(s.shelter.bed)
  check(s.begin_rest(),"rest allowed in closed cabin")
  var time_before:float=s.clock;s.advance(1)
  check(is_equal_approx(s.clock-time_before,3600) and s.energy>30,"one-hour sleep advances clock and restores energy")
@@ -152,6 +153,7 @@ func run() -> void:
  check(s.health<hp and s.health>0,"prolonged dangerous cold damages health gradually")
  s.health=100;s.warmth=80;s.wetness=0;s.weather="clear";s.weather_until=s.clock+100000
  p.global_position=s.shelter.global_position+Vector3(0,0.2,0);s.shelter.set_door(true)
+ s.open_sleep(s.shelter.bed)
  check(s.begin_rest(),"begin rest for clock-boundary test")
  var t0:float=s.clock;s.advance(1.1)
  check(absf((s.clock-t0)-3606)<0.01,"rest ends at exactly one hour; leftover frame resumes normal time")

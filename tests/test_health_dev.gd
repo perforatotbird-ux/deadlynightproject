@@ -65,7 +65,10 @@ func run() -> void:
  p=load("res://scenes/player/Player.tscn").instantiate();scene.add_child(p);p.position=Vector3(6,0.2,6);p.set_active(true);p.set_physics_process(false)
  s=load("res://scripts/survival/SurvivalWorld.gd").new();scene.add_child(s);s.set_process(false);s.shelter.position=Vector3.ZERO
  await physics_frame;await settle()
- check(s.resources.size()==7,"finite authored camp supplies exist without filling inventory")
+ var supply_count:=0
+ for id in s.resources:
+  if str(id).begins_with("camp_supply_"):supply_count+=1
+ check(supply_count==7,"finite authored camp supplies exist alongside streamed natural resources")
  var supply=s.resources.camp_supply_0;supply.survival_interact();check(s.picked.has("camp_supply_0") and s.Items.count(p.inventory_slots,"ration")==1,"camp supplies are normal pickups and persist collected ID")
  s._spawn_supplies();check(not s.resources.has("camp_supply_0"),"collected camp supply cannot respawn")
  clear_items();var slot:=add("water");s.body.water=10
@@ -149,9 +152,9 @@ func run() -> void:
  clear_items()
  for id in ["water","raw_water","ration","berries","bandage","compress"]:add(id)
  s.open_backpack();p._on_slot_clicked(0);await capture("supplies_720p")
- p._backpack_ui.tabs.current_tab=4;s.body.conditions.bleeding={"remaining":-1};s.body.conditions.sprain={"remaining":240};s.body.water=14;s.body.food=20
+ p._backpack_ui.tabs.current_tab=2;s.body.conditions.bleeding={"remaining":-1};s.body.conditions.sprain={"remaining":240};s.body.water=14;s.body.food=20
  await capture("health_720p")
- check(p._backpack_ui.condition_values.size()==6,"journal exposes six separate body indicators")
+ check(p._backpack_ui.condition_values.size()==7,"journal exposes all seven body indicators including wetness")
  for id in ["water","raw_water","ration","berries","bandage","compress"]:check(load("res://scripts/ui/JournalArt.gd").texture(id)!=null,"new supply icon loaded: "+id)
  root.size=Vector2i(800,600);await settle();p._backpack_ui.resize();await capture("health_800")
  s.close_backpack();dev.open_menu()

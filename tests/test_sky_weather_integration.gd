@@ -58,7 +58,7 @@ func run() -> void:
  check(p._is_inventory_open and p._is_active,"weather keeps actual backpack interactive")
  await capture("03_actual_backpack");s.close_backpack()
  var before:float=s.clock;p.set_active(false);s._process(4)
- check(s.clock==before,"inactive/free camera freezes weather and world together")
+ check(s.clock>before,"switching to free camera does not pause the authoritative world clock")
  p.set_active(true);p.set_physics_process(false)
  var rain_style:String=s.weather_model.rain_style;var until:float=s.weather_until
  if graphical:

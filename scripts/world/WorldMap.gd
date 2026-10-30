@@ -14,17 +14,19 @@ var _interactive_root: Node3D = null
 var _tree_meshes: Dictionary = {}
 # All tree records from JSON
 var _all_trees_data: Array = []
+var _tutorial_records:Array=[]
 # Interactive trees pool
 var _interactive_trees: Dictionary = {}
 
 # Dynamic proximity trees
 var _dynamic_trees_root: Node3D = null
 var _chunk_trees_data: Dictionary = {} # chunk_name -> [tree_data, ...]
-var _tree_mmi_index: Dictionary = {}   # tree_id -> { "mm": mm, "index": i, "xform": xform }
+var _tree_mmi_index: Dictionary = {}   # tree_id -> { "mm": mm, "index": i, "xform": original_xform }
 var _dynamic_trees: Dictionary = {}    # tree_id -> TreeInteractive
 var _player_ref: Node3D = null
 var _dynamic_update_timer: float = 0.0
 var _remnant_requested: Dictionary = {}
+var _hidden_tree_ids:Dictionary={}
 
 func _ready() -> void:
 	_load_tree_models()
@@ -303,12 +305,14 @@ func _load_vegetation() -> void:
 				var t_id = t.get("id", "")
 				var pos_id = "pos_%d_%d_%d" % [int(round(origin.x)), int(round(origin.y)), int(round(origin.z))]
 				var is_felled = (t_id != "" and TreeChoppable.felled_tree_ids.has(t_id)) or TreeChoppable.felled_tree_ids.has(pos_id)
+				var original_xform:Transform3D=xform
 				if is_felled:
 					xform.basis = Basis().scaled(Vector3.ZERO)
 				mm.set_instance_transform(i, xform)
 				
 				if t_id != "":
-					_tree_mmi_index[t_id] = { "mm": mm, "index": i, "xform": xform }
+					_tree_mmi_index[t_id] = { "mm": mm, "index": i, "xform": original_xform }
+					if is_felled:_hidden_tree_ids[t_id]=true
 				
 			mmi.multimesh = mm
 			chunk_node.add_child(mmi)
@@ -317,19 +321,24 @@ func _load_vegetation() -> void:
 	print("[WorldMap] Spawned %d trees across %d chunks using MultiMesh." % [total_instances, chunk_map.size()])
 
 func _spawn_tutorial_trees() -> void:
-	_interactive_root = Node3D.new()
-	_interactive_root.name = "InteractiveTrees"
-	add_child(_interactive_root)
+	if not is_instance_valid(_interactive_root):
+		_interactive_root = Node3D.new()
+		_interactive_root.name = "InteractiveTrees"
+		add_child(_interactive_root)
 	
 	var interactive_scene = load("res://scenes/props/TreeInteractive.tscn")
 	if interactive_scene == null:
 		return
 		
-	# Find tutorial trees
-	for tree in _all_trees_data:
+	# Cache authored tutorial records; in-place loads must not scan 55k trees.
+	if _tutorial_records.is_empty():
+		for record in _all_trees_data:
+			if record.get("tutorial",false):_tutorial_records.append(record)
+	for tree in _tutorial_records:
 		if tree.get("tutorial", false):
 			var sp = tree.get("species", "birch")
 			var tree_id = tree.get("id", "tut_tree")
+			if _interactive_trees.has(tree_id) and is_instance_valid(_interactive_trees[tree_id]):continue
 			var pos_arr = tree.get("pos")
 			var origin = Vector3(pos_arr[0], pos_arr[2], -pos_arr[1])
 			
@@ -449,7 +458,7 @@ func _deactivate_dynamic_tree(t_id: String) -> void:
 				pos_id = "pos_%d_%d_%d" % [int(round(inst.global_position.x)), int(round(inst.global_position.y)), int(round(inst.global_position.z))]
 			var is_felled = TreeChoppable.felled_tree_ids.has(t_id) or (pos_id != "" and TreeChoppable.felled_tree_ids.has(pos_id))
 			# If tree hasn't been chopped (still full HP) AND is not felled
-			if inst.current_hp == inst.max_hp and not is_felled:
+			if not is_felled:
 				_restore_mmi_tree_scale(t_id)
 			else:
 				_set_mmi_tree_scale(t_id, 0.0)
@@ -515,6 +524,8 @@ func restore_felled_stumps() -> void:
 			if origin.distance_squared_to(player.global_position)<70.0*70.0:_ensure_saved_remnant(t_id,origin)
 
 func _set_mmi_tree_scale(t_id: String, scale_mult: float) -> void:
+	if is_zero_approx(scale_mult):_hidden_tree_ids[t_id]=true
+	else:_hidden_tree_ids.erase(t_id)
 	if _tree_mmi_index.has(t_id):
 		var data = _tree_mmi_index[t_id]
 		var mm: MultiMesh = data["mm"]
@@ -525,6 +536,7 @@ func _set_mmi_tree_scale(t_id: String, scale_mult: float) -> void:
 		mm.set_instance_transform(idx, new_xform)
 
 func _restore_mmi_tree_scale(t_id: String) -> void:
+	_hidden_tree_ids.erase(t_id)
 	if _tree_mmi_index.has(t_id):
 		var data = _tree_mmi_index[t_id]
 		var mm: MultiMesh = data["mm"]
@@ -540,3 +552,26 @@ func _on_mine_entrance_entered(body: Node3D) -> void:
 			var session = get_parent().get_node_or_null("SurvivalWorld")
 			if session: session.prepare_travel()
 			tree_ref.change_scene_to_file.call_deferred("res://scenes/mine/MineInterior.tscn")
+
+func reconcile_loaded_world() -> void:
+	# Replace changed geometry, not every intact nearby tree on every load.
+	# Pending old remnant jobs must not materialize after the new state applies.
+	for builder in get_tree().get_nodes_in_group("remnant_builders"):
+		if is_instance_valid(builder) and is_ancestor_of(builder):builder.free()
+	for stump in get_tree().get_nodes_in_group("permanent_stumps"):
+		if get_parent().is_ancestor_of(stump):stump.queue_free()
+	for pool in [_interactive_trees,_dynamic_trees]:
+		for id in pool.keys():
+			var tree=pool[id]
+			if not is_instance_valid(tree):pool.erase(id);continue
+			if tree._is_already_felled() or tree._is_falling or tree._fall_preparing or tree._restoring_remnant:
+				tree.free();pool.erase(id);continue
+			var wanted:Array=TreeChoppable.damaged_tree_states.get(tree.get_effective_id(),{}).get("cuts",[])
+			var actual:Array=tree._voxel_trunk.export_cuts() if tree._voxel_trunk else []
+			if actual!=wanted:
+				tree._apply_species_config();tree._setup_voxel_trunk();tree._update_mesh_stage(0);tree.restore_damage()
+	for id in _hidden_tree_ids.keys():
+		if not _dynamic_trees.has(id) and not _interactive_trees.has(id):_restore_mmi_tree_scale(id)
+	if not is_instance_valid(_dynamic_trees_root):_setup_dynamic_trees()
+	restore_felled_stumps()
+	_spawn_tutorial_trees()

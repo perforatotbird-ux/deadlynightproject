@@ -1,0 +1,31 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[SaveManager] Changing scene to MapViewer for save payload application...
+PASS: fresh process reads previously written slot
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+[SaveManager] Loaded game state successfully applied to active scene.
+PASS: fresh process restores exactly one installed campfire
+PASS: fresh process retains felled authored birch
+PASS: fresh process restores two uncollected physical logs
+PASS: fresh process restores cabin-dropped split firewood
+PASS: fresh process retains ten collected natural resource identities
+PASS: fresh process restores exact body and time snapshot
+PASS: fresh process reconstructs partially damaged beech geometry
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[SaveManager] Loaded game state successfully applied to active scene.
+PASS: loading an older uncut state removes remnants and restores standing tree
+RESTART LOAD TOTAL US: 6098945
+[SaveManager] Deleted save slot: bugfix_restart
+RESTART READ SUMMARY: 9 PASS, 0 FAIL

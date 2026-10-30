@@ -1,0 +1,138 @@
+{
+  "sources": {
+    "before": {
+      "file": "benchmark_before.json",
+      "sha256": "1fe8d5c007626e3492bd1b332f057ac3aa67108f0c93523c581923db199ef060",
+      "rows": 18
+    },
+    "after": {
+      "file": "benchmark_after.json",
+      "sha256": "89cddaad0642adc0a22047edc0641402750ebf53caa058f331f7179b36f4bba8",
+      "rows": 18
+    }
+  },
+  "baseline_commit": "3501a69",
+  "measurement": "Godot 4.7.2 Linux headless; same fixture scene and synthetic state; sequential, isolated XDG_DATA_HOME; microsecond clocks",
+  "comparison_plan": "Table requested by engineering acceptance; one first write per scenario and median of five subsequent writes. No target GPU/FPS claims.",
+  "metrics": [
+    {
+      "key": "first",
+      "label": "Первое сохранение, без изменённых деревьев",
+      "before": 0.548,
+      "after": 0.685,
+      "unit": "ms"
+    },
+    {
+      "key": "repeat",
+      "label": "Повторная перезапись без изменений, медиана 5",
+      "before": 0.419,
+      "after": 0.669,
+      "unit": "ms"
+    },
+    {
+      "key": "small",
+      "label": "Перезапись после 3 изменённых деревьев / 12 picked-ID",
+      "before": 0.681,
+      "after": 1.117,
+      "unit": "ms"
+    },
+    {
+      "key": "large",
+      "label": "Перезапись после 1000 изменённых деревьев / 4000 picked-ID",
+      "before": 59.284,
+      "after": 24.308,
+      "unit": "ms"
+    },
+    {
+      "key": "large_repeat",
+      "label": "Повторная перезапись большого состояния, медиана 5",
+      "before": 62.827,
+      "after": 40.763,
+      "unit": "ms"
+    },
+    {
+      "key": "bytes",
+      "label": "Размер JSON большого состояния",
+      "before": 1232285.0,
+      "after": 252149.0,
+      "unit": "bytes"
+    },
+    {
+      "key": "memory",
+      "label": "Выборка прироста static-memory после сериализации, большой слот",
+      "before": 13240828.0,
+      "after": 3901484.0,
+      "unit": "bytes"
+    },
+    {
+      "key": "load_0",
+      "label": "Тёплая загрузка: чтение + JSON + применение, малый слот",
+      "before": 6.022,
+      "after": 6.527,
+      "unit": "ms"
+    },
+    {
+      "key": "load_1000",
+      "label": "Тёплая загрузка: чтение + JSON + применение, большой слот",
+      "before": 60.157,
+      "after": 31.927,
+      "unit": "ms"
+    }
+  ],
+  "large_repeat_phases_ms": [
+    {
+      "key": "player_us",
+      "label": "Персонаж",
+      "before": 0.031,
+      "after": 0.037
+    },
+    {
+      "key": "voxel_us",
+      "label": "Реестр изменений деревьев",
+      "before": 7.942,
+      "after": 5.677
+    },
+    {
+      "key": "items_us",
+      "label": "Физические брёвна",
+      "before": 0.008,
+      "after": 0.016
+    },
+    {
+      "key": "world_us",
+      "label": "Состояние survival / предметов / погоды",
+      "before": 0.837,
+      "after": 0.794
+    },
+    {
+      "key": "assemble_us",
+      "label": "Header и сборка payload",
+      "before": 0.039,
+      "after": 0.038
+    },
+    {
+      "key": "serialize_us",
+      "label": "JSON-сериализация",
+      "before": 41.054,
+      "after": 15.536
+    },
+    {
+      "key": "disk_us",
+      "label": "Файл, проверка, backup и замена",
+      "before": 2.323,
+      "after": 15.473
+    },
+    {
+      "key": "metadata_us",
+      "label": "Manifest",
+      "before": 0.249,
+      "after": 1.657
+    }
+  ],
+  "notes": [
+    "File read+parse and synchronous state application measured together; cold scene construction not included.",
+    "OS static-memory sample after serialization, not process RSS high-water or guaranteed allocation peak.",
+    "Baseline fixture measures original save algorithm; distant synthetic tree records do not reconstruct 1000 nearby meshes.",
+    "Lower small-save latency was not achieved; backup verification intentionally adds overhead."
+  ]
+}

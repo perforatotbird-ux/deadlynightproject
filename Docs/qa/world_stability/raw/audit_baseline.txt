@@ -1,0 +1,31 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+AUDIT initial active=true paused=false health=100.0 clock=57600.5 resources=105
+AUDIT hit (-900.0, 26.0, 1100.0): (-900.0, 27.79999, 1100.0) collider=Player:<CharacterBody3D#35198600655> ground=false
+AUDIT resources=105 cells=9
+AUDIT hit (-400.0, 20.0, -400.0): (-400.0, 21.79999, -400.0) collider=Player:<CharacterBody3D#35198600655> ground=false
+AUDIT resources=99 cells=9
+AUDIT hit (925.0, 90.0, -37.0): (925.0, 91.8, -37.0) collider=Player:<CharacterBody3D#35198600655> ground=false
+AUDIT resources=5 cells=1
+AUDIT real clock delta=25.0 resources=5 hud=true health=100.0
+AUDIT MAT birch M_Bark_birch color=(0.9453, 0.9357, 0.9163, 1.0) vtx=false colors=0 first=none
+AUDIT MAT birch M_Foliage_birch color=(0.65, 0.7918, 0.4845, 1.0) vtx=false colors=0 first=none
+AUDIT MAT spruce M_Bark_spruce color=(0.5749, 0.5064, 0.4366, 1.0) vtx=false colors=0 first=none
+AUDIT MAT spruce M_Foliage_spruce color=(0.3811, 0.5169, 0.3959, 1.0) vtx=false colors=0 first=none
+AUDIT MAT beech M_Bark_beech color=(0.722, 0.7287, 0.7287, 1.0) vtx=false colors=0 first=none
+AUDIT MAT beech M_Foliage_beech color=(0.5749, 0.7354, 0.4366, 1.0) vtx=false colors=0 first=none
+AUDIT MAT oak M_Bark_oak color=(0.5271, 0.4236, 0.3492, 1.0) vtx=false colors=0 first=none
+AUDIT MAT oak M_Foliage_oak color=(0.5169, 0.6343, 0.4236, 1.0) vtx=false colors=0 first=none

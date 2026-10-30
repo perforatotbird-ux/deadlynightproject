@@ -1,0 +1,41 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+PASS: birch first strike: undamaged bark retains exact authored material and original vertex colors
+PASS: birch repeated strike: undamaged bark retains exact authored material and original vertex colors
+PASS: birch: repeated light damage retains standing tree
+PASS: birch: partial cuts survive JSON restoration
+PASS: birch loaded partial tree: undamaged bark retains exact authored material and original vertex colors
+PASS: birch: real repeated strikes reach physical fracture
+PASS: birch: felling clears standing-damage registry
+PASS: birch: canonical save contains one record per felled tree
+PASS: birch: loaded fractured stump retains species bark material
+PASS: spruce first strike: undamaged bark retains exact authored material and original vertex colors
+PASS: spruce repeated strike: undamaged bark retains exact authored material and original vertex colors
+PASS: spruce: repeated light damage retains standing tree
+PASS: spruce: partial cuts survive JSON restoration
+PASS: spruce loaded partial tree: undamaged bark retains exact authored material and original vertex colors
+PASS: spruce: real repeated strikes reach physical fracture
+PASS: spruce: felling clears standing-damage registry
+PASS: spruce: canonical save contains one record per felled tree
+PASS: spruce: loaded fractured stump retains species bark material
+PASS: beech first strike: undamaged bark retains exact authored material and original vertex colors
+PASS: beech repeated strike: undamaged bark retains exact authored material and original vertex colors
+PASS: beech: repeated light damage retains standing tree
+PASS: beech: partial cuts survive JSON restoration
+PASS: beech loaded partial tree: undamaged bark retains exact authored material and original vertex colors
+PASS: beech: real repeated strikes reach physical fracture
+PASS: beech: felling clears standing-damage registry
+PASS: beech: canonical save contains one record per felled tree
+PASS: beech: loaded fractured stump retains species bark material
+PASS: oak first strike: undamaged bark retains exact authored material and original vertex colors
+PASS: oak repeated strike: undamaged bark retains exact authored material and original vertex colors
+PASS: oak: repeated light damage retains standing tree
+PASS: oak: partial cuts survive JSON restoration
+PASS: oak loaded partial tree: undamaged bark retains exact authored material and original vertex colors
+PASS: oak: real repeated strikes reach physical fracture
+PASS: oak: felling clears standing-damage registry
+PASS: oak: canonical save contains one record per felled tree
+PASS: oak: loaded fractured stump retains species bark material
+PASS: oak requires fewer real strikes than previous strength 20
+CHOP COUNTS: [{"damage":1,"hits":7,"species":"birch","strength":8,"tool":"iron_axe"},{"damage":1,"hits":10,"species":"spruce","strength":12,"tool":"iron_axe"},{"damage":1,"hits":13,"species":"beech","strength":16,"tool":"iron_axe"},{"damage":1,"hits":13,"species":"oak","strength":16,"tool":"iron_axe"},{"damage":1,"hits":17,"species":"oak_before","strength":20,"tool":"iron_axe"}]
+TREE MATERIAL BALANCE SUMMARY: 37 PASS, 0 FAIL

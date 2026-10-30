@@ -36,7 +36,11 @@ func run() -> void:
 	_update_sections()
 	if prepared.is_empty():
 		for data in inputs: prepared.append(_prepare(data))
-	for data in prepared: results.append(_damage(data))
+	for data in prepared:
+		var damaged:=_damage(data)
+		results.append({"arrays":damaged["arrays"],"material":data["material"],"bark":data["bark"]})
+		if damaged.has("cut_arrays") and not damaged["cut_arrays"][Mesh.ARRAY_VERTEX].is_empty():
+			results.append({"arrays":damaged["cut_arrays"],"material":-1,"bark":true})
 	if force_cut >= 0.0 or remaining_ratio <= BREAK_RATIO:
 		if force_cut >= 0.0: weakest_y = force_cut
 		_split()
@@ -189,8 +193,8 @@ func _damage(data: Dictionary) -> Dictionary:
 	if not data["bark"]: return {"arrays":data["arrays"],"material":data["material"],"bark":false}
 	var arrays: Array = data["arrays"].duplicate()
 	var original: PackedVector3Array = data["arrays"][Mesh.ARRAY_VERTEX]
-	var v := PackedVector3Array(); var n := PackedVector3Array(); var colors := PackedColorArray()
-	v.resize(original.size());n.resize(original.size());colors.resize(original.size())
+	var v := PackedVector3Array(); var n := PackedVector3Array(); var depths := PackedFloat32Array()
+	v.resize(original.size());n.resize(original.size());depths.resize(original.size())
 	var source_normals: PackedVector3Array = data["arrays"][Mesh.ARRAY_NORMAL]
 	for i in original.size():
 		var p := original[i]; var normal := source_normals[i]
@@ -208,9 +212,18 @@ func _damage(data: Dictionary) -> Dictionary:
 			var ny := normal.y+nr*field.w
 			normal = (radial*nr+tangent*nt+Vector3.UP*ny).normalized()
 		n[i] = normal
-		colors[i] = data["bark_color"].lerp(wood_color,smoothstep(0.0005,0.008,d))
-	arrays[Mesh.ARRAY_VERTEX]=v;arrays[Mesh.ARRAY_NORMAL]=n;arrays[Mesh.ARRAY_COLOR]=colors
-	return {"arrays":arrays,"material":data["material"],"bark":true}
+		depths[i]=d
+	# Never turn the whole stem into a white vertex-colored material. Keep
+	# intact triangles on their original surface; exposed notch triangles get
+	# the separate species-specific wood material, also used by fracture caps.
+	var bark_arrays:=_empty_arrays();var cut_arrays:=_empty_arrays()
+	for i in range(0,v.size(),3):
+		var tri:Array=[]
+		var exposed:=maxf(depths[i],maxf(depths[i+1],depths[i+2]))>0.0005
+		for j in 3:
+			tri.append([v[i+j],n[i+j],arrays[Mesh.ARRAY_TEX_UV][i+j],arrays[Mesh.ARRAY_COLOR][i+j]])
+		_append_tri(cut_arrays if exposed else bark_arrays,tri)
+	return {"arrays":bark_arrays,"cut_arrays":cut_arrays,"material":data["material"],"bark":true}
 
 func _split() -> void:
 	for data in results:

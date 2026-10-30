@@ -967,6 +967,7 @@ func _toggle_inventory() -> void:
 	_is_inventory_open = not _is_inventory_open
 	if _is_inventory_open:
 		_inv_layer.visible = true
+		_backpack_ui.focus_condition()
 		_backpack_ui.call_deferred("resize")
 		_is_mouse_captured = false
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -974,7 +975,8 @@ func _toggle_inventory() -> void:
 		_refresh_inventory_ui()
 	else:
 		_inv_layer.visible = false
-		if is_instance_valid(survival): survival.cancel_job()
+		if is_instance_valid(survival): survival.cancel_job();survival.revoke_sleep_access()
+		_backpack_ui.hide_context_pages()
 		_is_mouse_captured = true
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		_play_ui_sound("res://assets/sounds/level_01/ui/ui_inventory_close.wav")

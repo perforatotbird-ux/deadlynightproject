@@ -20,7 +20,7 @@ func _ready() -> void:
  door.set_script(preload("res://scripts/survival/ShelterInteract.gd"));door.shelter=self;door.kind="door"
  bed=StaticBody3D.new();bed.name="Cot";bed.collision_layer=1|8;add_child(bed);bed.position=Vector3(-1.1,0.3,-0.8)
  _box(bed,Vector3(1.1,0.3,1.9),Vector3.ZERO,roof,false)
- bed.set_script(preload("res://scripts/survival/ShelterInteract.gd"));bed.shelter=self;bed.kind="bed"
+ bed.set_script(preload("res://scripts/survival/SleepPoint.gd"));bed.shelter=self;bed.kind="bed";bed.add_to_group("sleep_points")
  var sign:=Label3D.new();sign.text="ЛЕСНАЯ СТОЯНКА\nДверь — [E] · Отдых — у койки";sign.font_size=32;sign.pixel_size=0.006;sign.position=Vector3(0,2.5,2.22);add_child(sign)
  set_door(door_closed)
 func _box(parent: Node3D, size: Vector3, pos: Vector3, mat: Material, own_body: bool = true) -> void:

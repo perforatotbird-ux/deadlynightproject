@@ -51,6 +51,8 @@ var item_empty:Label
 var condition_info:Label
 var condition_values:Dictionary={}
 var supply_select:OptionButton
+var fire_page:VBoxContainer
+var sleep_page:VBoxContainer
 
 func label(parent:Node,text:String,size:int=14) -> Label:
  var n:=Label.new();n.text=text;n.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;n.size_flags_horizontal=Control.SIZE_EXPAND_FILL
@@ -130,7 +132,7 @@ func p_inspector() -> void:
  button(player._inv_inspector_box,"use_supply","Использовать",func():player.survival.use_supply(player._selected_slot_index);refresh_actions())
  button(player._inv_inspector_box,"place","Разместить костёр",func():player.survival.begin_placement())
  button(player._inv_inspector_box,"recipe_link","Открыть рецепт раскола",func():select_recipe("split_"+str(player.inventory_slots[player._selected_slot_index].get("species","birch")));tabs.current_tab=1)
- button(player._inv_inspector_box,"fuel_link","Добавить в костёр…",func():tabs.current_tab=2;fuel_select.select(fuel_select.get_item_index(player._selected_slot_index));refresh_actions())
+ button(player._inv_inspector_box,"fuel_link","Добавить в костёр…",func():focus_fire();fuel_select.select(fuel_select.get_item_index(player._selected_slot_index));refresh_actions())
  label(player._inv_inspector_box,"БЫСТРЫЙ ДОСТУП  /  ПОЯС",11).add_theme_color_override("font_color",Journal.MUTED)
  var beltrow:=row(player._inv_inspector_box,6);belt_select=picker(beltrow)
  for i in 3:belt_select.add_item("Ячейка %d" % (i+6),i)
@@ -168,7 +170,8 @@ func _build_craft() -> void:
  label(detail_column,"Готовый набор: «Рюкзак» → разместить или назначить на пояс.",12).add_theme_color_override("font_color",Journal.MUTED)
 
 func _build_fire() -> void:
- var camp:=page("Костёр");var body:=row(camp,20);body.size_flags_vertical=Control.SIZE_EXPAND_FILL
+ fire_page=VBoxContainer.new();fire_page.name="FireInteraction";fire_page.size_flags_vertical=Control.SIZE_EXPAND_FILL;tabs.get_parent().add_child(fire_page);fire_page.hide()
+ var camp:=fire_page;var body:=row(camp,20);body.size_flags_vertical=Control.SIZE_EXPAND_FILL
  var overview:=column(scroll(body));overview.size_flags_stretch_ratio=0.65
  picture(overview,"campfire",170);heading(overview,"Огонь в лесу",24);fire_info=label(overview,"")
  label(overview,"Огонь согревает и сушит. Дождь ускоряет расход топлива. Брёвна сначала нужно расколоть.",14).add_theme_color_override("font_color",Journal.MUTED)
@@ -185,7 +188,8 @@ func _build_fire() -> void:
  ignition_reason=label(ignition,"",12)
 
 func _build_sleep() -> void:
- var sleep:=page("Сон");var body:=row(sleep,24);body.size_flags_vertical=Control.SIZE_EXPAND_FILL
+ sleep_page=VBoxContainer.new();sleep_page.name="SleepInteraction";sleep_page.size_flags_vertical=Control.SIZE_EXPAND_FILL;tabs.get_parent().add_child(sleep_page);sleep_page.hide()
+ var sleep:=sleep_page;var body:=row(sleep,24);body.size_flags_vertical=Control.SIZE_EXPAND_FILL
  var overview:=column(scroll(body));overview.size_flags_stretch_ratio=0.65
  picture(overview,"bedroll",180);heading(overview,"До рассвета",24)
  label(overview,"Отдыхайте в защищённой стоянке. Огонь, холод и погода продолжают действовать во время сна.").add_theme_color_override("font_color",Journal.MUTED)
@@ -222,11 +226,24 @@ func _focus_page() -> void:
  if not player._is_inventory_open:return
  resize()
  Style.trap_focus(player._inv_root_panel)
-func focus_rest() -> void:tabs.current_tab=3
-func focus_fire() -> void:tabs.current_tab=2
+func hide_sleep() -> void:
+ if is_instance_valid(sleep_page):sleep_page.hide()
+ if is_instance_valid(tabs):tabs.show()
+func hide_context_pages() -> void:
+ if is_instance_valid(fire_page):fire_page.hide()
+ hide_sleep()
+func focus_condition() -> void:
+ hide_context_pages();tabs.current_tab=2
+func focus_rest() -> void:
+ if not is_instance_valid(player.survival) or not player.survival.has_sleep_access():return
+ fire_page.hide();tabs.hide();sleep_page.show()
+func focus_fire() -> void:
+ if not is_instance_valid(player.survival) or player.survival.nearby_fire().is_empty():return
+ sleep_page.hide();tabs.hide();fire_page.show()
 func show_selection() -> void:
- tabs.current_tab=0;right_scroll.scroll_vertical=0
+ hide_context_pages();tabs.current_tab=0;right_scroll.scroll_vertical=0
 func select_recipe(id:String) -> void:
+ hide_context_pages();tabs.current_tab=1
  selected_recipe=id;_inventory_signature="";refresh_actions()
 func _update_picker(node:OptionButton,types:Array,empty:String,species:String="") -> void:
  if node.get_popup().visible:return
@@ -404,22 +421,23 @@ func _build_condition() -> void:
  var health_page:=page("Состояние");var body_row:=row(health_page,20);body_row.size_flags_vertical=Control.SIZE_EXPAND_FILL
  var overview:=column(scroll(body_row),12)
  heading(overview,"Состояние персонажа",24)
- for id in ["health","warmth","water","food","energy","stamina"]:
-  var line:=row(overview,8);var text:=label(line,{"health":"Здоровье","warmth":"Тепло","water":"Вода","food":"Питание","energy":"Отдых","stamina":"Выносливость"}[id],14)
-  var bar:=ProgressBar.new();bar.custom_minimum_size=Vector2(90,20);bar.size_flags_horizontal=Control.SIZE_EXPAND_FILL;bar.show_percentage=false;line.add_child(bar);var value_text:=label(line,"100%",14);value_text.size_flags_horizontal=0;value_text.custom_minimum_size.x=45;value_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_RIGHT;condition_values[id]={"label":text,"bar":bar,"value":value_text}
+ for id in ["health","warmth","water","food","energy","stamina","wetness"]:
+  var line:=row(overview,8);var text:=label(line,{"health":"Здоровье","warmth":"Тепло","water":"Вода","food":"Питание","energy":"Отдых","stamina":"Выносливость","wetness":"Промокание"}[id],14)
+  var bar:=ProgressBar.new();bar.custom_minimum_size=Vector2(90,20);bar.size_flags_horizontal=Control.SIZE_EXPAND_FILL;bar.show_percentage=false;line.add_child(bar);var value_text:=label(line,"100%",14);value_text.size_flags_horizontal=0;value_text.custom_minimum_size.x=55;value_text.autowrap_mode=TextServer.AUTOWRAP_OFF;value_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_RIGHT;condition_values[id]={"label":text,"bar":bar,"value":value_text}
  label(overview,"Здоровье — последствия. Выносливость возвращается после передышки; усталость требует сна. Лечение останавливает причину, а не мгновенно возвращает здоровье.",14)
  var details:=column(scroll(body_row),12);heading(details,"Травмы и восстановление",24);condition_info=label(details,"")
  label(details,"Безопасная вода и готовая еда используются из рюкзака. У стоянки есть ограниченные припасы и дождесборник; съедобные ягоды встречаются в лесу. Сырую воду кипятите у горящего костра.",14)
  supply_select=picker(details)
  button(details,"condition_use","Использовать выбранный припас",func():player.survival.use_supply(supply_select.get_selected_id());refresh_actions())
- button(details,"condition_rest","Подготовиться ко сну",func():focus_rest())
+ label(details,"Сон — подойдите к кровати и нажмите E. Здесь меню сна не открывается.",13)
  label(details,"Восстановление здоровья: сон, тепло выше 45%, питание и вода, отсутствие кровотечения и переохлаждения. Травма ноги проходит за 4 игровых часа или быстрее во сне.",13)
 func _refresh_condition(s:Node) -> void:
  for id in condition_values:
   var value:float=s.body.get(id) if id in ["water","food","stamina"] else s.get(id)
   condition_values[id].bar.value=value
   condition_values[id].value.text="%.0f%%" % value
+  var danger:bool=value>70 if id=="wetness" else value<20
+  condition_values[id].value.add_theme_color_override("font_color",Color("f0a78e") if danger else Color("eee5d3"))
  condition_info.text=("Причина гибели: "+s.body.death_reason+"\n" if s.health<=0 else "")+s.body.describe()
  _update_picker(supply_select,["water","raw_water","ration","berries","bandage","compress"],"Нет еды, воды или медикаментов")
  buttons["condition_use"].disabled=s.health<=0 or not s.job.is_empty() or supply_select.item_count==0
- buttons["condition_rest"].disabled=s.health<=0

@@ -47,7 +47,7 @@ func init_trunk(p_species: String, p_radius: float = 0.35, p_height: float = 18.
 	_layer_solid_counts=_layer_initial_counts.duplicate()
 	_wood_material=StandardMaterial3D.new()
 	_wood_material.resource_name="M_Wood_Cut_"+species
-	_wood_material.albedo_color=Color.WHITE;_wood_material.vertex_color_use_as_albedo=true
+	_wood_material.albedo_color=SPECIES_PALETTES.get(species,SPECIES_PALETTES["birch"])["wood"]
 	_wood_material.roughness=0.9
 	_fallback=MeshInstance3D.new()
 	var cylinder:=CylinderMesh.new();cylinder.height=trunk_height;cylinder.top_radius=trunk_radius;cylinder.bottom_radius=trunk_radius;cylinder.radial_segments=32
@@ -70,10 +70,9 @@ func _snapshot(mi: MeshInstance3D) -> void:
 	for i in mi.mesh.get_surface_count():
 		var material:=mi.get_active_material(i)
 		var bark:bool=material!=null and "bark" in material.resource_name.to_lower()
-		var color:Color=SPECIES_PALETTES.get(species,SPECIES_PALETTES["birch"])["bark"]
-		if bark and material is StandardMaterial3D:
-			color=material.albedo_color
-			material=material.duplicate();material.albedo_color=Color.WHITE;material.vertex_color_use_as_albedo=true
+		# Retain the authored material verbatim (texture, color space, culling,
+		# vertex tint and roughness). Only newly exposed cut faces use wood.
+		var color:Color=material.albedo_color if material is StandardMaterial3D else Color.WHITE
 		var material_index:=_materials.size();_materials.append(material)
 		_inputs.append({"arrays":mi.mesh.surface_get_arrays(i),"transform":xform,"bark":bark,"material":material_index,"bark_color":color})
 

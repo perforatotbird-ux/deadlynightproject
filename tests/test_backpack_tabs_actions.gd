@@ -49,7 +49,7 @@ func run() -> void:
  await physics_frame;await settle()
  add("stone",6);add("brush",8);add("flint");add("pyrite");p._add_to_backpack({"species":"birch","weight":4.0})
  await key(KEY_TAB);var ui=p._backpack_ui
- check(ui.tabs.get_tab_count()==5,"five backpack tabs including character condition")
+ check(ui.tabs.get_tab_count()==3,"three general tabs; fire and sleep are contextual panels")
  await tab(1);check(ui.tabs.current_tab==1,"real mouse switches to recipes")
  await shot("01_craft");await click(ui.buttons["kit"])
  check(Items.count(p.inventory_slots,"camp_kit")==1,"held craft click survives repeated refresh")
@@ -69,7 +69,7 @@ func run() -> void:
  await shot("03_split");s.advance(10)
  check(Items.count(p.inventory_slots,"firewood")==3,"split yields three firewood pieces")
  var f:Dictionary=s.fires[0];s.open_backpack(f["id"]);await settle()
- check(ui.tabs.current_tab==2,"fire interaction opens dedicated camp tab")
+ check(ui.fire_page.visible and not ui.tabs.visible,"fire interaction opens contextual controls, not a craft tab")
  ui.fuel_select.select(ui.fuel_select.get_item_index(slot("firewood")));ui.refresh_actions();ui.fuel_amount.value=2
  await shot("04_camp");await click(ui.buttons["fuel"])
  check(Items.count(p.inventory_slots,"firewood")==1 and is_equal_approx(f["fuel"],3600),"held GUI fuel click adds selected amount exactly once")
@@ -82,7 +82,7 @@ func run() -> void:
  # Nonselected fuels remain accessible through the camp picker.
  p.position=s.shelter.global_position+Vector3(0,0.2,0);s.shelter.set_door(true);s.warmth=80;s.energy=20
  s.shelter.bed.survival_interact();await settle()
- check(ui.tabs.current_tab==3 and not ui.rest.disabled,"cot opens enabled sleep tab")
+ check(ui.sleep_page.visible and not ui.rest.disabled,"cot opens enabled contextual sleep panel")
  var slider_rect:Rect2=ui.sleep_hours.get_global_rect()
  var slider_point:Vector2=slider_rect.position+Vector2(slider_rect.size.x*0.75,slider_rect.size.y*0.5)
  pointer(slider_point,true);await process_frame;pointer(slider_point,false);await settle()
@@ -117,9 +117,10 @@ func run() -> void:
  check(ui.buttons["split"].disabled,"empty recipe picker does not expose a false actionable slot")
  if graphical:
   root.size=Vector2i(800,600);await settle();ui.resize()
-  for i in 4:
+  for i in 3:
    await tab(i);await shot("07_small_tab_%d" % i)
    check(ui.tabs.get_current_tab_control().get_global_rect().position.y>=ui.tabs.get_tab_bar().get_global_rect().end.y-1,"tab %d content does not overlap tab bar" % i)
    check(Rect2(Vector2.ZERO,root.get_visible_rect().size).encloses(p._inv_root_panel.get_global_rect()),"small window tab %d stays within viewport" % i)
  s.close_backpack();await settle();arena.free();current_scene=null;await settle()
+ await create_timer(0.25).timeout
  print("BACKPACK TABS SUMMARY: %d PASS, %d FAIL" % [passes,failures]);quit(1 if failures else 0)

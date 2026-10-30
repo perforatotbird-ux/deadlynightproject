@@ -64,6 +64,34 @@ var _old_felled: Dictionary = {}
 var _old_logs: Array = []
 var _mine_logs: Array = []
 var _saved_door_closed := true
+var _old_damaged:Dictionary={}
+var sleep_point:Node3D
+var _physics_ready:=false
+
+func has_sleep_access() -> bool:
+ return is_instance_valid(sleep_point) and sleep_point.has_method("is_sleep_point") and sleep_point.can_interact(player)
+func open_sleep(point:Node3D) -> bool:
+ if not is_instance_valid(point) or not point.has_method("is_sleep_point") or not point.can_interact(player):return false
+ if health<=0 or placing or not job.is_empty() or (is_instance_valid(dev_menu) and dev_menu.visible) or get_tree().paused:return false
+ sleep_point=point
+ open_backpack("","rest")
+ return true
+func revoke_sleep_access() -> void:
+ sleep_point=null
+ if job.get("kind")=="rest":cancel_job()
+ if is_instance_valid(player._backpack_ui):player._backpack_ui.hide_sleep()
+
+func _physics_process(delta:float) -> void:
+ if not is_instance_valid(player):return
+ _physics_ready=true
+ if sleep_point!=null and not has_sleep_access():
+  revoke_sleep_access()
+  if player._is_inventory_open:close_backpack()
+ if location=="forest":
+  _scan-=delta
+  if _scan<=0:_scan=0.7;_stream_resources()
+  if placing:_update_placement()
+
 
 func _ready() -> void:
  name="SurvivalWorld";add_to_group("survival_session");rng.randomize()
@@ -89,9 +117,16 @@ func _ready() -> void:
    if not ground.is_empty():exit_pos.y=ground.position.y+0.2
    player.global_position=exit_pos
    load("res://scripts/props/TreeChoppable.gd").felled_tree_ids=payload.get("felled",{})
+   load("res://scripts/props/TreeChoppable.gd").damaged_tree_states=payload.get("damaged",{})
    _restore_exterior_logs(payload.get("logs",[]))
-   get_parent().get_node("WorldMap").restore_felled_stumps()
-  else:_restore_exterior_logs(_mine_logs)
+   get_parent().get_node("WorldMap").reconcile_loaded_world()
+  else:
+   # Forest disk saves omit redundant exterior data, but travel carries it
+   # explicitly. Keep it while in the mine so the return/save cannot lose it.
+   _old_felled=payload.get("felled",_old_felled)
+   _old_damaged=payload.get("damaged",_old_damaged)
+   _old_logs=payload.get("logs",_old_logs)
+   _restore_exterior_logs(_mine_logs)
  dev_menu=preload("res://scripts/dev/DevMenu.gd").new();dev_menu.session=self;add_child(dev_menu)
  if location=="forest":call_deferred("_setup_supplies")
  _update_lighting()
@@ -102,7 +137,6 @@ func notify(text: String) -> void:
 
 func _process(delta: float) -> void:
  if not is_instance_valid(player):return
- if not player._is_active:return
  var sleeping:bool=job.get("kind")=="rest"
  advance(delta*dev_time_rate)
  weather_visual=weather_model.sample(clock,weather=="rain",weather_until,daylight())
@@ -113,10 +147,6 @@ func _process(delta: float) -> void:
  sky_events.advance(delta,weather_visual,sleeping)
  rain_field.update_field(delta,weather_visual,int(load("res://scripts/core/SettingsManager.gd").get_instance().get_setting("graphics","rain_quality",1)))
  atmosphere.advance(delta,sleeping)
- if location=="forest":
-  _scan-=delta
-  if _scan<=0:_scan=0.7;_stream_resources()
-  if placing:_update_placement()
  _visual_tick-=delta
  if _visual_tick<=0:
   _visual_tick=0.2;_update_lighting();ui.refresh()
@@ -126,6 +156,8 @@ func _process(delta: float) -> void:
 func advance(real_seconds: float) -> void:
  # Called by _process, which naturally stops with SceneTree pause.
  if real_seconds<=0 or health<=0 or dev_freeze_world:return
+ if not job.is_empty() and not valid_job(job):
+  cancel_job();notify("Незавершённое действие повреждено и отменено; игровые предметы не списаны.")
  var remaining:=real_seconds
  # Bounded integration preserves fuel/temperature order during accelerated sleep.
  while remaining>0.00001:
@@ -155,7 +187,7 @@ func advance(real_seconds: float) -> void:
    _die();break
   if not job.is_empty():
    if job.get("kind")=="rest":
-    if not safe_shelter() or warmth<20 or body.water<=0 or body.food<=0 or body.conditions.has("bleeding"):
+    if not has_sleep_access() or not safe_shelter() or warmth<20 or body.water<=0 or body.food<=0 or body.conditions.has("bleeding"):
      cancel_job();notify("Отдых прерван: холод, открытая дверь, голод, жажда или кровотечение");continue
    elif player.global_position.distance_to(_v3(job.get("origin",[])))>0.7:
     cancel_job();notify("Действие прервано движением");continue
@@ -218,10 +250,12 @@ func open_backpack(fire_id: String = "", page: String = "camp") -> void:
  selected_fire=fire_id
  if not player._is_inventory_open:player._toggle_inventory()
  player._backpack_ui.refresh_actions()
- if page=="rest":player._backpack_ui.focus_rest()
+ if page=="rest" and has_sleep_access():player._backpack_ui.focus_rest()
  elif fire_id!="":player._backpack_ui.focus_fire()
 func close_backpack() -> void:
  cancel_job()
+ if is_instance_valid(player._backpack_ui):player._backpack_ui.hide_context_pages()
+ sleep_point=null
  if player._is_inventory_open:player._toggle_inventory()
 func handle_input(event: InputEvent) -> bool:
  if placing:
@@ -237,6 +271,15 @@ func make_kit() -> bool:
  var ok:=Items.transact(player,CAMP_COST,[Items.item("camp_kit")])
  notify("Набор костра собран. Теперь разместите его." if ok else "Нужно 6 камней, 4 хвороста и место в рюкзаке")
  ui.refresh();return ok
+func valid_job(data:Dictionary) -> bool:
+ if data.get("kind","") not in ["rest","split","ignite","boil"]:return false
+ var duration=body.bounded(data.get("duration",0),0,100000)
+ var elapsed=body.bounded(data.get("elapsed",0),0,100000)
+ if duration<=0 or elapsed>duration:return false
+ if not data.get("origin") is Array or data.origin.size()!=3:return false
+ if data.kind=="split":return data.has("slot") and data.has("item_id") and data.has("weight") and data.has("species")
+ if data.kind in ["ignite","boil"]:return data.get("fire") is String and (data.kind!="ignite" or data.has("success"))
+ return duration<=12
 func begin_split(slot_index: int) -> bool:
  if not job.is_empty() or slot_index<0 or slot_index>=player.inventory_slots.size():return false
  var s=player.inventory_slots[slot_index]
@@ -289,6 +332,7 @@ func _fire_in_reach(f: Dictionary) -> bool:
 func rest_block_reason() -> String:
  if health<=0:return "Нельзя спать: персонаж погиб."
  if not job.is_empty():return "Сначала завершите или отмените текущее действие."
+ if not has_sleep_access():return "Подойдите к действительной точке сна и нажмите E."
  if not covered() or location!="forest":return "Нужна койка в лесной стоянке."
  if not safe_shelter():return "Закройте дверь стоянки."
  if warmth<20:return "Слишком холодно для сна. Сначала согрейтесь."
@@ -375,6 +419,9 @@ func _create_shelter() -> void:
  get_parent().add_child(shelter);shelter.global_position=pos
 
 func _stream_resources() -> void:
+ if not _physics_ready:return
+ for d in dropped:
+  if d.get("location","forest")==location and not picked.has(d["id"]) and Vector2(_v3(d["pos"]).x-player.global_position.x,_v3(d["pos"]).z-player.global_position.z).length()<60:_spawn_pickup(d["item"],d["id"],_v3(d["pos"]))
  if is_instance_valid(shelter) and player.global_position.distance_to(shelter.global_position)<60:_spawn_supplies()
  # Deterministic, finite per-cell resources; collected IDs survive unloading/loading.
  var center:=Vector2i(floori(player.global_position.x/24),floori(player.global_position.z/24))
@@ -387,16 +434,18 @@ func _stream_resources() -> void:
    var types=["brush","brush","brush","brush","stone","stone","stone","stone","flint","pyrite","berries"]
    for i in types.size():
     var id:=key+":"+str(i)
-    if picked.has(id):continue
     var pos:=Vector3(x*24+random.randf_range(2,22),player.global_position.y,z*24+random.randf_range(2,22))
-    var hit=player.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(pos+Vector3.UP*70,pos-Vector3.UP*90,1))
+    if picked.has(id):continue
+    var query:=PhysicsRayQueryParameters3D.create(Vector3(pos.x,1024,pos.z),Vector3(pos.x,-512,pos.z),1)
+    query.exclude=[player.get_rid()]
+    var hit=player.get_world_3d().direct_space_state.intersect_ray(query)
     if hit.is_empty() or hit.normal.y<0.8 or not hit.collider.is_in_group("camp_ground"):continue
     # Avoid authored cabin floor/roof: scatter only terrain, never structures.
     if is_instance_valid(shelter) and Vector2(pos.x-shelter.global_position.x,pos.z-shelter.global_position.z).length()<3.5:continue
     _spawn_pickup(Items.item(types[i]),id,hit.position)
  for id in resources.keys():
   var n=resources[id]
-  if is_instance_valid(n) and n.global_position.distance_to(player.global_position)>65:
+  if is_instance_valid(n) and Vector2(n.global_position.x-player.global_position.x,n.global_position.z-player.global_position.z).length()>65:
    n.queue_free();resources.erase(id)
    var parts=str(id).split(":")
    if parts.size()>=3:loaded_cells.erase(parts[0]+":"+parts[1])
@@ -410,7 +459,7 @@ func drop_resource(item: Dictionary, pos: Vector3) -> void:
  _spawn_pickup(item,id,pos)
 
 func export_state() -> Dictionary:
- var state:={"version":3,"body":body.export_state(),"rain_reserve":rain_reserve,"dev_tainted":dev_tainted,"sky_weather":weather_model.export_state(),"sky_events":sky_events.export_state() if is_instance_valid(sky_events) else {},"atmosphere":atmosphere.export_state(),"clock":clock,"weather":weather,"weather_until":weather_until,"wetness":wetness,"warmth":warmth,"energy":energy,"health":health,"matches":matches,"active_tool":player.active_hotbar_slot,"belt_items":player.belt_items.duplicate(),"lantern_on":player._is_lantern_on,"fires":fires.duplicate(true),"picked":picked.duplicate(),"dropped":dropped.duplicate(true),"job":job.duplicate(true),"rng_state":str(rng.state),"location":location,"door_closed":shelter.door_closed if is_instance_valid(shelter) else _saved_door_closed,"exterior_felled":_old_felled,"exterior_logs":_old_logs,"mine_logs":_mine_logs}
+ var state:={"version":3,"body":body.export_state(),"rain_reserve":rain_reserve,"dev_tainted":dev_tainted,"sky_weather":weather_model.export_state(),"sky_events":sky_events.export_state() if is_instance_valid(sky_events) else {},"atmosphere":atmosphere.export_state(),"clock":clock,"weather":weather,"weather_until":weather_until,"wetness":wetness,"warmth":warmth,"energy":energy,"health":health,"matches":matches,"active_tool":player.active_hotbar_slot,"belt_items":player.belt_items.duplicate(),"lantern_on":player._is_lantern_on,"fires":fires.duplicate(true),"picked":picked.duplicate(),"dropped":dropped.duplicate(true),"job":job.duplicate(true),"rng_state":str(rng.state),"location":location,"door_closed":shelter.door_closed if is_instance_valid(shelter) else _saved_door_closed,"exterior_felled":_old_felled if location=="mine" else {},"exterior_damaged":_old_damaged if location=="mine" else {},"exterior_logs":_old_logs if location=="mine" else [],"mine_logs":_mine_logs}
  return state
 func import_state(state: Dictionary) -> void:
  close_backpack();cancel_placement()
@@ -422,7 +471,7 @@ func import_state(state: Dictionary) -> void:
  player._refresh_belt_labels()
  player._is_lantern_on=bool(state.get("lantern_on",false));player.select_hotbar_slot(int(state.get("active_tool",player.active_hotbar_slot)))
  fires=state.get("fires",[]).duplicate(true);picked=state.get("picked",{}).duplicate();dropped=state.get("dropped",[]).duplicate(true)
- _old_felled=state.get("exterior_felled",{});_old_logs=state.get("exterior_logs",[]);_mine_logs=state.get("mine_logs",[])
+ _old_damaged=state.get("exterior_damaged",{});_old_felled=state.get("exterior_felled",{});_old_logs=state.get("exterior_logs",[]);_mine_logs=state.get("mine_logs",[])
  if state.has("rng_state"):rng.state=int(state["rng_state"])
  for n in fire_nodes:
   if is_instance_valid(n):n.free()
@@ -436,10 +485,13 @@ func import_state(state: Dictionary) -> void:
  for d in dropped:
   if d.get("location","forest")==location and not picked.has(d["id"]):_spawn_pickup(d["item"],d["id"],_v3(d["pos"]))
  var saved_job:Dictionary=state.get("job",{}).duplicate(true)
- if not saved_job.is_empty():
+ if not saved_job.is_empty() and valid_job(saved_job):
   job=saved_job
-  if job.get("kind")=="rest":player._backpack_ui.sleep_hours.value=clampi(int(job.get("hours",job.get("duration",1))),1,12)
-  open_backpack(job.get("fire",""),"rest" if job.get("kind")=="rest" else "camp")
+  if job.get("kind")=="rest":
+   if is_instance_valid(shelter) and shelter.bed.can_interact(player):sleep_point=shelter.bed
+   else:job={}
+   player._backpack_ui.sleep_hours.value=clampi(int(saved_job.get("hours",saved_job.get("duration",1))),1,12)
+  if not job.is_empty():open_backpack(job.get("fire",""),"rest" if job.get("kind")=="rest" else "camp")
  weather_model.import_state(state.get("sky_weather",{}),clock,weather=="rain")
  if is_instance_valid(sky_events):sky_events.import_state(state.get("sky_events",{}))
  atmosphere.import_state(state.get("atmosphere",{}))
@@ -449,16 +501,18 @@ func prepare_travel() -> void:
  if _transitioning:return
  _transitioning=true;close_backpack();cancel_placement();atmosphere.suspend()
  if is_instance_valid(sky_events):sky_events.suspend()
- var felled:Dictionary=load("res://scripts/props/TreeChoppable.gd").felled_tree_ids.duplicate(true)
+ var trees=load("res://scripts/props/TreeChoppable.gd")
+ var felled:Dictionary=trees.compact_felled_registry()
+ var damaged:Dictionary=trees.damaged_tree_states.duplicate(true)
  var logs:Array=[]
  if location=="forest":
   for n in get_tree().get_nodes_in_group("pickup_logs"):logs.append({"species":n.species,"weight":n.weight_kg,"position":_arr(n.global_position)})
-  _old_felled=felled;_old_logs=logs
+  _old_felled=felled;_old_damaged=damaged;_old_logs=logs
  else:
   _mine_logs=[]
   for n in get_tree().get_nodes_in_group("pickup_logs"):_mine_logs.append({"species":n.species,"weight":n.weight_kg,"position":_arr(n.global_position)})
-  felled=_old_felled;logs=_old_logs
- travel={"survival":export_state(),"inventory":player.inventory_slots.duplicate(true),"felled":felled,"logs":logs}
+  felled=_old_felled;damaged=_old_damaged;logs=_old_logs
+ travel={"survival":export_state(),"inventory":player.inventory_slots.duplicate(true),"felled":felled,"damaged":damaged,"logs":logs}
 func _restore_exterior_logs(logs: Array) -> void:
  for n in get_tree().get_nodes_in_group("pickup_logs"):n.queue_free()
  for d in logs:

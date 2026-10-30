@@ -1,0 +1,41 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+PASS: six natural stones and four brush collected for real recipe
+PASS: actual authored birch was felled
+PASS: felled tree produces three real world logs
+PASS: real harvested birch log splits inside cabin
+PASS: harvested log gives three pieces
+PASS: campfire recipe consumes naturally gathered materials
+PASS: real terrain accepts crafted campfire placement
+PASS: standing beech damage registered before save
+PASS: mine retains exterior felled tree and two log snapshots
+PASS: mine retains exterior standing beech cuts
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+PASS: forest return restores felled tree, partial damage and remaining logs
+PASS: scenario E saves successfully
+PASS: scenario E overwrites same slot successfully
+RESTART WRITE PROFILE: {"assemble_us":34,"bytes":3610,"disk_us":704,"items_us":23,"logs":2,"memory_delta":39432,"metadata_us":488,"player_us":38,"serialize_us":277,"total_us":1682,"trees":1,"voxel_us":36,"world_us":77}
+RESTART WRITE SUMMARY: 13 PASS, 0 FAIL

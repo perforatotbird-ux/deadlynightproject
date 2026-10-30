@@ -87,7 +87,7 @@ func run() -> void:
  p.global_position=s.shelter.global_position+Vector3(0,0.2,1.2);p.rotation=Vector3.ZERO;p._camera_pivot.rotation.x=-0.25;p.select_hotbar_slot(1);p._toggle_lantern()
  check(s.safe_shelter(),"player enters actual physical shelter")
  await capture("04_shelter_interior")
- s.open_backpack("","rest");await capture("05_rest_panel")
+ s.open_sleep(s.shelter.bed);await capture("05_rest_panel")
  if graphical:
   root.size=Vector2i(800,600);await settle();p._backpack_ui.resize();await capture("06_small_window")
   check(p._inv_root_panel.get_global_rect().end.x<=root.get_visible_rect().size.x and p._inv_root_panel.get_global_rect().end.y<=root.get_visible_rect().size.y,"modal fits smaller window")

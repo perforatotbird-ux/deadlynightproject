@@ -1,0 +1,112 @@
+[
+  {
+    "test": "test_first_night",
+    "exit": 0,
+    "errors": [],
+    "summary": [
+      "FIRST NIGHT SUMMARY: 97 PASS, 0 FAIL"
+    ]
+  },
+  {
+    "test": "test_first_night_integration",
+    "exit": 0,
+    "errors": [],
+    "summary": [
+      "FIRST NIGHT INTEGRATION SUMMARY: 26 PASS, 0 FAIL"
+    ]
+  },
+  {
+    "test": "test_backpack_tabs_actions",
+    "exit": 0,
+    "errors": [],
+    "summary": [
+      "BACKPACK TABS SUMMARY: 30 PASS, 0 FAIL"
+    ]
+  },
+  {
+    "test": "test_field_journal",
+    "exit": 0,
+    "errors": [],
+    "summary": [
+      "FIELD JOURNAL SUMMARY: 74 PASS, 0 FAIL"
+    ]
+  },
+  {
+    "test": "test_health_dev",
+    "exit": 0,
+    "errors": [],
+    "summary": [
+      "HEALTH DEV SUMMARY: 97 PASS, 0 FAIL"
+    ]
+  },
+  {
+    "test": "test_health_world",
+    "exit": 0,
+    "errors": [],
+    "summary": [
+      "HEALTH WORLD SUMMARY: 18 PASS, 0 FAIL"
+    ]
+  },
+  {
+    "test": "test_main_menu_and_persistence",
+    "exit": 0,
+    "errors": [],
+    "summary": [
+      "TEST RUN SUMMARY: 15 PASSED, 0 FAILED"
+    ]
+  },
+  {
+    "test": "test_sky_weather",
+    "exit": 0,
+    "errors": [],
+    "summary": [
+      "SKY WEATHER SUMMARY: 56 PASS, 0 FAIL"
+    ]
+  },
+  {
+    "test": "test_sky_weather_integration",
+    "exit": 0,
+    "errors": [],
+    "summary": [
+      "SKY WEATHER INTEGRATION SUMMARY: 14 PASS, 0 FAIL"
+    ]
+  },
+  {
+    "test": "test_ui_rain_hotfix",
+    "exit": 0,
+    "errors": [],
+    "summary": [
+      "UI / RAIN HOTFIX SUMMARY: 39 PASS, 0 FAIL"
+    ]
+  },
+  {
+    "test": "test_atmosphere",
+    "exit": 0,
+    "errors": [],
+    "summary": [
+      "ATMOSPHERE SUMMARY: 31 PASS, 0 FAIL"
+    ]
+  },
+  {
+    "test": "test_atmosphere_integration",
+    "exit": 0,
+    "errors": [],
+    "summary": [
+      "ATMOSPHERE INTEGRATION SUMMARY: 11 PASS, 0 FAIL"
+    ]
+  },
+  {
+    "test": "test_tree_fracture",
+    "exit": 0,
+    "errors": [],
+    "summary": []
+  },
+  {
+    "test": "audit_scripts",
+    "exit": 0,
+    "errors": [],
+    "summary": [
+      "SCRIPT AUDIT: 46 scripts, 0 failures"
+    ]
+  }
+]

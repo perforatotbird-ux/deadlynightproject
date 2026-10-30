@@ -53,13 +53,39 @@ const SPECIES_CONFIG = {
 		"height": 24.0, "radius": 0.60
 	},
 	"oak": {
-		"hp": 20, "logs": 3, "weight": 9.0,
+		"hp": 16, "logs": 3, "weight": 9.0,
 		"color": Color(0.55, 0.35, 0.17),
 		"height": 20.0, "radius": 0.70
 	}
 }
 
 static var felled_tree_ids: Dictionary = {}
+static var damaged_tree_states: Dictionary = {}
+
+static func compact_felled_registry() -> Dictionary:
+	# Keep legacy bool flags; modern records have one canonical identity.
+	var result:Dictionary={}
+	for key in felled_tree_ids:
+		var info=felled_tree_ids[key]
+		if info is Dictionary:
+			var id:String=info.get("id","")
+			if id=="":
+				var p=info.get("pos",[])
+				id="pos_%d_%d_%d"%[roundi(p[0]),roundi(p[1]),roundi(p[2])] if p.size()==3 else str(key)
+			if not result.has(id):result[id]=info.duplicate(true)
+		else:result[key]=info
+	return result
+
+func _remember_damage() -> void:
+	if _voxel_trunk and not _is_falling and not _restoring_remnant:
+		damaged_tree_states[get_effective_id()]={"cuts":_voxel_trunk.export_cuts()}
+
+func restore_damage() -> void:
+	if _voxel_trunk and not _restoring_remnant:
+		var saved:Dictionary=damaged_tree_states.get(get_effective_id(),{})
+		if not saved.is_empty():
+			_voxel_trunk.restore_cuts(saved.get("cuts",[]));_voxel_trunk._schedule()
+
 static var _collision_cache: Dictionary = {}
 
 func get_effective_id() -> String:
@@ -93,6 +119,7 @@ func _ready() -> void:
 	_setup_particles()
 	_setup_voxel_trunk()
 	_update_mesh_stage(0)
+	restore_damage()
 
 func init_tree(p_species: String, p_id: String = "") -> void:
 	species = p_species.to_lower()
@@ -106,6 +133,7 @@ func init_tree(p_species: String, p_id: String = "") -> void:
 		_setup_collision()
 		_setup_voxel_trunk()
 		_update_mesh_stage(0)
+		restore_damage()
 
 func _setup_voxel_trunk() -> void:
 	if _voxel_trunk != null and is_instance_valid(_voxel_trunk):
@@ -276,6 +304,7 @@ func hit(damage: int, hit_point: Vector3, player_pos: Vector3) -> bool:
 	_fall_direction = away.normalized() if away.length_squared() > 0.001 else Vector3.FORWARD
 	if _voxel_trunk:
 		_voxel_trunk.carve(hit_point, (hit_point-player_pos).normalized(), damage)
+		_remember_damage()
 	return false
 
 func _on_cut_mesh_updated() -> void:
@@ -314,6 +343,7 @@ func _start_falling() -> void:
 	if _voxel_trunk: _voxel_trunk.request_fracture(_break_height)
 
 func _on_fracture_ready(lower: ArrayMesh, upper: ArrayMesh, cut_y: float) -> void:
+	damaged_tree_states.erase(get_effective_id())
 	_break_height = cut_y
 	_spawn_stump(lower)
 	if _restoring_remnant:
@@ -357,6 +387,7 @@ func _saved_felling() -> Dictionary:
 	return info if info is Dictionary else {}
 
 func _restore_remnant() -> void:
+	add_to_group("remnant_builders")
 	_restoring_remnant = true
 	_apply_species_config()
 	_setup_voxel_trunk()

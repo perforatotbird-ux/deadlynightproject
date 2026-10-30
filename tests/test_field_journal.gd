@@ -45,7 +45,7 @@ func run() -> void:
  for i in 20:ui.refresh_actions()
  check(nodes==p._inv_root_panel.find_children("*","Control",true,false).size(),"refresh does not rebuild control tree")
  check(focus.has_focus(),"refresh retains keyboard focus")
- s.begin_split(ui.log_select.get_selected_id());var before:=str(s.job);ui.tabs.current_tab=3;ui.tabs.current_tab=1
+ s.begin_split(ui.log_select.get_selected_id());var before:=str(s.job);ui.tabs.current_tab=2;ui.tabs.current_tab=1
  check(str(s.job)==before,"tab switch preserves active job")
  s.cancel_job();s.advance(10)
  check(Items.count(p.inventory_slots,"firewood")==0,"cancelled split awards no items")
@@ -69,9 +69,10 @@ func run() -> void:
  var fire:Dictionary=s.fires[0];s.selected_fire=fire.id
  ui.select_recipe("split_birch");s.begin_split(ui.log_select.get_selected_id());s.advance(10)
  s.open_backpack(fire.id);ui.select_recipe("camp_kit");p._on_slot_clicked(1)
+ ui.hide_context_pages()
  for resolution in [Vector2i(800,600),Vector2i(1280,720),Vector2i(1920,1080),Vector2i(2560,1440)]:
   root.content_scale_mode=Window.CONTENT_SCALE_MODE_DISABLED;root.content_scale_size=Vector2i.ZERO;root.min_size=Vector2i(640,480);root.size=resolution;await settle();ui.resize();await settle()
-  for index in 4:
+  for index in 3:
    ui.tabs.current_tab=index;ui.refresh_actions();await settle()
    var panel:Rect2=p._inv_root_panel.get_global_rect();var viewport:=root.get_visible_rect()
    check(viewport.encloses(panel),"%s tab %d shell in viewport" % [resolution,index])
