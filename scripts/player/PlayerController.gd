@@ -2,8 +2,16 @@ extends CharacterBody3D
 class_name PlayerController
 
 const AxeArmRigScript = preload("res://scripts/player/AxeArmRig.gd")
-const AXE_REST_POS := Vector3(0.29, -0.29, -0.48)
+const AXE_REST_POS := Vector3(0.29, -0.29, -0.43)
 const AXE_REST_ROT := Vector3(-12.0, -18.0, -12.0)
+const AXE_WINDUP_POS := Vector3(0.36, -0.14, -0.48)
+const AXE_WINDUP_ROT := Vector3(24.0, -18.0, 14.0)
+const AXE_CONTACT_POS := Vector3(0.035, -0.28, -0.50)
+const AXE_CONTACT_ROT := Vector3(-66.0, 8.0, 16.0)
+const AXE_FOLLOW_POS := Vector3(-0.015, -0.41, -0.48)
+const AXE_FOLLOW_ROT := Vector3(-84.0, 6.0, 20.0)
+# One shared playback scale doubles every phase, contact and cooldown together.
+const AXE_ANIMATION_SPEED: float = 0.5
 const AXE_WINDUP_TIME: float = 0.12
 const AXE_STROKE_TIME: float = 0.10
 
@@ -1423,19 +1431,19 @@ func _play_swing_animation_and_sound() -> void:
 		return
 	if _chop_tween and _chop_tween.is_valid():
 		_chop_tween.kill()
-	var windup := Vector3(0.39, -0.06, -0.25)
-	var windup_rot := Vector3(42.0, -28.0, -34.0)
-	var contact := Vector3(0.035, -0.28, -0.67)
-	var contact_rot := Vector3(-66.0, 8.0, 16.0)
-	var follow := Vector3(-0.015, -0.41, -0.64)
-	var follow_rot := Vector3(-84.0, 6.0, 20.0)
-	_chop_tween = create_tween()
+	var windup := AXE_WINDUP_POS
+	var windup_rot := AXE_WINDUP_ROT
+	var contact := AXE_CONTACT_POS
+	var contact_rot := AXE_CONTACT_ROT
+	var follow := AXE_FOLLOW_POS
+	var follow_rot := AXE_FOLLOW_ROT
+	_chop_tween = create_tween().set_speed_scale(AXE_ANIMATION_SPEED)
 	# Deliberate shoulder lift, then accelerated circular downstroke.
-	_chop_tween.tween_method(_sample_axe_arc.bind(AXE_REST_POS, Vector3(0.43, -0.16, -0.28), windup, AXE_REST_ROT, windup_rot), 0.0, 1.0, AXE_WINDUP_TIME).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_chop_tween.tween_method(_sample_axe_arc.bind(AXE_REST_POS, Vector3(0.42, -0.20, -0.39), windup, AXE_REST_ROT, windup_rot), 0.0, 1.0, AXE_WINDUP_TIME).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	_chop_tween.tween_callback(_play_axe_whoosh)
-	_chop_tween.tween_method(_sample_axe_arc.bind(windup, Vector3(0.33, 0.04, -0.78), contact, windup_rot, contact_rot), 0.0, 1.0, AXE_STROKE_TIME).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_chop_tween.tween_method(_sample_axe_arc.bind(windup, Vector3(0.33, 0.04, -0.59), contact, windup_rot, contact_rot), 0.0, 1.0, AXE_STROKE_TIME).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	_chop_tween.tween_callback(_apply_chop_impact)
-	_chop_tween.tween_method(_sample_axe_arc.bind(contact, Vector3(-0.025, -0.34, -0.70), follow, contact_rot, follow_rot), 0.0, 1.0, 0.055).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_chop_tween.tween_method(_sample_axe_arc.bind(contact, Vector3(-0.025, -0.34, -0.54), follow, contact_rot, follow_rot), 0.0, 1.0, 0.055).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	_chop_tween.tween_interval(0.025)
 	_chop_tween.tween_method(_sample_axe_arc.bind(follow, Vector3(0.30, -0.46, -0.36), AXE_REST_POS, follow_rot, AXE_REST_ROT), 0.0, 1.0, 0.18).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_chop_tween.tween_interval(maxf(0.0, _chop_cooldown - 0.48))

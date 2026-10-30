@@ -25,27 +25,33 @@ func run() -> void:
 	target.add_to_group("choppable_trees")
 	await process_frame
 	check(player._axe_arm_rig._arms.size() == 2, "two hands attached to grip")
-	player._sample_axe_arc(1.0, Player.AXE_REST_POS, Vector3(0.43, -0.16, -0.28), Vector3(0.39, -0.06, -0.25), Player.AXE_REST_ROT, Vector3(42, -28, -34))
-	check(player._axe_anim_pivot.position.x > 0.30 and player._axe_anim_pivot.position.y > -0.10, "wind-up from right shoulder")
+	check(player._axe_arm_rig._templates.has("RightHand") and player._axe_arm_rig._templates.has("LeftHand"), "both Blender-authored anatomical hands imported")
+	check(player._axe_arm_rig._templates["RightHand"]["mesh"].get_faces().size() > 5000, "continuous model mesh replaces runtime primitive fingers")
+	check(player._axe_arm_rig._arms[0]["wrist"].name == "WristSocket", "forearm attached to wrist, not handle centre")
+	check(is_equal_approx(Player.AXE_ANIMATION_SPEED, 0.5), "all swing phases play at exactly half speed")
+	player._sample_axe_arc(1.0, Player.AXE_REST_POS, Vector3(0.42, -0.20, -0.39), Player.AXE_WINDUP_POS, Player.AXE_REST_ROT, Player.AXE_WINDUP_ROT)
+	check(player._axe_anim_pivot.position.x > 0.30 and player._axe_anim_pivot.position.y > -0.20, "wind-up from right shoulder")
 	player._cancel_chop()
 	player._try_chop()
 	await create_timer(0.08).timeout
 	check(target.hits == 0, "wind-up does not apply damage early")
-	await create_timer(0.20).timeout
+	await create_timer(0.22).timeout
+	check(target.hits == 0, "half speed: no contact before 0.44 seconds")
+	await create_timer(0.23).timeout
 	check(target.hits == 1, "one contact callback per swing")
 	check(player._audio_hit.stream == null, "player does not duplicate tree impact sound")
-	await create_timer(0.25).timeout
+	await create_timer(0.55).timeout
 	check(player._can_chop and player._axe_anim_pivot.position.is_equal_approx(Player.AXE_REST_POS), "recovery and cooldown complete")
 	player._try_chop()
 	player.select_hotbar_slot(1)
-	await create_timer(0.30).timeout
+	await create_timer(0.60).timeout
 	check(target.hits == 1 and player._can_chop, "tool switch cancels pending impact")
 	check(not player._axe_arm_rig.visible, "arms hidden with unequipped axe")
 	player.select_hotbar_slot(0)
 	player._try_chop()
 	paused = true
 	paused = false
-	await create_timer(0.30).timeout
+	await create_timer(0.60).timeout
 	check(target.hits == 1, "pause cancels pending swing")
 	var tree := Choppable.new()
 	tree.tree_id = "axe_effect_smoke"
