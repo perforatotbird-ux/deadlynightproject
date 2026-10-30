@@ -33,8 +33,8 @@ func _run_toolbelt_test() -> void:
 		return
 		
 	print("\n[TEST 1] Toolbelt Initialization...")
-	if player._toolbelt_panel != null and player._hotbar_slot_buttons.size() == 5:
-		print("  -> Toolbelt panel instantiated with 5 tool slots.")
+	if player._toolbelt_panel != null and player._hotbar_slot_buttons.size() == 8:
+		print("  -> Toolbelt panel instantiated with 8 tool slots.")
 		if player.active_hotbar_slot == 0 and player._axe_anim_pivot.visible:
 			print("  -> Slot 0 (Axe) is active by default, viewmodel visible.")
 			passed += 1
@@ -117,13 +117,14 @@ func _run_toolbelt_test() -> void:
 		failed += 1
 
 	print("\n[TEST 5] Mouse Wheel Cycling...")
-	# Currently at slot 4 (Knife). Wheel Down -> wrap to slot 0 (Axe)
+	# Last quick slot wraps to the first permanent tool.
+	player.select_hotbar_slot(7)
 	player.cycle_hotbar_slot(1)
 	var wrap_to_axe = (player.active_hotbar_slot == 0 and player._axe_anim_pivot.visible)
 	
 	# Wheel Up -> back to slot 4 (Knife)
 	player.cycle_hotbar_slot(-1)
-	var wrap_to_knife = (player.active_hotbar_slot == 4)
+	var wrap_to_knife = (player.active_hotbar_slot == 7)
 	
 	if wrap_to_axe and wrap_to_knife:
 		print("  -> PASS: Mouse wheel smoothly cycles forward and backward across toolbelt.")

@@ -54,6 +54,7 @@ func run() -> void:
  p._add_to_backpack({"species":"birch","weight":4.0})
  await key(KEY_TAB)
  check(p._is_inventory_open and p._is_inventory_open,"Tab opens the actual backpack through real input")
+ p._backpack_ui.tabs.current_tab=1;await settle()
  await capture("01_crafting_panel")
  await click(p._backpack_ui.buttons["kit"])
  check(s.Items.count(p.inventory_slots,"camp_kit")==1,"real mouse click reaches craft button")
@@ -68,9 +69,7 @@ func run() -> void:
  var f:Dictionary=s.fires[0];p.global_position=Vector3(ground.position.x,ground.position.y+0.1,ground.position.z+2.0)
  s.selected_fire=f["id"]
  s.cancel_job();s.open_backpack(f["id"]);p.select_hotbar_slot(1)
- for i in p.inventory_slots.size():
-  if p.inventory_slots[i]!=null and p.inventory_slots[i].get("type")=="log":
-   await click(p._inv_slot_buttons[i]);break
+ p._backpack_ui.tabs.current_tab=1;await settle()
  await capture("01b_selected_log")
  await click(p._backpack_ui.buttons["split"])
  check(s.job.get("kind")=="split" and p.active_hotbar_slot==0,"mouse split from backpack auto-equips axe")
@@ -93,6 +92,8 @@ func run() -> void:
   root.size=Vector2i(800,600);await settle();p._backpack_ui.resize();await capture("06_small_window")
   check(p._inv_root_panel.get_global_rect().end.x<=root.get_visible_rect().size.x and p._inv_root_panel.get_global_rect().end.y<=root.get_visible_rect().size.y,"modal fits smaller window")
   root.size=Vector2i(1280,720);await settle()
+ for i in p.inventory_slots.size():
+  if p.inventory_slots[i]!=null and p.inventory_slots[i].get("type")=="brush":p.assign_belt_item(i,2);break
  s.close_backpack()
  # Save/load while in the real scene, including an in-progress split/ignition already covered by units.
  var sm=load("res://scripts/core/SaveManager.gd").get_instance()
@@ -106,6 +107,7 @@ func run() -> void:
  await settle(6)
  var mine=current_scene;var ms=mine.get_node("SurvivalWorld");ms.set_process(false);ms.player.set_physics_process(false)
  check(ms.location=="mine" and ms.matches==2,"mine retains match count and session")
+ check(ms.player.belt_items[2]=="brush","mine retains crafted belt binding")
  check(ms.Items.count(ms.player.inventory_slots,"firewood")==2,"mine retains actual backpack")
  ms.advance(10)
  check(ms.fires[0]["fuel"]<exterior_fire_fuel,"outside camp keeps burning while player is in mine")
@@ -124,5 +126,6 @@ func run() -> void:
  check(current_scene.name=="MineInterior" and current_scene.has_node("SurvivalWorld"),"loading selects the correct mine scene")
  var loaded=current_scene.get_node("SurvivalWorld");loaded.set_process(false)
  check(loaded.matches==2,"saved mine survival restored after scene load")
+ check(loaded.player.belt_items[2]=="brush","saved mine restores crafted belt binding")
  print("FIRST NIGHT INTEGRATION SUMMARY: %d PASS, %d FAIL"%[passes,failures])
  current_scene.free();current_scene=null;await settle(2);quit(1 if failures else 0)

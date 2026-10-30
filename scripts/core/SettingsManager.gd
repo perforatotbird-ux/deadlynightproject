@@ -65,6 +65,9 @@ const DEFAULTS: Dictionary = {
 			"hotbar_3": KEY_3,
 			"hotbar_4": KEY_4,
 			"hotbar_5": KEY_5,
+			"hotbar_6": KEY_6,
+			"hotbar_7": KEY_7,
+			"hotbar_8": KEY_8,
 			"toggle_camera": KEY_F1
 		}
 	},

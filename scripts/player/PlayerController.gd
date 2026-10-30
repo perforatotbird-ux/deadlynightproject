@@ -115,10 +115,15 @@ const HOTBAR_CONFIG = [
 		"icon": "🔪",
 		"desc": "Снятие коры и крафт",
 		"status": "Острый"
-	}
+	},
+	{"id":"crafted_6","name":"Быстрый предмет","short_name":"ПУСТО","key":"6","icon":"◇","desc":"Назначьте предмет из рюкзака","status":"—"},
+	{"id":"crafted_7","name":"Быстрый предмет","short_name":"ПУСТО","key":"7","icon":"◇","desc":"Назначьте предмет из рюкзака","status":"—"},
+	{"id":"crafted_8","name":"Быстрый предмет","short_name":"ПУСТО","key":"8","icon":"◇","desc":"Назначьте предмет из рюкзака","status":"—"}
 ]
 
+var belt_items: Array = ["", "", ""] # Item-ID shortcuts; items remain in the one authoritative backpack.
 var active_hotbar_slot: int = 0
+var _hotbar_icons: Array[Label] = []
 var _is_lantern_on: bool = false
 var _lantern_light: SpotLight3D = null
 
@@ -438,7 +443,7 @@ func _setup_hud() -> void:
 	bp_box.add_child(_speed_penalty_label)
 	
 	var tip = Label.new()
-	tip.text = "[1-5 / Колесо] Инструменты  |  [ЛКМ] Действие  |  [E] Подобрать\n[TAB] Рюкзак  |  [Shift] Бег  |  [Ctrl] Присед  |  [F1] Свободная камера"
+	tip.text = "[1–8 / Колесо] Пояс  |  [ЛКМ] Действие  |  [E] Подобрать\n[TAB] Рюкзак  |  [Shift] Бег  |  [Ctrl] Присед  |  [F1] Свободная камера"
 	tip.add_theme_color_override("font_color", Color(0.65, 0.65, 0.65))
 	tip.add_theme_font_size_override("font_size", 12)
 	tip.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -481,8 +486,8 @@ func _setup_toolbelt_hud() -> void:
 	_toolbelt_panel = PanelContainer.new()
 	_toolbelt_panel.name = "ToolbeltPanel"
 	_toolbelt_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_toolbelt_panel.position = Vector2(-195, -82)
-	_toolbelt_panel.custom_minimum_size = Vector2(390, 68)
+	_toolbelt_panel.position = Vector2(-306, -82)
+	_toolbelt_panel.custom_minimum_size = Vector2(612, 68)
 	_toolbelt_panel.mouse_filter = Control.MOUSE_FILTER_PASS
 	
 	var belt_sb = StyleBoxFlat.new()
@@ -514,6 +519,8 @@ func _setup_toolbelt_hud() -> void:
 	_hotbar_slot_buttons.clear()
 	_hotbar_slot_labels.clear()
 	_hotbar_hotkey_labels.clear()
+	_hotbar_status_labels.clear()
+	_hotbar_icons.clear()
 	
 	for i in range(HOTBAR_CONFIG.size()):
 		var item = HOTBAR_CONFIG[i]
@@ -562,6 +569,7 @@ func _setup_toolbelt_hud() -> void:
 		icon_lbl.add_theme_font_size_override("font_size", 18)
 		icon_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		vbox.add_child(icon_lbl)
+		_hotbar_icons.append(icon_lbl)
 		
 		var title_lbl = Label.new()
 		title_lbl.text = item.short_name
@@ -581,6 +589,7 @@ func _setup_toolbelt_hud() -> void:
 	_update_hotbar_ui()
 
 func _update_hotbar_ui() -> void:
+	_refresh_belt_labels()
 	for i in range(_hotbar_slot_buttons.size()):
 		var btn = _hotbar_slot_buttons[i]
 		var is_selected = (i == active_hotbar_slot)
@@ -622,7 +631,7 @@ func _update_hotbar_ui() -> void:
 		if i < _hotbar_slot_labels.size():
 			_hotbar_slot_labels[i].add_theme_color_override("font_color", Color(1.0, 0.92, 0.45) if is_selected else Color(0.80, 0.84, 0.88))
 			
-	if active_hotbar_slot >= 0 and active_hotbar_slot < HOTBAR_CONFIG.size():
+	if active_hotbar_slot >= 0 and active_hotbar_slot < 5:
 		var cur = HOTBAR_CONFIG[active_hotbar_slot]
 		_show_tool_banner("[%s] %s  ·  %s" % [cur.key, cur.name.to_upper(), cur.desc])
 
@@ -665,6 +674,57 @@ func _update_equipped_tool() -> void:
 			_lantern_light.visible = false
 		if _compass_label:
 			_compass_label.visible = false
+
+	else: # Crafted quick-slot: stow the permanent tools.
+		_axe_anim_pivot.visible = false
+		if _lantern_light: _lantern_light.visible = false
+		if _compass_label: _compass_label.visible = false
+
+func belt_item_slot(index: int) -> int:
+	if index < 0 or index >= belt_items.size(): return -1
+	for i in inventory_slots.size():
+		var item = inventory_slots[i]
+		if item != null and item.get("id", "") == belt_items[index] and int(item.get("count", 0)) > 0: return i
+	return -1
+
+func assign_belt_item(slot: int, index: int) -> bool:
+	if index < 0 or index >= 3 or slot < 0 or slot >= inventory_slots.size(): return false
+	if is_instance_valid(survival) and not survival.job.is_empty(): return false
+	var item = inventory_slots[slot]
+	if item == null or item.get("type", "") not in ["camp_kit", "firewood", "brush"]: return false
+	for i in belt_items.size():
+		if belt_items[i] == item["id"]: belt_items[i] = ""
+	belt_items[index] = item["id"]
+	_refresh_belt_labels()
+	return true
+
+func clear_belt_item(index: int) -> void:
+	if index >= 0 and index < belt_items.size(): belt_items[index] = ""; _refresh_belt_labels()
+
+func _refresh_belt_labels() -> void:
+	for i in belt_items.size():
+		var slot := belt_item_slot(i)
+		if slot < 0: belt_items[i] = ""
+		var item: Dictionary = inventory_slots[slot] if slot >= 0 else {}
+		var type: String = item.get("type", "")
+		if _hotbar_slot_labels.size() > i + 5:
+			_hotbar_slot_labels[i+5].text = {"camp_kit":"КОСТЁР", "firewood":"ПОЛЕНЦЕ", "brush":"ХВОРОСТ"}.get(type,"ПУСТО")
+			var count := 0
+			for x in inventory_slots:
+				if x != null and x.get("id", "") == belt_items[i]: count += int(x.get("count", 0))
+			_hotbar_status_labels[i+5].text = "×%d" % count if count > 0 else "—"
+			_hotbar_icons[i+5].text = {"camp_kit":"△", "firewood":"▰", "brush":"♧"}.get(type,"◇")
+			_hotbar_slot_buttons[i+5].tooltip_text = item.get("name", "Пустая ячейка")
+
+func _use_belt_item(index: int) -> void:
+	if not is_instance_valid(survival): return
+	var slot := belt_item_slot(index)
+	if slot < 0: _show_tool_banner("Ячейка пояса пуста. Назначьте предмет в рюкзаке."); return
+	if inventory_slots[slot].get("type") == "camp_kit": survival.begin_placement()
+	else:
+		var fire: Dictionary = survival.nearby_fire()
+		if fire.is_empty(): _show_tool_banner("Подойдите к костру, чтобы добавить топливо.")
+		else: survival.add_fuel(fire["id"], slot)
 
 func select_hotbar_slot(idx: int) -> void:
 	if idx < 0 or idx >= HOTBAR_CONFIG.size():
@@ -713,6 +773,8 @@ func _use_active_tool() -> void:
 			_strike_match()
 		4:
 			_use_knife()
+		_:
+			_use_belt_item(active_hotbar_slot - 5)
 
 func _toggle_lantern() -> void:
 	if _lantern_light == null:
@@ -800,7 +862,7 @@ func _input(event: InputEvent) -> void:
 			if not _is_inventory_open:
 				_jump_buffer_timer = 0.20
 		elif not _is_inventory_open:
-			for index in range(5):
+			for index in range(HOTBAR_CONFIG.size()):
 				if _event_matches_action(event, "hotbar_%d" % (index + 1)):
 					select_hotbar_slot(index)
 					return
@@ -1518,12 +1580,12 @@ func _refresh_inventory_ui() -> void:
 		var count = item.get("count", 1)
 		var unit_w = item.get("unit_weight", 4.0)
 		var total_w = float(count) * unit_w
-		_inv_details_stats.text = "В стаке: x%d шт.\nВес за шт.: %.1f кг\nОбщий вес: %.1f кг\nВремя горения: %s\nТеплоотдача: %s" % [
-			count, unit_w, total_w, item.get("burn_time", "—"), item.get("heat", "—")
-		]
+		_inv_details_stats.text = "Количество: %d · за шт.: %.1f кг\nОбщий вес: %.1f кг" % [count, unit_w, total_w]
+		if item.get("burn_time", "—") != "—": _inv_details_stats.text += "\nГорение: " + str(item.get("burn_time"))
+
 		_inv_details_desc.text = item.get("description", "")
-		_inv_btn_drop_one.text = "Выбросить 1 шт. (%.1f кг)" % unit_w
-		_inv_btn_drop_all.text = "Выбросить весь стак (%d шт., %.1f кг)" % [count, total_w]
+		_inv_btn_drop_one.text = "Выбросить 1"
+		_inv_btn_drop_all.text = "Весь стак ×%d" % count
 	else:
 		_inv_empty_inspector_label.visible = true
 		_inv_inspector_box.visible = false

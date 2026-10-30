@@ -56,5 +56,6 @@ static func refresh(player: Node) -> void:
    player.backpack_weight+=float(s.get("unit_weight",0))*int(s["count"])
    if s.get("type")=="log":
     for i in int(s["count"]):player.backpack_items.append({"species":s.get("species","birch"),"weight":s["unit_weight"]})
+ player._refresh_belt_labels()
  player._update_inventory_hud()
  player._refresh_inventory_ui()

@@ -286,6 +286,9 @@ func _build_controls_tab() -> void:
 		{"action": "hotbar_3", "name": "Компас"},
 		{"action": "hotbar_4", "name": "Спички"},
 		{"action": "hotbar_5", "name": "Нож"},
+		{"action": "hotbar_6", "name": "Быстрый предмет 6"},
+		{"action": "hotbar_7", "name": "Быстрый предмет 7"},
+		{"action": "hotbar_8", "name": "Быстрый предмет 8"},
 		{"action": "toggle_camera", "name": "Камера отладки"}
 	]
 	

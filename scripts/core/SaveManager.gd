@@ -171,6 +171,7 @@ func save_game(slot_id: String = "", save_type: String = "manual", custom_name: 
 		"camera_pitch": p_pitch,
 		"backpack_weight": p_weight,
 		"active_hotbar_slot": p_tool,
+		"belt_items": player_node.belt_items.duplicate() if player_node != null else ["", "", ""],
 		"inventory_slots": p_slots
 	}
 	
@@ -382,6 +383,9 @@ func _apply_loaded_state(payload: Dictionary) -> void:
 		if player_node.get("backpack_weight") != null:
 			player_node.backpack_weight = p_data.get("backpack_weight", 0.0)
 			
+		player_node.belt_items = p_data.get("belt_items", ["", "", ""]).duplicate()
+		player_node.belt_items.resize(3)
+		player_node._refresh_belt_labels()
 		var tool_idx = p_data.get("active_hotbar_slot", 0)
 		if player_node.has_method("select_hotbar_slot"):
 			player_node.select_hotbar_slot(tool_idx)

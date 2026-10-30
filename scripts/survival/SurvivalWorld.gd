@@ -59,8 +59,9 @@ func _ready() -> void:
  ui=UI.new();ui.session=self;add_child(ui)
  if location=="forest":_create_shelter();_setup_weather_fx()
  if not travel.is_empty():
-  var payload:=travel;travel={};import_state(payload["survival"])
-  player.inventory_slots=payload["inventory"].duplicate(true);Items.refresh(player)
+  var payload:=travel;travel={}
+  player.inventory_slots=payload["inventory"].duplicate(true)
+  import_state(payload["survival"]);Items.refresh(player)
   if location=="forest":
    var exit_pos:=Vector3(1125,144,-1203)
    var ground=player.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(Vector3(exit_pos.x,300,exit_pos.z),Vector3(exit_pos.x,-10,exit_pos.z),1))
@@ -173,8 +174,8 @@ func open_backpack(fire_id: String = "", page: String = "camp") -> void:
  selected_fire=fire_id
  if not player._is_inventory_open:player._toggle_inventory()
  player._backpack_ui.refresh_actions()
- if page=="rest":player._backpack_ui.call_deferred("focus_rest")
- elif fire_id!="":player._backpack_ui.call_deferred("focus_fire")
+ if page=="rest":player._backpack_ui.focus_rest()
+ elif fire_id!="":player._backpack_ui.focus_fire()
 func close_backpack() -> void:
  cancel_job()
  if player._is_inventory_open:player._toggle_inventory()
@@ -200,15 +201,15 @@ func begin_split(slot_index: int) -> bool:
  player.select_hotbar_slot(0)
  job={"kind":"split","elapsed":0.0,"duration":SPLIT_SECONDS,"slot":slot_index,"item_id":s["id"],"weight":s["unit_weight"],"species":s["species"],"origin":_arr(player.global_position)}
  player._cancel_chop();ui.refresh();return true
-func add_fuel(id: String, slot_index: int) -> bool:
+func add_fuel(id: String, slot_index: int, amount: int = 1) -> bool:
  var f:=find_fire(id)
  if f.is_empty() or not _fire_in_reach(f) or not job.is_empty():return false
  if slot_index<0 or slot_index>=player.inventory_slots.size():return false
  var s=player.inventory_slots[slot_index]
- if s==null or s.get("type") not in ["firewood","brush"]:return false
+ if s==null or s.get("type") not in ["firewood","brush"] or amount<1 or amount>int(s.get("count",0)):return false
  var seconds:=300.0 if s["type"]=="brush" else float(Fire.FUEL_SECONDS.get(s.get("species","birch"),1800.0))
- if not Items.transact(player,{s["id"]:1}):return false
- Fire.add_fuel(f,seconds);notify("Топливо добавлено");ui.refresh();return true
+ if not Items.transact(player,{s["id"]:amount},[],slot_index):return false
+ Fire.add_fuel(f,seconds*amount);notify("Топливо добавлено");ui.refresh();return true
 func add_tinder(id: String) -> bool:
  var f:=find_fire(id)
  if f.is_empty() or not _fire_in_reach(f) or not job.is_empty():return false
@@ -236,11 +237,23 @@ func begin_ignition(id: String, method: String) -> bool:
 func _fire_in_reach(f: Dictionary) -> bool:
  if location!="forest" or player.global_position.distance_to(_v3(f["pos"]))>3.3:return false
  var q:=PhysicsRayQueryParameters3D.create(player.global_position+Vector3.UP,_v3(f["pos"])+Vector3.UP*0.4,1)
- q.exclude=[player.get_rid()]
+ var excluded:Array[RID]=[player.get_rid()]
+ for n in fire_nodes:
+  if is_instance_valid(n) and n.data.get("id")==f.get("id"):excluded.append(n.get_rid())
+ q.exclude=excluded
  return player.get_world_3d().direct_space_state.intersect_ray(q).is_empty()
-func begin_rest() -> bool:
- if not job.is_empty() or not safe_shelter() or warmth<20:notify("Нужны закрытое укрытие и отсутствие опасного холода");return false
- job={"kind":"rest","elapsed":0.0,"duration":1.0,"origin":_arr(player.global_position)};ui.refresh();return true
+func rest_block_reason() -> String:
+ if health<=0:return "Нельзя спать: персонаж погиб."
+ if not job.is_empty():return "Сначала завершите или отмените текущее действие."
+ if not covered() or location!="forest":return "Нужна койка в лесной стоянке."
+ if not safe_shelter():return "Закройте дверь стоянки."
+ if warmth<20:return "Слишком холодно для сна. Сначала согрейтесь."
+ return ""
+func begin_rest(hours: int = 1) -> bool:
+ var reason:=rest_block_reason()
+ if reason!="":notify(reason);return false
+ if hours<1 or hours>12:notify("Выберите от 1 до 12 часов сна");return false
+ job={"kind":"rest","elapsed":0.0,"duration":float(hours),"hours":hours,"origin":_arr(player.global_position)};ui.refresh();return true
 func cancel_job() -> void:
  job={}
 func _finish_job() -> void:
@@ -256,7 +269,7 @@ func _finish_job() -> void:
    var f:=find_fire(done["fire"])
    if not f.is_empty() and _fire_in_reach(f) and f["fuel"]>0 and done["success"]:f["state"]="burning";notify("Костёр разгорелся")
    else:notify("Розжиг не удался. Добавьте растопку и попробуйте ещё раз.")
-  "rest":notify("Вы отдохнули 1 игровой час")
+  "rest":notify("Сон завершён: %d ч" % int(done.get("hours",1)))
  ui.refresh()
 
 func begin_placement() -> void:
@@ -346,12 +359,14 @@ func drop_resource(item: Dictionary, pos: Vector3) -> void:
  _spawn_pickup(item,id,pos)
 
 func export_state() -> Dictionary:
- var state:={"version":1,"clock":clock,"weather":weather,"weather_until":weather_until,"wetness":wetness,"warmth":warmth,"energy":energy,"health":health,"matches":matches,"active_tool":player.active_hotbar_slot,"lantern_on":player._is_lantern_on,"fires":fires.duplicate(true),"picked":picked.duplicate(),"dropped":dropped.duplicate(true),"job":job.duplicate(true),"rng_state":str(rng.state),"location":location,"door_closed":shelter.door_closed if is_instance_valid(shelter) else _saved_door_closed,"exterior_felled":_old_felled,"exterior_logs":_old_logs,"mine_logs":_mine_logs}
+ var state:={"version":1,"clock":clock,"weather":weather,"weather_until":weather_until,"wetness":wetness,"warmth":warmth,"energy":energy,"health":health,"matches":matches,"active_tool":player.active_hotbar_slot,"belt_items":player.belt_items.duplicate(),"lantern_on":player._is_lantern_on,"fires":fires.duplicate(true),"picked":picked.duplicate(),"dropped":dropped.duplicate(true),"job":job.duplicate(true),"rng_state":str(rng.state),"location":location,"door_closed":shelter.door_closed if is_instance_valid(shelter) else _saved_door_closed,"exterior_felled":_old_felled,"exterior_logs":_old_logs,"mine_logs":_mine_logs}
  return state
 func import_state(state: Dictionary) -> void:
  close_backpack();cancel_placement()
  clock=float(state.get("clock",16*3600));weather=state.get("weather","clear");weather_until=float(state.get("weather_until",clock+7200))
  wetness=clampf(float(state.get("wetness",0)),0,100);warmth=clampf(float(state.get("warmth",80)),0,100);energy=clampf(float(state.get("energy",100)),0,100);health=clampf(float(state.get("health",100)),0,100);matches=maxi(0,int(state.get("matches",12)))
+ player.belt_items=state.get("belt_items",["","",""]).duplicate();player.belt_items.resize(3)
+ player._refresh_belt_labels()
  player._is_lantern_on=bool(state.get("lantern_on",false));player.select_hotbar_slot(int(state.get("active_tool",player.active_hotbar_slot)))
  fires=state.get("fires",[]).duplicate(true);picked=state.get("picked",{}).duplicate();dropped=state.get("dropped",[]).duplicate(true)
  _old_felled=state.get("exterior_felled",{});_old_logs=state.get("exterior_logs",[]);_mine_logs=state.get("mine_logs",[])
@@ -370,6 +385,7 @@ func import_state(state: Dictionary) -> void:
  var saved_job:Dictionary=state.get("job",{}).duplicate(true)
  if not saved_job.is_empty():
   job=saved_job
+  if job.get("kind")=="rest":player._backpack_ui.sleep_hours.value=clampi(int(job.get("hours",job.get("duration",1))),1,12)
   open_backpack(job.get("fire",""),"rest" if job.get("kind")=="rest" else "camp")
  _update_lighting();ui.refresh()
 func prepare_travel() -> void:
