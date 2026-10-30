@@ -107,7 +107,7 @@ func _build_inventory() -> void:
  var body:=row(inventory,20);body.size_flags_vertical=Control.SIZE_EXPAND_FILL
  inventory_left=column(body,8);inventory_left.size_flags_stretch_ratio=1.12
  var sc:=scroll(inventory_left);var content:=column(sc)
- item_grid=GridContainer.new();item_grid.columns=4;item_grid.size_flags_horizontal=Control.SIZE_EXPAND_FILL;item_grid.add_theme_constant_override("h_separation",6);item_grid.add_theme_constant_override("v_separation",6);content.add_child(item_grid)
+ item_grid=GridContainer.new();item_grid.columns=8;item_grid.size_flags_horizontal=Control.SIZE_EXPAND_FILL;item_grid.add_theme_constant_override("h_separation",6);item_grid.add_theme_constant_override("v_separation",6);content.add_child(item_grid)
  for i in player.MAX_SLOTS:
   var card:=Card.new();card.name="Item_%d" % i;card.pressed.connect(player._on_slot_clicked.bind(i));item_grid.add_child(card);player._inv_slot_buttons.append(card)
  item_empty=label(content,"Ничего не найдено. Измените поиск или категорию.");item_empty.hide()
@@ -147,9 +147,9 @@ func _build_craft() -> void:
  only_available=CheckButton.new();only_available.text="Доступные";only_available.custom_minimum_size.y=44;toolbar.add_child(only_available);only_available.toggled.connect(func(_value):refresh_actions())
  var body:=row(craft,20);body.size_flags_vertical=Control.SIZE_EXPAND_FILL
  var left:=column(scroll(body));left.size_flags_stretch_ratio=1.12
- recipe_grid=GridContainer.new();recipe_grid.columns=2;recipe_grid.add_theme_constant_override("h_separation",8);recipe_grid.add_theme_constant_override("v_separation",8);left.add_child(recipe_grid)
+ recipe_grid=GridContainer.new();recipe_grid.columns=4;recipe_grid.add_theme_constant_override("h_separation",8);recipe_grid.add_theme_constant_override("v_separation",8);left.add_child(recipe_grid)
  for r in Catalog.RECIPES:
-  var card:=Card.new();card.custom_minimum_size.y=172;card.pressed.connect(select_recipe.bind(r.id));recipe_grid.add_child(card);recipe_cards[r.id]=card
+  var card:=Card.new();card.custom_minimum_size.y=95;card.pressed.connect(select_recipe.bind(r.id));recipe_grid.add_child(card);recipe_cards[r.id]=card
  recipe_empty=label(left,"Пока нет доступных рецептов. Соберите материалы или выключите фильтр.");recipe_empty.hide()
  var detail_column:=column(body,8)
  var right:=column(scroll(detail_column),10)
@@ -199,9 +199,9 @@ func resize() -> void:
  ui_scale=maxf(1.0,size.x/maxf(1,physical.x))
  var dim:=Vector2(minf(1240*ui_scale,size.x-32*ui_scale),minf(820*ui_scale,size.y-32*ui_scale))
  player._inv_root_panel.size=dim;player._inv_root_panel.position=(size-dim)/2
- item_grid.columns=3 if dim.x<960*ui_scale else 4
- for card in player._inv_slot_buttons:card.custom_minimum_size=Vector2(76,150)*ui_scale
- for card in recipe_cards.values():card.custom_minimum_size=Vector2(110,190)*ui_scale
+ item_grid.columns=6 if dim.x<960*ui_scale else 8
+ for card in player._inv_slot_buttons:card.set_card_size(Vector2(38,75)*ui_scale,ui_scale)
+ for card in recipe_cards.values():card.set_card_size(Vector2(55,95)*ui_scale,ui_scale,true)
  for node in player._inv_root_panel.find_children("*","Control",true,false):
   if node is Label or node is Button or node is TabContainer or node is LineEdit:
    if not node.has_meta("journal_font"):node.set_meta("journal_font",node.get_theme_font_size("font_size"))
