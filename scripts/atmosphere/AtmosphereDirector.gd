@@ -40,6 +40,7 @@ func advance(seconds: float, sleeping: bool=false) -> void:
   if dark and event.is_empty():cooldown=minf(cooldown,rng.randf_range(18,35))
   last_dark=dark
  if event.is_empty():
+  if is_instance_valid(session.sky_events) and session.sky_events.busy():return
   cooldown=maxf(0,cooldown-seconds)
   if cooldown<=0:
    var kind:="crossing"
@@ -89,6 +90,7 @@ func _clear_visuals() -> void:
  visuals.clear();_curves.clear();_fading=false;_fade_left=0
 
 func try_start_event(kind: String, require_hidden: bool=true) -> bool:
+ if is_instance_valid(session.sky_events) and session.sky_events.busy():return false
  if not allowed() or not event.is_empty() or kind not in ["eyes","orbs","crossing"]:return false
  if kind in ["eyes","orbs"] and not is_dark():return false
  var center:Vector3=session.player.global_position

@@ -18,6 +18,11 @@ var _btn_back: Button = null
 # Graphics controls
 var _opt_window_mode: OptionButton = null
 var _opt_resolution: OptionButton = null
+var _opt_sky:OptionButton
+var _opt_rain:OptionButton
+var _chk_lightning:CheckBox
+var _slider_weather:HSlider
+var _slider_thunder:HSlider
 var _chk_vsync: CheckBox = null
 var _opt_max_fps: OptionButton = null
 var _opt_shadows: OptionButton = null
@@ -195,9 +200,19 @@ func _build_graphics_tab() -> void:
 	# View Distance
 	_opt_view_dist = _create_option_row(vbox, "Дальность прорисовки мира:", ["Близкая (1.5 км)", "Средняя (2.5 км)", "Дальняя (4.0 км)"])
 
+	_opt_sky = _create_option_row(vbox, "Качество неба:", ["Низкое", "Среднее", "Высокое"])
+	_opt_rain = _create_option_row(vbox, "Плотность дождя:", ["Низкая", "Средняя", "Высокая"])
+	_chk_lightning = _create_checkbox_row(vbox, "Уменьшенные вспышки грозы")
+
 func _build_audio_tab() -> void:
 	var vbox = _create_tab("Звук")
 	
+	var weather_row = _create_slider_row(vbox, "Погодный фон:")
+	_slider_weather = weather_row["slider"]
+	_slider_weather.value_changed.connect(func(v): weather_row["label"].text = "%d%%" % int(v*100))
+	var thunder_row = _create_slider_row(vbox, "Гром:")
+	_slider_thunder = thunder_row["slider"]
+	_slider_thunder.value_changed.connect(func(v): thunder_row["label"].text = "%d%%" % int(v*100))
 	var r1 = _create_slider_row(vbox, "Общая громкость (Master):")
 	_slider_master = r1["slider"]
 	_lbl_master = r1["label"]
@@ -405,6 +420,11 @@ func _load_current_values() -> void:
 	_opt_max_fps.selected = fps_idx if fps_idx >= 0 else 1
 	_opt_shadows.selected = sm.get_setting("graphics", "shadow_quality", 2)
 	_opt_view_dist.selected = sm.get_setting("graphics", "view_distance", 2)
+	_opt_sky.selected = sm.get_setting("graphics", "sky_quality", 1)
+	_opt_rain.selected = sm.get_setting("graphics", "rain_quality", 1)
+	_chk_lightning.button_pressed = sm.get_setting("graphics", "reduced_lightning", false)
+	_slider_weather.value = sm.get_setting("audio", "weather_volume", 0.85)
+	_slider_thunder.value = sm.get_setting("audio", "thunder_volume", 0.8)
 	
 	# Audio
 	var mv = sm.get_bus_volume_linear("Master")
@@ -521,6 +541,11 @@ func _on_apply_pressed() -> void:
 	sm.set_setting("graphics", "max_fps", SettingsManager.FPS_LIMIT_OPTIONS[_opt_max_fps.selected])
 	sm.set_setting("graphics", "shadow_quality", _opt_shadows.selected)
 	sm.set_setting("graphics", "view_distance", _opt_view_dist.selected)
+	sm.set_setting("graphics", "sky_quality", _opt_sky.selected)
+	sm.set_setting("graphics", "rain_quality", _opt_rain.selected)
+	sm.set_setting("graphics", "reduced_lightning", _chk_lightning.button_pressed)
+	sm.set_setting("audio", "weather_volume", _slider_weather.value)
+	sm.set_setting("audio", "thunder_volume", _slider_thunder.value)
 	
 	sm.set_setting("controls", "mouse_sensitivity", _slider_sens.value)
 	sm.set_setting("controls", "invert_y", _chk_invert_y.button_pressed)

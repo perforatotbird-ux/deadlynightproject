@@ -39,9 +39,14 @@ var message := "[Tab] Выживание · Собирайте хворост и
 var message_time := 15.0
 var _scan := 0.0
 var _visual_tick := 0.0
-var _rain: GPUParticles3D
+var weather_model=preload("res://scripts/weather/WeatherModel.gd").new()
+var sky_renderer:Node3D
+var rain_field:Node3D
+var sky_events:Node3D
+var weather_visual:Dictionary={}
 var _rain_audio: AudioStreamPlayer
 var _night_audio: AudioStreamPlayer
+var _gust_audio:AudioStreamPlayer
 var _wind_audio: AudioStreamPlayer
 var _last_phase := ""
 var _transitioning := false
@@ -58,7 +63,12 @@ func _ready() -> void:
  player.survival=self
  location="mine" if get_parent().name=="MineInterior" else "forest"
  ui=UI.new();ui.session=self;add_child(ui)
+ weather_model.reset(clock,weather=="rain")
  if location=="forest":_create_shelter();_setup_weather_fx()
+ else:_rain_audio=_loop_audio("res://assets/sounds/survival/rain_loop.wav",-80)
+ sky_renderer=preload("res://scripts/weather/SkyRenderer.gd").new();sky_renderer.session=self;sky_renderer.model=weather_model;add_child(sky_renderer)
+ rain_field=preload("res://scripts/weather/RainField.gd").new();rain_field.session=self;add_child(rain_field)
+ sky_events=preload("res://scripts/weather/SkyEvents.gd").new();sky_events.session=self;sky_events.sky=sky_renderer;add_child(sky_events)
  atmosphere=preload("res://scripts/atmosphere/AtmosphereDirector.gd").new();atmosphere.session=self;add_child(atmosphere)
  if not travel.is_empty():
   var payload:=travel;travel={}
@@ -84,6 +94,9 @@ func _process(delta: float) -> void:
  if not player._is_active:return
  var sleeping:bool=job.get("kind")=="rest"
  advance(delta)
+ weather_visual=weather_model.sample(clock,weather=="rain",weather_until,daylight())
+ sky_events.advance(delta,weather_visual,sleeping)
+ rain_field.update_field(delta,weather_visual,int(load("res://scripts/core/SettingsManager.gd").get_instance().get_setting("graphics","rain_quality",1)))
  atmosphere.advance(delta,sleeping)
  if location=="forest":
   _scan-=delta
@@ -107,9 +120,11 @@ func advance(real_seconds: float) -> void:
   remaining-=dt
   var world_dt:=dt*factor
   clock+=world_dt
+  weather_model.sample(clock,weather=="rain",weather_until,daylight())
   if clock>=weather_until:
    weather="rain" if weather=="clear" else "clear"
    weather_until=clock+rng.randf_range(2.0,4.0)*3600.0
+   weather_model.sample(clock,weather=="rain",weather_until,daylight())
    notify("Начинается дождь: хворост сложнее разжечь" if weather=="rain" else "Дождь закончился")
   for f in fires:
    Fire.advance(f,world_dt,weather=="rain")
@@ -363,7 +378,7 @@ func drop_resource(item: Dictionary, pos: Vector3) -> void:
  _spawn_pickup(item,id,pos)
 
 func export_state() -> Dictionary:
- var state:={"version":1,"atmosphere":atmosphere.export_state(),"clock":clock,"weather":weather,"weather_until":weather_until,"wetness":wetness,"warmth":warmth,"energy":energy,"health":health,"matches":matches,"active_tool":player.active_hotbar_slot,"belt_items":player.belt_items.duplicate(),"lantern_on":player._is_lantern_on,"fires":fires.duplicate(true),"picked":picked.duplicate(),"dropped":dropped.duplicate(true),"job":job.duplicate(true),"rng_state":str(rng.state),"location":location,"door_closed":shelter.door_closed if is_instance_valid(shelter) else _saved_door_closed,"exterior_felled":_old_felled,"exterior_logs":_old_logs,"mine_logs":_mine_logs}
+ var state:={"version":2,"sky_weather":weather_model.export_state(),"sky_events":sky_events.export_state() if is_instance_valid(sky_events) else {},"atmosphere":atmosphere.export_state(),"clock":clock,"weather":weather,"weather_until":weather_until,"wetness":wetness,"warmth":warmth,"energy":energy,"health":health,"matches":matches,"active_tool":player.active_hotbar_slot,"belt_items":player.belt_items.duplicate(),"lantern_on":player._is_lantern_on,"fires":fires.duplicate(true),"picked":picked.duplicate(),"dropped":dropped.duplicate(true),"job":job.duplicate(true),"rng_state":str(rng.state),"location":location,"door_closed":shelter.door_closed if is_instance_valid(shelter) else _saved_door_closed,"exterior_felled":_old_felled,"exterior_logs":_old_logs,"mine_logs":_mine_logs}
  return state
 func import_state(state: Dictionary) -> void:
  close_backpack();cancel_placement()
@@ -391,11 +406,14 @@ func import_state(state: Dictionary) -> void:
   job=saved_job
   if job.get("kind")=="rest":player._backpack_ui.sleep_hours.value=clampi(int(job.get("hours",job.get("duration",1))),1,12)
   open_backpack(job.get("fire",""),"rest" if job.get("kind")=="rest" else "camp")
+ weather_model.import_state(state.get("sky_weather",{}),clock,weather=="rain")
+ if is_instance_valid(sky_events):sky_events.import_state(state.get("sky_events",{}))
  atmosphere.import_state(state.get("atmosphere",{}))
  _update_lighting();ui.refresh()
 func prepare_travel() -> void:
  if _transitioning:return
  _transitioning=true;close_backpack();cancel_placement();atmosphere.suspend()
+ if is_instance_valid(sky_events):sky_events.suspend()
  var felled:Dictionary=load("res://scripts/props/TreeChoppable.gd").felled_tree_ids.duplicate(true)
  var logs:Array=[]
  if location=="forest":
@@ -418,40 +436,24 @@ func _loop_audio(path: String, volume: float) -> AudioStreamPlayer:
 func _setup_weather_fx() -> void:
  _rain_audio=_loop_audio("res://assets/sounds/survival/rain_loop.wav",-80)
  _night_audio=_loop_audio("res://assets/sounds/survival/night_loop.wav",-80)
+ _gust_audio=_loop_audio("res://assets/sounds/level_01/ambience/amb_wind_canopy.wav",-80)
  _wind_audio=_loop_audio("res://assets/sounds/level_01/ambience/amb_forest_bed.mp3",-23)
- _rain=GPUParticles3D.new();_rain.amount=600;_rain.lifetime=0.7;_rain.visibility_aabb=AABB(Vector3(-12,-10,-12),Vector3(24,25,24))
- var p:=ParticleProcessMaterial.new();p.emission_shape=ParticleProcessMaterial.EMISSION_SHAPE_BOX;p.emission_box_extents=Vector3(9,0.5,9);p.direction=Vector3(0.12,-1,0);p.spread=4;p.initial_velocity_min=17;p.initial_velocity_max=22;p.gravity=Vector3(0,-4,0);_rain.process_material=p
- var mesh:=BoxMesh.new();mesh.size=Vector3(0.008,0.18,0.008);var m:=StandardMaterial3D.new();m.albedo_color=Color(0.6,0.72,0.8,0.4);m.transparency=BaseMaterial3D.TRANSPARENCY_ALPHA;mesh.material=m;_rain.draw_pass_1=mesh;get_parent().add_child(_rain)
 func _update_lighting() -> void:
+ var day:=daylight()
+ weather_visual=weather_model.sample(clock,weather=="rain",weather_until,day)
  if location=="mine":
   var entrance=get_parent().get_node_or_null("Geometry/EntranceDaylight")
   if entrance:entrance.light_energy=0.8*daylight()
+  if _rain_audio:
+   var settings=load("res://scripts/core/SettingsManager.gd").get_instance()
+   _rain_audio.volume_db=lerpf(-80,-44,weather_visual.rain)+linear_to_db(maxf(0.0001,float(settings.get_setting("audio","weather_volume",0.85))))
   return
- var day:=daylight()
- var sun=get_parent().get_node_or_null("DirectionalLight3D")
- if sun:
-  sun.rotation_degrees=Vector3(-((hour()-6)/12.0)*180,25,0)
-  sun.light_energy=lerpf(0.015,1.3,day)*(0.6 if weather=="rain" else 1)
-  sun.light_color=Color(0.55,0.65,1).lerp(Color(1,0.93,0.76),day)
- var envnode=get_parent().get_node_or_null("WorldEnvironment")
- if envnode:
-  var env:Environment=envnode.environment
-  env.ambient_light_source=Environment.AMBIENT_SOURCE_COLOR
-  env.ambient_light_sky_contribution=0.0
-  env.ambient_light_energy=lerpf(0.035,0.7,day)*(0.7 if weather=="rain" else 1)
-  env.ambient_light_color=Color(0.3,0.4,0.65).lerp(Color(0.7,0.75,0.8),day)
-  env.fog_light_color=Color(0.025,0.04,0.065).lerp(Color(0.65,0.72,0.8),day)
-  env.fog_density=0.0015 if weather=="rain" else 0.0008
-  var sky=env.sky.sky_material as ProceduralSkyMaterial
-  if sky:
-   sky.ground_bottom_color=Color(0.005,0.008,0.012).lerp(Color(0.2,0.22,0.2),day)
-   sky.ground_horizon_color=Color(0.01,0.018,0.025).lerp(Color(0.55,0.6,0.62),day)
-   sky.sky_top_color=Color(0.007,0.012,0.03).lerp(Color(0.38,0.58,0.82),day)
-   sky.sky_horizon_color=Color(0.025,0.035,0.065).lerp(Color(0.68,0.76,0.84),day)
- if _rain:
-  _rain.global_position=player.global_position+Vector3.UP*10;_rain.emitting=weather=="rain" and not covered()
- if _rain_audio:_rain_audio.volume_db=(-27 if covered() else -15) if weather=="rain" else -80
- if _wind_audio:_wind_audio.volume_db=lerpf(-52,-23,day)
+ if is_instance_valid(sky_renderer):sky_renderer.update_sky(weather_visual,sky_events.flash if is_instance_valid(sky_events) else 0.0)
+ var sm=load("res://scripts/core/SettingsManager.gd").get_instance()
+ var weather_gain:=linear_to_db(maxf(0.0001,float(sm.get_setting("audio","weather_volume",0.85))))
+ if _rain_audio:_rain_audio.volume_db=lerpf(-60,-15,weather_visual.rain)+(-12 if covered() else 0)+weather_gain
+ if _wind_audio:_wind_audio.volume_db=lerpf(-44,-21,maxf(day*0.5,weather_visual.wind))+weather_gain
+ if _gust_audio:_gust_audio.volume_db=lerpf(-55,-19,weather_visual.wind)+weather_gain+(-10 if covered() else 0)
  if _night_audio:_night_audio.volume_db=lerpf(-20,-65,day)
  var phase:="ночь" if day<0.1 else ("сумерки" if hour()>18 else "день")
  if phase!=_last_phase:

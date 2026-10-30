@@ -37,13 +37,18 @@ const DEFAULTS: Dictionary = {
 		"max_fps": 60,
 		"shadow_quality": 2, # 0: Low, 1: Med, 2: High
 		"view_distance": 2,  # 0: Near, 1: Med, 2: Far
-		"fog_enabled": true
+		"fog_enabled": true,
+		"sky_quality": 1,
+		"rain_quality": 1,
+		"reduced_lightning": false
 	},
 	"audio": {
 		"master_volume": 0.85,
 		"music_volume": 0.70,
 		"sfx_volume": 0.90,
-		"ambience_volume": 0.85
+		"ambience_volume": 0.85,
+		"weather_volume": 0.85,
+		"thunder_volume": 0.8
 	},
 	"controls": {
 		"mouse_sensitivity": 0.0022,
