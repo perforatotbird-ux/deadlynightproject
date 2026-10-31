@@ -1,0 +1,41 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 24.2.6 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 15.0.7, 256 bits)
+
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+PASS: real world item stone
+PASS: real world item brush
+PASS: real world item camp_kit
+PASS: real world item water
+PASS: real world item ration
+PASS: real world item bandage
+PASS: real world item flint
+PASS: real world item pyrite
+PASS: real world HUD suppressed
+PASS: actual world inventory fits (1280, 720)
+PASS: actual world capture world_inventory_1280
+PASS: actual world inventory fits (1600, 900)
+PASS: actual world capture world_inventory_1600
+PASS: actual world inventory fits (1920, 1080)
+PASS: actual world capture world_inventory_1920
+PASS: inventory does not pause survival simulation
+PASS: actual world HUD restored
+PASS: previously hidden HUD is not forced on
+INVENTORY WORLD SUMMARY: 18 PASS, 0 FAIL
+ERROR: Texture with GL ID of 100: leaked 349524 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 101: leaked 349524 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)

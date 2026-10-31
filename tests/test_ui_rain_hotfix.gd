@@ -37,8 +37,8 @@ func run() -> void:
  var items=s.Items
  for id in ["stone","brush","flint","pyrite","camp_kit"]:items.transact(p,{},[items.item(id)])
  s.open_backpack();var ui=p._backpack_ui;await settle();ui.resize();await settle()
- check(ui.item_grid.columns==8 and ui.recipe_grid.columns==4,"twice as many inventory and recipe columns at 720p")
- check(p._inv_slot_buttons[0].custom_minimum_size==Vector2(38,75),"inventory card minimum is half old 76x150")
+ check(ui.item_grid.columns==1 and ui.recipe_grid.columns==4,"compact inventory list and retained recipe grid")
+ check(p._inv_slot_buttons[0].custom_minimum_size==Vector2(0,60),"inventory uses compact 60px rows")
  check(ui.recipe_cards.camp_kit.custom_minimum_size==Vector2(55,95),"recipe card minimum is half old 110x190")
  var c:Button=p._inv_slot_buttons[0];check(c.size.y<=76,"actual inventory card height is compact, not stretched back to 150")
  check(c.picture.texture!=null and c.caption.get_theme_font_size("font_size")>=12,"compact cards retain actual art and readable font")
@@ -48,7 +48,7 @@ func run() -> void:
  await capture("02_compact_craft_720p")
  for resolution in [Vector2i(800,600),Vector2i(1920,1080)]:
   root.size=resolution;await settle();ui.resize();await settle()
-  check(ui.item_grid.columns==(6 if resolution.x<960 else 8),"compact responsive columns "+str(resolution))
+  check(ui.item_grid.columns==1,"compact responsive list "+str(resolution))
   await capture("03_compact_craft_"+str(resolution.x))
  s.close_backpack();root.size=Vector2i(1280,720)
  s.clock=14*3600;s.weather="rain";s.weather_until=s.clock+10000;s.weather_model.reset(s.clock,true);s.weather_model.rain_style="heavy_rain";s._update_lighting()

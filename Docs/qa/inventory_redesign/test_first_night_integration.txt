@@ -1,0 +1,57 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[SettingsManager] Settings loaded successfully from: user://settings.cfg
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+PASS: real MapViewer / Player integration
+PASS: real terrain spawns gatherable resources
+PASS: physical first-night cabin near spawn
+PASS: Tab opens the actual backpack through real input
+PASS: real mouse click reaches craft button
+PASS: Escape closes backpack and releases player
+PASS: authored terrain tagged as valid ground
+PASS: real forest placement passes physical checks
+PASS: place fire in real forest
+PASS: mouse split from backpack auto-equips axe
+PASS: real forest camp successfully burns
+PASS: player enters actual physical shelter
+PASS: full-scene SaveManager writes
+[SaveManager] Loaded game state successfully applied to active scene.
+PASS: full-scene load restores survival once
+PASS: mine retains match count and session
+PASS: mine retains crafted belt binding
+PASS: mine retains actual backpack
+PASS: outside camp keeps burning while player is in mine
+PASS: save inside mine
+PASS: save identifies interior location
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+PASS: return preserves time, matches and fire
+PASS: mine exit returns to entrance, not spawn
+[SaveManager] Changing scene to MineInterior for save payload application...
+PASS: load saved mine slot
+[SaveManager] Loaded game state successfully applied to active scene.
+PASS: loading selects the correct mine scene
+PASS: saved mine survival restored after scene load
+PASS: saved mine restores crafted belt binding
+FIRST NIGHT INTEGRATION SUMMARY: 26 PASS, 0 FAIL

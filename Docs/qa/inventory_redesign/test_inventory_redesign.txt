@@ -1,0 +1,145 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[SettingsManager] Settings loaded successfully from: user://settings.cfg
+PASS: empty backpack has zero fake cells and useful hint
+PASS: journal suppresses underlying gameplay HUD
+PASS: real five tools + three assignments, no duplicate inventory
+PASS: real transaction stone
+PASS: real transaction brush
+PASS: real transaction flint
+PASS: real transaction pyrite
+PASS: real transaction camp_kit
+PASS: real transaction water
+PASS: real transaction raw_water
+PASS: real transaction ration
+PASS: real transaction berries
+PASS: real transaction bandage
+PASS: real transaction compress
+PASS: real species fuel
+PASS: partial backpack shows occupied slots only
+PASS: mouse selects authoritative slot
+PASS: stone exposes no fictional use or binding
+PASS: second click deselects
+PASS: camp kit contextual placement and belt
+PASS: assign uses existing belt contract
+PASS: quick strip actual aggregate amount
+PASS: quick strip selects existing tool
+PASS: weight sorting cannot mutate source
+PASS: case insensitive search
+PASS: no results is not empty cells
+PASS: medicine category actual types
+PASS: tools projected separately from backpack slots
+PASS: permanent tool cannot be dropped or re-bound
+PASS: matches count from survival, not literal hotbar status
+PASS: use water changes real inventory and hydration
+PASS: bandage honestly disabled without bleeding
+PASS: bandage available for actual bleeding
+PASS: bandage treats actual condition
+PASS: compress disabled without sprain
+PASS: compress treats actual sprain
+PASS: quantity drop uses existing logic
+PASS: refresh preserves controls and input focus
+PASS: shell inside (1280, 720) stretch=true
+PASS: columns never overlap (1280, 720)
+PASS: quick strip inside shell (1280, 720)
+PASS: search inside shell (1280, 720)
+PASS: drop actions always visible (1280, 720)
+PASS: navigation label not clipped: Все предметы (1280, 720)
+PASS: navigation label not clipped: Ресурсы (1280, 720)
+PASS: navigation label not clipped: Топливо (1280, 720)
+PASS: navigation label not clipped: Снаряжение (1280, 720)
+PASS: navigation label not clipped: Еда и вода (1280, 720)
+PASS: navigation label not clipped: Медицина (1280, 720)
+PASS: navigation label not clipped: Инструменты (1280, 720)
+PASS: navigation label not clipped: Закрыть · Tab / Esc (1280, 720)
+PASS: compact 60px physical row (1280, 720)
+PASS: compact quick slot (1280, 720)
+PASS: tab inside viewport 1(1280, 720)
+PASS: tab inside viewport 2(1280, 720)
+PASS: shell inside (1600, 900) stretch=true
+PASS: columns never overlap (1600, 900)
+PASS: quick strip inside shell (1600, 900)
+PASS: search inside shell (1600, 900)
+PASS: drop actions always visible (1600, 900)
+PASS: navigation label not clipped: Все предметы (1600, 900)
+PASS: navigation label not clipped: Ресурсы (1600, 900)
+PASS: navigation label not clipped: Топливо (1600, 900)
+PASS: navigation label not clipped: Снаряжение (1600, 900)
+PASS: navigation label not clipped: Еда и вода (1600, 900)
+PASS: navigation label not clipped: Медицина (1600, 900)
+PASS: navigation label not clipped: Инструменты (1600, 900)
+PASS: navigation label not clipped: Закрыть · Tab / Esc (1600, 900)
+PASS: compact 60px physical row (1600, 900)
+PASS: compact quick slot (1600, 900)
+PASS: tab inside viewport 1(1600, 900)
+PASS: tab inside viewport 2(1600, 900)
+PASS: shell inside (1920, 1080) stretch=true
+PASS: columns never overlap (1920, 1080)
+PASS: quick strip inside shell (1920, 1080)
+PASS: search inside shell (1920, 1080)
+PASS: drop actions always visible (1920, 1080)
+PASS: navigation label not clipped: Все предметы (1920, 1080)
+PASS: navigation label not clipped: Ресурсы (1920, 1080)
+PASS: navigation label not clipped: Топливо (1920, 1080)
+PASS: navigation label not clipped: Снаряжение (1920, 1080)
+PASS: navigation label not clipped: Еда и вода (1920, 1080)
+PASS: navigation label not clipped: Медицина (1920, 1080)
+PASS: navigation label not clipped: Инструменты (1920, 1080)
+PASS: navigation label not clipped: Закрыть · Tab / Esc (1920, 1080)
+PASS: compact 60px physical row (1920, 1080)
+PASS: compact quick slot (1920, 1080)
+PASS: tab inside viewport 1(1920, 1080)
+PASS: tab inside viewport 2(1920, 1080)
+PASS: shell inside (1280, 720) stretch=false
+PASS: columns never overlap (1280, 720)
+PASS: quick strip inside shell (1280, 720)
+PASS: search inside shell (1280, 720)
+PASS: drop actions always visible (1280, 720)
+PASS: navigation label not clipped: Все предметы (1280, 720)
+PASS: navigation label not clipped: Ресурсы (1280, 720)
+PASS: navigation label not clipped: Топливо (1280, 720)
+PASS: navigation label not clipped: Снаряжение (1280, 720)
+PASS: navigation label not clipped: Еда и вода (1280, 720)
+PASS: navigation label not clipped: Медицина (1280, 720)
+PASS: navigation label not clipped: Инструменты (1280, 720)
+PASS: navigation label not clipped: Закрыть · Tab / Esc (1280, 720)
+PASS: compact 60px physical row (1280, 720)
+PASS: compact quick slot (1280, 720)
+PASS: shell inside (1600, 900) stretch=false
+PASS: columns never overlap (1600, 900)
+PASS: quick strip inside shell (1600, 900)
+PASS: search inside shell (1600, 900)
+PASS: drop actions always visible (1600, 900)
+PASS: navigation label not clipped: Все предметы (1600, 900)
+PASS: navigation label not clipped: Ресурсы (1600, 900)
+PASS: navigation label not clipped: Топливо (1600, 900)
+PASS: navigation label not clipped: Снаряжение (1600, 900)
+PASS: navigation label not clipped: Еда и вода (1600, 900)
+PASS: navigation label not clipped: Медицина (1600, 900)
+PASS: navigation label not clipped: Инструменты (1600, 900)
+PASS: navigation label not clipped: Закрыть · Tab / Esc (1600, 900)
+PASS: compact 60px physical row (1600, 900)
+PASS: compact quick slot (1600, 900)
+PASS: shell inside (1920, 1080) stretch=false
+PASS: columns never overlap (1920, 1080)
+PASS: quick strip inside shell (1920, 1080)
+PASS: search inside shell (1920, 1080)
+PASS: drop actions always visible (1920, 1080)
+PASS: navigation label not clipped: Все предметы (1920, 1080)
+PASS: navigation label not clipped: Ресурсы (1920, 1080)
+PASS: navigation label not clipped: Топливо (1920, 1080)
+PASS: navigation label not clipped: Снаряжение (1920, 1080)
+PASS: navigation label not clipped: Еда и вода (1920, 1080)
+PASS: navigation label not clipped: Медицина (1920, 1080)
+PASS: navigation label not clipped: Инструменты (1920, 1080)
+PASS: navigation label not clipped: Закрыть · Tab / Esc (1920, 1080)
+PASS: compact 60px physical row (1920, 1080)
+PASS: compact quick slot (1920, 1080)
+PASS: full 160-item backpack and real overweight
+PASS: full bag rejects overflowing transaction
+PASS: stack inspector uses real count
+PASS: Escape closes journal without opening pause
+PASS: closing journal restores gameplay HUD snapshot
+PASS: Tab reopens existing condition landing page
+PASS: Tab closes journal
+INVENTORY REDESIGN SUMMARY: 141 PASS, 0 FAIL

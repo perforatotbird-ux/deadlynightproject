@@ -1,0 +1,34 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[SettingsManager] Settings loaded successfully from: user://settings.cfg
+PASS: three general tabs; fire and sleep are contextual panels
+PASS: real mouse switches to recipes
+PASS: held craft click survives repeated refresh
+PASS: bind crafted kit to belt without moving/duplicating inventory
+PASS: key 6 equips crafted quick slot
+PASS: LMB on crafted belt kit starts placement
+PASS: Tab cancels placement before opening bag
+PASS: place kit for camp tests
+PASS: consumed last kit clears shortcut
+PASS: held split click in recipes starts job
+PASS: split yields three firewood pieces
+PASS: fire interaction opens contextual controls, not a craft tab
+PASS: held GUI fuel click adds selected amount exactly once
+PASS: held tinder click survives periodic refresh
+PASS: held ignition click starts once
+PASS: GUI ignition burns camp
+PASS: cot opens enabled contextual sleep panel
+PASS: sleep slider responds to actual mouse input
+PASS: sleep slider responds to real input and selects six hours
+PASS: held sleep click starts requested duration
+PASS: save/load keeps multi-hour sleep progress
+PASS: six hours sleep advances world by exactly six hours
+PASS: open door explains why sleep unavailable
+PASS: dangerous cold explicitly blocks sleep
+PASS: invalid sleep durations rejected
+PASS: bind crafted fuel to belt 7
+PASS: survival save restores crafted belt binding
+PASS: belt LMB adds fuel and consumes one authoritative item
+PASS: empty fuel shortcut clears
+PASS: empty recipe picker does not expose a false actionable slot
+BACKPACK TABS SUMMARY: 30 PASS, 0 FAIL

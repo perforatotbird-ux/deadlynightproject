@@ -4,6 +4,7 @@ const Style=preload("res://scripts/ui/UITheme.gd")
 const Journal=preload("res://scripts/ui/JournalTheme.gd")
 const Art=preload("res://scripts/ui/JournalArt.gd")
 const Card=preload("res://scripts/ui/JournalCard.gd")
+const ItemRow=preload("res://scripts/ui/JournalItemRow.gd")
 const Catalog=preload("res://scripts/survival/CraftCatalog.gd")
 var player:Node
 var buttons:Dictionary={}
@@ -20,10 +21,12 @@ var belt_select:OptionButton
 var belt_info:Label
 var status:Label
 var progress:ProgressBar
+var inspector_column:VBoxContainer
 var right_scroll:ScrollContainer
 var rest:Button
 var ui_scale:=1.0
 var _tick:=0.0
+var _resize_pending:=false
 var _inventory_signature:=""
 var selected_recipe:="camp_kit"
 var recipe_cards:Dictionary={}
@@ -54,6 +57,25 @@ var supply_select:OptionButton
 var fire_page:VBoxContainer
 var sleep_page:VBoxContainer
 
+var navigation:VBoxContainer
+var category_buttons:Array[Button]=[]
+var tool_rows:Array[Button]=[]
+var quick_buttons:Array[Button]=[]
+var quick_keys:Array[Label]=[]
+var quick_values:Array[Label]=[]
+var quick_strip:HBoxContainer
+var list_summary:Label
+var application:Label
+var belt_group:VBoxContainer
+var drop_group:HBoxContainer
+var selected_tool:=-1
+var _hud_visibility:Dictionary={}
+var _detail_key:=""
+var _detail_tween:Tween
+const CATEGORY_NAMES=["Все предметы","Ресурсы","Топливо","Снаряжение","Еда и вода","Медицина","Инструменты"]
+const TOOL_KEYS=["axe","lantern","compass","matches","knife"]
+const TOOL_USE=["Рубка деревьев и раскол брёвен во вкладке «Крафт».","Переносной источник света. Переключается действием выбранного инструмента.","Ориентирование по сторонам света.","Розжиг подготовленного костра. Спички расходуются при попытке розжига.","Постоянный инструмент. Обработка ресурсов ножом пока не реализована."]
+
 func label(parent:Node,text:String,size:int=14) -> Label:
  var n:=Label.new();n.text=text;n.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;n.size_flags_horizontal=Control.SIZE_EXPAND_FILL
  n.add_theme_font_size_override("font_size",size);parent.add_child(n);return n
@@ -80,69 +102,126 @@ func sheet(parent:Node) -> VBoxContainer:
 func build(p:Node) -> void:
  player=p
  p._inv_layer=CanvasLayer.new();p._inv_layer.name="InventoryLayer";p._inv_layer.layer=110;p._inv_layer.hide();p.add_child(p._inv_layer)
- var shade:=ColorRect.new();shade.color=Color(0.015,0.023,0.02,0.93);shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);p._inv_layer.add_child(shade)
+ var shade:=ColorRect.new();shade.color=Color(0.015,0.023,0.02,0.62);shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);p._inv_layer.add_child(shade)
  p._inv_root_panel=PanelContainer.new();p._inv_root_panel.name="InventoryPanel";p._inv_root_panel.theme=Journal.theme()
  p._inv_root_panel.add_theme_stylebox_override("panel",Journal.box(Journal.INK,Journal.LINE));p._inv_layer.add_child(p._inv_root_panel)
- var bg:=TextureRect.new();bg.texture=load(Art.ROOT+"journal_background.jpg");bg.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;bg.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_COVERED;bg.mouse_filter=Control.MOUSE_FILTER_IGNORE;bg.modulate=Color(0.7,0.75,0.67,0.55);p._inv_root_panel.add_child(bg)
+ var bg:=TextureRect.new();bg.texture=load(Art.ROOT+"journal_background.jpg");bg.expand_mode=TextureRect.EXPAND_IGNORE_SIZE;bg.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_COVERED;bg.mouse_filter=Control.MOUSE_FILTER_IGNORE;bg.modulate=Color(0.7,0.75,0.72,0.18);p._inv_root_panel.add_child(bg)
  var margin:=MarginContainer.new();margin.add_theme_constant_override("margin_left",8);margin.add_theme_constant_override("margin_right",8);margin.add_theme_constant_override("margin_top",4);p._inv_root_panel.add_child(margin)
- var layout:=column(margin,10)
- var head:=row(layout);var mast:=column(head,0);label(mast,"DEADLY NIGHT  /  ПОЛЕВОЙ ЖУРНАЛ",11).add_theme_color_override("font_color",Journal.MUTED);heading(mast,"Снаряжение",30)
- button(head,"close","Закрыть   ·   Tab / Esc",func():player._toggle_inventory()).size_flags_horizontal=0
- var mass:=row(layout);p._inv_weight_label=label(mass,"");p._inv_overweight_warning=label(mass,"")
- p._inv_weight_bar=ProgressBar.new();p._inv_weight_bar.max_value=p.max_backpack_kg;p._inv_weight_bar.show_percentage=false;p._inv_weight_bar.custom_minimum_size.y=4;layout.add_child(p._inv_weight_bar)
+ var layout:=column(margin,8)
+ var head:=row(layout,16);var mast:=column(head,0)
+ label(mast,"DEADLY NIGHT / ПОЛЕВОЙ ЖУРНАЛ",11).add_theme_color_override("font_color",Journal.MUTED);heading(mast,"Снаряжение",26)
+ var capacity:=column(head,4);capacity.size_flags_vertical=Control.SIZE_SHRINK_CENTER;capacity.size_flags_horizontal=Control.SIZE_FILL;capacity.custom_minimum_size.x=280
+ p._inv_weight_label=label(capacity,"");p._inv_overweight_warning=label(capacity,"",12)
+ p._inv_weight_bar=ProgressBar.new();p._inv_weight_bar.max_value=p.max_backpack_kg;p._inv_weight_bar.show_percentage=false;p._inv_weight_bar.custom_minimum_size=Vector2(180,4);capacity.add_child(p._inv_weight_bar)
+ button(head,"close","Закрыть · Tab / Esc",func():player._toggle_inventory()).size_flags_horizontal=0
  tabs=TabContainer.new();tabs.size_flags_vertical=Control.SIZE_EXPAND_FILL;tabs.add_theme_font_size_override("font_size",15);layout.add_child(tabs)
  tabs.tab_changed.connect(func(_index):call_deferred("_focus_page"))
  _build_inventory();_build_craft();_build_fire();_build_sleep();_build_condition()
+ _build_quick_strip(layout)
  layout.add_child(HSeparator.new())
- status=label(layout,"",13);status.custom_minimum_size.y=20
+ status=label(layout,"",13);status.custom_minimum_size.y=16
  var action:=row(layout);progress=ProgressBar.new();progress.show_percentage=false;progress.size_flags_horizontal=Control.SIZE_EXPAND_FILL;progress.custom_minimum_size.y=8;progress.size_flags_vertical=Control.SIZE_SHRINK_CENTER;action.add_child(progress)
  button(action,"cancel","Прервать",func():player.survival.cancel_job();refresh_actions()).size_flags_horizontal=0
- p._inv_root_panel.minimum_size_changed.connect(func():call_deferred("resize"))
+ p._inv_root_panel.minimum_size_changed.connect(_queue_resize)
  get_viewport().size_changed.connect(resize);resize();refresh_actions()
 
 func _build_inventory() -> void:
  var inventory:=page("Рюкзак")
- var toolbar:=row(inventory,8)
- search=LineEdit.new();search.placeholder_text="Найти предмет…";search.size_flags_horizontal=Control.SIZE_EXPAND_FILL;search.custom_minimum_size=Vector2(80,44);toolbar.add_child(search)
- category=picker(toolbar);category.size_flags_horizontal=0
- for name in ["Все предметы","Ресурсы","Топливо","Размещаемое","Еда и вода","Медицина"]:category.add_item(name)
- sorting=picker(toolbar);sorting.size_flags_horizontal=0
- for name in ["По ячейке","По имени","По весу"]:sorting.add_item(name)
- search.text_changed.connect(func(_value):refresh_inventory());category.item_selected.connect(func(_value):refresh_inventory());sorting.item_selected.connect(func(_value):refresh_inventory())
- var body:=row(inventory,20);body.size_flags_vertical=Control.SIZE_EXPAND_FILL
- inventory_left=column(body,8);inventory_left.size_flags_stretch_ratio=1.12
- var sc:=scroll(inventory_left);var content:=column(sc)
- item_grid=GridContainer.new();item_grid.columns=8;item_grid.size_flags_horizontal=Control.SIZE_EXPAND_FILL;item_grid.add_theme_constant_override("h_separation",6);item_grid.add_theme_constant_override("v_separation",6);content.add_child(item_grid)
+ var body:=row(inventory,16);body.size_flags_vertical=Control.SIZE_EXPAND_FILL
+ navigation=column(scroll(body),4);navigation.get_parent().size_flags_horizontal=Control.SIZE_FILL
+ label(navigation,"КАТЕГОРИИ",11).add_theme_color_override("font_color",Journal.MUTED)
+ category=OptionButton.new();category.hide();navigation.add_child(category)
+ var icons=["bedroll","stone","firewood_birch","camp_kit","ration","bandage","axe"]
+ for i in CATEGORY_NAMES.size():
+  category.add_item(CATEGORY_NAMES[i]);var index:int=i
+  var nav:=button(navigation,"category_%d" % i,CATEGORY_NAMES[i],func():category.select(index);_change_category())
+  nav.alignment=HORIZONTAL_ALIGNMENT_LEFT;nav.icon=Art.texture(icons[i]);nav.expand_icon=true;nav.add_theme_constant_override("icon_max_width",18);nav.add_theme_font_size_override("font_size",14)
+  var flat:=Journal.box(Color(0,0,0,0),Color(0,0,0,0),0);flat.content_margin_left=6;flat.content_margin_right=6;nav.add_theme_stylebox_override("normal",flat);category_buttons.append(nav)
+ inventory_left=column(body,8)
+ var toolbar:=row(inventory_left,6)
+ search=LineEdit.new();search.placeholder_text="Поиск…";search.clear_button_enabled=true;search.size_flags_horizontal=Control.SIZE_EXPAND_FILL;search.custom_minimum_size=Vector2(80,44);toolbar.add_child(search)
+ sorting=picker(toolbar);sorting.size_flags_horizontal=Control.SIZE_FILL
+ for title in ["По ячейке","По имени","По весу"]:sorting.add_item(title)
+ search.text_changed.connect(func(_value):refresh_inventory());category.item_selected.connect(func(_value):_change_category());sorting.item_selected.connect(func(_value):refresh_inventory())
+ list_summary=label(inventory_left,"",12);list_summary.add_theme_color_override("font_color",Journal.MUTED)
+ var sc:=scroll(inventory_left);var content:=column(sc,4)
+ item_grid=GridContainer.new();item_grid.columns=1;item_grid.size_flags_horizontal=Control.SIZE_EXPAND_FILL;item_grid.add_theme_constant_override("v_separation",4);content.add_child(item_grid)
  for i in player.MAX_SLOTS:
-  var card:=Card.new();card.name="Item_%d" % i;card.pressed.connect(player._on_slot_clicked.bind(i));item_grid.add_child(card);player._inv_slot_buttons.append(card)
- item_empty=label(content,"Ничего не найдено. Измените поиск или категорию.");item_empty.hide()
- label(inventory_left,"ЗАКРЕПЛЁННЫЕ ИНСТРУМЕНТЫ",11).add_theme_color_override("font_color",Journal.MUTED)
- var tools:=row(inventory_left,4)
+  var card:=ItemRow.new();card.name="Item_%d" % i;var index:int=i
+  card.pressed.connect(func():selected_tool=-1;if_selected(index));item_grid.add_child(card);player._inv_slot_buttons.append(card)
  for i in 5:
-  var b:=Button.new();b.icon=Art.texture(["axe","lantern","compass","matches","knife"][i]);b.expand_icon=true;b.custom_minimum_size=Vector2(44,44);b.size_flags_horizontal=Control.SIZE_EXPAND_FILL;b.add_theme_constant_override("icon_max_width",30);b.tooltip_text=player.HOTBAR_CONFIG[i].name+" · "+str(i+1);b.pressed.connect(player.select_hotbar_slot.bind(i));tools.add_child(b)
- right_scroll=scroll(body);right_scroll.size_flags_stretch_ratio=1.0;inventory_right=column(right_scroll,10)
+  var tool:=ItemRow.new();var index:int=i;tool.name="Tool_%d" % i;tool.pressed.connect(func():selected_tool=index;player._selected_slot_index=-1;refresh_actions());content.add_child(tool);tool_rows.append(tool)
+ item_empty=label(content,"Рюкзак пуст.
+
+Подбирайте припасы в мире. Постоянные инструменты доступны на поясе.",16)
+ body.add_child(VSeparator.new())
+ inspector_column=column(body,6);inspector_column.size_flags_vertical=Control.SIZE_EXPAND_FILL
+ right_scroll=scroll(inspector_column);inventory_right=column(right_scroll,10)
  p_inspector()
+func if_selected(index:int) -> void:
+ if player._selected_slot_index==index:
+  player._selected_slot_index=-1;refresh_actions()
+ else:player._on_slot_clicked(index)
+func _change_category() -> void:
+ selected_tool=-1;player._selected_slot_index=-1;refresh_inventory()
+ # Opacity only, never a changing minimum-size or a disappearing pressed control.
+ inventory_left.modulate=Color(1,1,1,0.85)
+ create_tween().tween_property(inventory_left,"modulate",Color.WHITE,0.10)
+func _build_quick_strip(parent:Node) -> void:
+ quick_strip=row(parent,6)
+ var caption:=column(quick_strip,0);caption.size_flags_vertical=Control.SIZE_SHRINK_CENTER
+ label(caption,"БЫСТРЫЙ ДОСТУП",11).add_theme_color_override("font_color",Journal.MUTED)
+ label(caption,"5 инструментов · 3 назначения",12)
+ for i in 8:
+  var index:int=i;var b:=Button.new();b.expand_icon=true;b.custom_minimum_size=Vector2(50,50);b.size_flags_horizontal=Control.SIZE_FILL;b.add_theme_constant_override("icon_max_width",32);quick_strip.add_child(b)
+  b.pressed.connect(func():player.select_hotbar_slot(index);refresh_actions());quick_buttons.append(b)
+  var key:=Label.new();key.mouse_filter=Control.MOUSE_FILTER_IGNORE;key.add_theme_font_size_override("font_size",11);b.add_child(key);key.position=Vector2(3,0);quick_keys.append(key)
+  var value:=Label.new();value.mouse_filter=Control.MOUSE_FILTER_IGNORE;value.add_theme_font_size_override("font_size",10);value.horizontal_alignment=HORIZONTAL_ALIGNMENT_RIGHT;value.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE);value.offset_top=-14;value.offset_right=-3;b.add_child(value);quick_values.append(value)
+func _refresh_quick_strip() -> void:
+ var bindings:Dictionary=player.SettingsManagerScript.get_instance().get_setting("controls","keybindings",{})
+ for i in 8:
+  var b:=quick_buttons[i];quick_keys[i].text=OS.get_keycode_string(int(bindings.get("hotbar_%d" % (i+1),KEY_1+i)))
+  var title:="Не назначено";var key:="";var value:=""
+  if i<5:
+   key=TOOL_KEYS[i];title=player.HOTBAR_CONFIG[i].name
+   if i==3 and is_instance_valid(player.survival):value=str(player.survival.matches)
+   elif i==1:value="Вкл" if player._is_lantern_on else ""
+  else:
+   var slot:int=player.belt_item_slot(i-5)
+   if slot>=0:
+    var item:Dictionary=player.inventory_slots[slot];key=Art.item_key(item);title=item.name
+    var count:=0
+    for entry in player.inventory_slots:
+     if entry!=null and entry.get("id")==item.id:count+=int(entry.count)
+    value=str(count)
+  b.icon=Art.texture(key) if key!="" else null;b.tooltip_text=quick_keys[i].text+" · "+title;quick_values[i].text=value
+  var style:=Journal.box(Color("2c372f") if player.active_hotbar_slot==i else Color("16221f"),Journal.GOLD if player.active_hotbar_slot==i else Journal.LINE,1)
+  style.content_margin_left=4;style.content_margin_right=4;style.content_margin_top=4;style.content_margin_bottom=4;b.add_theme_stylebox_override("normal",style)
 func p_inspector() -> void:
  player._inv_empty_inspector_label=label(inventory_right,"Выберите предмет\n\nОписание, применение и быстрые назначения появятся здесь.",18)
  player._inv_inspector_box=column(inventory_right,8)
- inspector_image=picture(player._inv_inspector_box,"",108)
- player._inv_details_title=heading(player._inv_inspector_box,"",24)
- player._inv_details_category=label(player._inv_inspector_box,"");player._inv_details_category.add_theme_color_override("font_color",Journal.MUTED)
- player._inv_details_stats=label(player._inv_inspector_box,"");player._inv_inspector_box.add_child(HSeparator.new());player._inv_details_desc=label(player._inv_inspector_box,"")
+ var hero:=row(player._inv_inspector_box,12)
+ inspector_image=picture(hero,"",112);inspector_image.custom_minimum_size.x=136;inspector_image.size_flags_horizontal=Control.SIZE_FILL
+ var identity:=column(hero,6);identity.size_flags_vertical=Control.SIZE_SHRINK_CENTER
+ player._inv_details_category=label(identity,"",12);player._inv_details_category.add_theme_color_override("font_color",Journal.MUTED)
+ player._inv_details_title=heading(identity,"",24)
+ player._inv_details_stats=label(identity,"",14)
+ player._inv_inspector_box.add_child(HSeparator.new());player._inv_details_desc=label(player._inv_inspector_box,"",16)
+ application=label(player._inv_inspector_box,"",14);application.add_theme_color_override("font_color",Journal.MUTED)
+ button(player._inv_inspector_box,"equip_tool","Выбрать инструмент",func():player.select_hotbar_slot(selected_tool);refresh_actions())
  button(player._inv_inspector_box,"use_supply","Использовать",func():player.survival.use_supply(player._selected_slot_index);refresh_actions())
  button(player._inv_inspector_box,"place","Разместить костёр",func():player.survival.begin_placement())
  button(player._inv_inspector_box,"recipe_link","Открыть рецепт раскола",func():select_recipe("split_"+str(player.inventory_slots[player._selected_slot_index].get("species","birch")));tabs.current_tab=1)
  button(player._inv_inspector_box,"fuel_link","Добавить в костёр…",func():focus_fire();fuel_select.select(fuel_select.get_item_index(player._selected_slot_index));refresh_actions())
- label(player._inv_inspector_box,"БЫСТРЫЙ ДОСТУП  /  ПОЯС",11).add_theme_color_override("font_color",Journal.MUTED)
- var beltrow:=row(player._inv_inspector_box,6);belt_select=picker(beltrow)
+ belt_group=column(player._inv_inspector_box,6)
+ label(belt_group,"БЫСТРЫЙ ДОСТУП  /  ПОЯС",11).add_theme_color_override("font_color",Journal.MUTED)
+ var beltrow:=row(belt_group,6);belt_select=picker(beltrow)
  for i in 3:belt_select.add_item("Ячейка %d" % (i+6),i)
  button(beltrow,"belt","Назначить",func():player.assign_belt_item(player._selected_slot_index,belt_select.get_selected_id());refresh_actions())
- var belticons:=row(player._inv_inspector_box,6)
- for i in 3:
-  var b:=Button.new();b.text=str(i+6);b.expand_icon=true;b.add_theme_constant_override("icon_max_width",30);b.custom_minimum_size.y=44;b.size_flags_horizontal=Control.SIZE_EXPAND_FILL;b.pressed.connect(func():belt_select.select(i));belticons.add_child(b);belt_buttons.append(b)
- button(player._inv_inspector_box,"unbelt","Убрать назначение",func():player.clear_belt_item(belt_select.get_selected_id());refresh_actions())
- belt_info=label(player._inv_inspector_box,"",12)
- var drops:=row(player._inv_inspector_box,6)
+ button(beltrow,"unbelt","Снять",func():player.clear_belt_item(belt_select.get_selected_id());refresh_actions())
+ belt_info=label(belt_group,"",12);belt_info.hide()
+ drop_group=row(inspector_column,6)
+ var drops:=drop_group
  drop_amount=SpinBox.new();drop_amount.min_value=1;drop_amount.max_value=10;drop_amount.value=1;drop_amount.custom_minimum_size=Vector2(70,44);drops.add_child(drop_amount)
  player._inv_btn_drop_one=button(drops,"drop_one","Выбросить",func():player.drop_selected_amount(int(drop_amount.value)))
  player._inv_btn_drop_all=button(drops,"drop_all","Всё",func():player.drop_selected_item(true))
@@ -200,28 +279,60 @@ func _build_sleep() -> void:
  rest=button(controls,"rest","Спать",func():player.survival.begin_rest(int(sleep_hours.value)))
  label(controls,"Сон прервётся при опасном холоде или открытой двери. Один игровой час занимает одну реальную секунду.",13).add_theme_color_override("font_color",Journal.MUTED)
 
+func _queue_resize() -> void:
+ if _resize_pending:return
+ _resize_pending=true
+ call_deferred("_settle_resize")
+func _settle_resize() -> void:
+ _resize_pending=false;resize()
 func resize() -> void:
  if not is_instance_valid(player) or not is_inside_tree() or not player.is_inside_tree() or get_viewport()==null:return
  var size:=get_viewport().get_visible_rect().size
  var physical:=Vector2(DisplayServer.window_get_size()) if DisplayServer.get_name()!="headless" else size
- ui_scale=maxf(1.0,size.x/maxf(1,physical.x))
- var dim:=Vector2(minf(1240*ui_scale,size.x-32*ui_scale),minf(820*ui_scale,size.y-32*ui_scale))
- player._inv_root_panel.size=dim;player._inv_root_panel.position=(size-dim)/2
- item_grid.columns=6 if dim.x<960*ui_scale else 8
- for card in player._inv_slot_buttons:card.set_card_size(Vector2(38,75)*ui_scale,ui_scale)
- for card in recipe_cards.values():card.set_card_size(Vector2(55,95)*ui_scale,ui_scale,true)
+ ui_scale=clampf(size.x/maxf(1,physical.x),0.5,2.0)
+ var small:=physical.x<1500
+ var dim:=size*Vector2(0.94 if small else 0.86,0.92 if small else 0.84)
+ # Cache immutable authored sizes, not results from previous resize passes.
  for node in player._inv_root_panel.find_children("*","Control",true,false):
+  if node is ItemRow or node is Card:continue
+  if not node.has_meta("journal_min"):node.set_meta("journal_min",node.custom_minimum_size)
+  if node!=inspector_image:node.custom_minimum_size=Vector2(node.get_meta("journal_min"))*ui_scale
   if node is Label or node is Button or node is TabContainer or node is LineEdit:
    if not node.has_meta("journal_font"):node.set_meta("journal_font",node.get_theme_font_size("font_size"))
-   var font_size:=roundi(float(node.get_meta("journal_font"))*ui_scale)
-   if node.get_theme_font_size("font_size")!=font_size:node.add_theme_font_size_override("font_size",font_size)
+   var target_font:=maxi(9,roundi(float(node.get_meta("journal_font"))*ui_scale))
+   if node.get_theme_font_size("font_size")!=target_font:node.add_theme_font_size_override("font_size",target_font)
+  if node is BoxContainer:
+   if not node.has_meta("journal_gap"):node.set_meta("journal_gap",node.get_theme_constant("separation"))
+   node.add_theme_constant_override("separation",roundi(float(node.get_meta("journal_gap"))*ui_scale))
   if node is Button and not node is Card:node.custom_minimum_size.y=44*ui_scale
- buttons["close"].custom_minimum_size.x=170*ui_scale
+ navigation.get_parent().custom_minimum_size.x=(144 if small else 164)*ui_scale
+ inventory_left.custom_minimum_size.x=clampf(physical.x*0.26,340,460)*ui_scale
+ inventory_left.size_flags_horizontal=Control.SIZE_FILL
+ buttons["close"].custom_minimum_size.x=200*ui_scale
+ # More detailed artwork on tall displays, without pushing 720p actions below the fold.
+ var hero_height:=clampf(112+(physical.y-720)*0.36,112,242)
+ inspector_image.custom_minimum_size=Vector2(hero_height*1.4,hero_height)*ui_scale
+ for card in player._inv_slot_buttons+tool_rows:
+  if card.get_meta("row_scale",-1.0)!=ui_scale:card.set_card_size(Vector2(0,60)*ui_scale,ui_scale);card.set_meta("row_scale",ui_scale)
+ for card in recipe_cards.values():
+  if card.get_meta("row_scale",-1.0)!=ui_scale:card.set_card_size(Vector2(55,95)*ui_scale,ui_scale,true);card.set_meta("row_scale",ui_scale)
+ for b in quick_buttons:b.custom_minimum_size=Vector2(50,50)*ui_scale;b.add_theme_constant_override("icon_max_width",roundi(32*ui_scale))
+ for b in category_buttons:b.add_theme_constant_override("icon_max_width",roundi(18*ui_scale))
+ player._inv_root_panel.size=dim;player._inv_root_panel.position=(size-player._inv_root_panel.size)/2
+func set_journal_visible(open:bool) -> void:
+ if open:
+  for hud in get_tree().get_nodes_in_group("gameplay_hud"):
+   if not _hud_visibility.has(hud):_hud_visibility[hud]=hud.visible
+   hud.hide()
+ else:
+  for hud in _hud_visibility:
+   if is_instance_valid(hud):hud.visible=_hud_visibility[hud]
+  _hud_visibility.clear()
 func _process(delta:float) -> void:
  _tick-=delta
  if _tick<=0:
   _tick=0.1
-  if is_instance_valid(player) and player._is_inventory_open:refresh_actions()
+  if is_instance_valid(player) and player._is_inventory_open:set_journal_visible(true);refresh_actions()
 func _focus_page() -> void:
  if not player._is_inventory_open:return
  resize()
@@ -241,6 +352,7 @@ func focus_fire() -> void:
  if not is_instance_valid(player.survival) or player.survival.nearby_fire().is_empty():return
  sleep_page.hide();tabs.hide();fire_page.show()
 func show_selection() -> void:
+ selected_tool=-1
  hide_context_pages();tabs.current_tab=0;right_scroll.scroll_vertical=0
 func select_recipe(id:String) -> void:
  hide_context_pages();tabs.current_tab=1
@@ -264,9 +376,9 @@ func refresh_inventory() -> void:
   if card.get_index()!=rank:item_grid.move_child(card,rank)
   var item=player.inventory_slots[index];var chosen:bool=index==player._selected_slot_index
   if item==null:
-   card.visible=category.selected==0 and search.text.is_empty();card.present("","Пустая ячейка","","",chosen);continue
+   card.hide();continue
   var kind:String=item.get("type","");var title:String=item.get("name","Предмет")
-  var accepted:=search.text.is_empty() or title.to_lower().contains(search.text.to_lower())
+  var accepted:=category.selected!=6 and (search.text.is_empty() or title.to_lower().contains(search.text.to_lower()))
   if category.selected==1:accepted=accepted and kind in ["stone","flint","pyrite","brush","log"]
   elif category.selected==2:accepted=accepted and kind in ["firewood","brush"]
   elif category.selected==4:accepted=accepted and kind in ["water","raw_water","ration","berries"]
@@ -278,11 +390,44 @@ func refresh_inventory() -> void:
   for i in player.belt_items.size():
    if player.belt_items[i]==item.get("id"):stamp+="  ·  [%d]" % (i+6)
   var short_title:=title.replace(" полено"," · бревно").replace("Поленце (","Поленья · ").replace(")","")
-  card.present(Art.item_key(item),short_title,"%.1f кг" % _slot_weight(index),stamp,chosen)
- item_empty.visible=visible_count==0 and (category.selected!=0 or not search.text.is_empty())
+  card.present(Art.item_key(item),short_title,"%.2f кг" % _slot_weight(index),stamp,chosen)
+ for i in tool_rows.size():
+  var tool=tool_rows[i];var title:String=player.HOTBAR_CONFIG[i].name
+  tool.visible=category.selected==6 and (search.text.is_empty() or title.to_lower().contains(search.text.to_lower()))
+  if tool.visible:visible_count+=1
+  tool.present(TOOL_KEYS[i],title,"Постоянный инструмент","ПОЯС",selected_tool==i)
+ item_empty.visible=visible_count==0
+ item_empty.text="Ничего не найдено.\nИзмените поиск или категорию." if search.text!="" or category.selected!=0 else "Рюкзак пуст.\n\nПодбирайте припасы в мире. Постоянные инструменты доступны на поясе."
+ var used:=0
+ for entry in player.inventory_slots:
+  if entry!=null:used+=1
+ list_summary.text=("%d / %d ячеек · найдено %d" % [used,player.MAX_SLOTS,visible_count]) if category.selected!=6 else "Пояс · инструменты не занимают рюкзак"
+ for i in category_buttons.size():
+  var nav:=category_buttons[i];var chosen:bool=category.selected==i
+  nav.add_theme_color_override("font_color",Journal.GOLD if chosen else Journal.MUTED)
+  if not nav.has_meta("category_chosen") or nav.get_meta("category_chosen")!=chosen:
+   nav.set_meta("category_chosen",chosen)
+   var flat:=Journal.box(Color(0.73,0.63,0.42,0.08) if chosen else Color(0,0,0,0),Journal.GOLD,0);flat.border_width_left=2 if chosen else 0;flat.content_margin_left=6;flat.content_margin_right=6;nav.add_theme_stylebox_override("normal",flat)
+ player._inv_overweight_warning.visible=not player._inv_overweight_warning.text.is_empty()
+ _refresh_quick_strip()
  var item:Dictionary={}
  if player._selected_slot_index>=0 and player._selected_slot_index<player.MAX_SLOTS and player.inventory_slots[player._selected_slot_index]!=null:item=player.inventory_slots[player._selected_slot_index]
- player._inv_empty_inspector_label.visible=item.is_empty();player._inv_inspector_box.visible=not item.is_empty()
+ buttons["equip_tool"].visible=selected_tool>=0
+ belt_group.visible=selected_tool<0 and item.get("type","") in ["camp_kit","firewood","brush"]
+ drop_group.visible=selected_tool<0 and not item.is_empty()
+ player._inv_empty_inspector_label.visible=item.is_empty() and selected_tool<0;player._inv_inspector_box.visible=not item.is_empty() or selected_tool>=0
+ var detail_key:=str(selected_tool)+":"+str(player._selected_slot_index)+":"+str(item.get("id",""))
+ if _detail_key!=detail_key:
+  _detail_key=detail_key
+  if is_instance_valid(_detail_tween):_detail_tween.kill()
+  player._inv_inspector_box.modulate=Color(1,1,1,0.75);_detail_tween=create_tween();_detail_tween.tween_property(player._inv_inspector_box,"modulate",Color.WHITE,0.14)
+ if selected_tool>=0:
+  inspector_image.texture=Art.texture(TOOL_KEYS[selected_tool]);player._inv_details_title.text=player.HOTBAR_CONFIG[selected_tool].name
+  player._inv_details_category.text="ПОСТОЯННЫЙ ИНСТРУМЕНТ · ПОЯС"
+  player._inv_details_stats.text="Не занимает ячейку рюкзака. Износ не моделируется."
+  if selected_tool==3 and is_instance_valid(player.survival):player._inv_details_stats.text="Спичек осталось: %d" % player.survival.matches
+  player._inv_details_desc.text=TOOL_USE[selected_tool];application.text="Выбор меняет активный инструмент. Действие — после закрытия журнала."
+  return
  if item.is_empty():return
  inspector_image.texture=Art.texture(Art.item_key(item));player._inv_details_title.text=item.get("name","")
  player._inv_details_category.text={"log":"ДРЕВЕСИНА / БРЕВНО","firewood":"ТОПЛИВО","brush":"РАСТОПКА / ТОПЛИВО","camp_kit":"РАЗМЕЩАЕМЫЙ НАБОР","water":"ПИТЬЕВАЯ ВОДА","raw_water":"ВОДА / НУЖНО КИПЯТИТЬ","ration":"ПИТАНИЕ","berries":"ПИТАНИЕ / СБОР","bandage":"МЕДИЦИНА","compress":"МЕДИЦИНА"}.get(item.get("type",""),"ПРИРОДНЫЙ МАТЕРИАЛ")
@@ -291,6 +436,7 @@ func refresh_inventory() -> void:
  if item.get("type")=="firewood" and is_instance_valid(player.survival):player._inv_details_stats.text+="\nГорение: %d мин за поленце" % int(player.survival.Fire.FUEL_SECONDS.get(item.get("species","birch"),1800)/60)
  elif item.get("type")=="brush":player._inv_details_stats.text+="\nГорение: 5 мин за единицу"
  player._inv_details_desc.text=item.get("description","");drop_amount.max_value=maxi(1,count)
+ application.text="ПРИМЕНЕНИЕ\n"+{"log":"Расколите во вкладке «Крафт», чтобы получить три поленца.","firewood":"Топливо для костра. Можно закрепить на поясе.","brush":"Растопка, топливо и материал для набора костра.","camp_kit":"Разместите на подходящей земле в лесу.","stone":"Материал для каменного кольца костра.","flint":"Розжиг костра вместе с пиритом. Не расходуется.","pyrite":"Розжиг костра вместе с кремнем. Не расходуется.","water":"Восстанавливает воду на 35 пунктов.","raw_water":"Кипятите у горящего костра, чтобы получить безопасную воду.","ration":"Восстанавливает питание на 45 пунктов.","berries":"Восстанавливают питание на 12 пунктов.","bandage":"Останавливает кровотечение.","compress":"Снимает травму ноги."}.get(item.get("type",""),item.get("description",""))
 func _slot_weight(index:int) -> float:
  var item=player.inventory_slots[index];return 0 if item==null else float(item.get("unit_weight",0))*int(item.get("count",0))
 func _refresh_recipe() -> void:
@@ -328,7 +474,15 @@ func refresh_actions() -> void:
  var type:String=item.get("type","")
  var busy:bool=valid and (not s.job.is_empty() or s.health<=0)
  buttons["use_supply"].visible=type in ["water","raw_water","ration","berries","bandage","compress"]
- buttons["use_supply"].disabled=busy or not valid
+ var use_reason:=""
+ if not valid:use_reason="Недоступно вне игрового мира."
+ elif busy:use_reason="Завершите текущее действие."
+ elif type=="water" and s.body.water>=100:use_reason="Запас воды уже полон."
+ elif type in ["ration","berries"] and s.body.food>=100:use_reason="Запас питания уже полон."
+ elif type=="bandage" and not s.body.conditions.has("bleeding"):use_reason="Нет кровотечения."
+ elif type=="compress" and not s.body.conditions.has("sprain"):use_reason="Нет травмы ноги."
+ buttons["use_supply"].disabled=use_reason!="";buttons["use_supply"].tooltip_text=use_reason
+ buttons["equip_tool"].disabled=busy
  buttons["use_supply"].text={"water":"Выпить · 0,5 л","raw_water":"Кипятить у костра · 5 мин","ration":"Съесть рацион","berries":"Съесть ягоды","bandage":"Перевязать рану","compress":"Наложить компресс"}.get(type,"Использовать")
  if valid:_refresh_condition(s)
  # Assign final states once. No false→true visibility/disabled pulses across refreshes.
@@ -352,7 +506,7 @@ func refresh_actions() -> void:
  progress.visible=active;buttons["cancel"].visible=active;buttons["cancel"].disabled=not active
  if not valid:
   recipe.text="Крафт доступен в игровом мире.";fire_info.text="Костёр недоступен.";sleep_info.text="Сон доступен в игровой стоянке."
-  status.text="Выберите предмет в сетке."
+  status.text="Выберите предмет в списке."
   buttons["recipe_link"].visible=type=="log";buttons["recipe_link"].disabled=true
   buttons["fuel_link"].visible=type in ["firewood","brush"];buttons["fuel_link"].disabled=true
   _refresh_recipe();refresh_inventory();return
@@ -383,6 +537,7 @@ func refresh_actions() -> void:
  rest.text="Спать %d ч" % hours;rest.disabled=busy or reason!=""
  sleep_hours.editable=not busy
  status.text=s.message if s.message_time>0 else "Мир не на паузе. Tab / Esc закрывает рюкзак и отменяет действие."
+ if "Dev Menu" in status.text:status.text="Мир не на паузе · Tab / Esc — закрыть журнал"
  if active:
   progress.max_value=float(s.job["duration"]);progress.value=float(s.job["elapsed"])
   status.text="%s · %.1f / %.1f с" % [{"split":"Раскол","ignite":"Розжиг","rest":"Сон","boil":"Кипячение"}.get(s.job["kind"],"Действие"),s.job["elapsed"],s.job["duration"]]

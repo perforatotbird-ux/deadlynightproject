@@ -1,0 +1,78 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[SettingsManager] Settings loaded successfully from: user://settings.cfg
+PASS: five real recipe cards, no fictional content
+PASS: painted art loaded: brush
+PASS: painted art loaded: stone
+PASS: painted art loaded: flint
+PASS: painted art loaded: pyrite
+PASS: painted art loaded: camp_kit
+PASS: painted art loaded: log_birch
+PASS: painted art loaded: log_spruce
+PASS: painted art loaded: log_beech
+PASS: painted art loaded: log_oak
+PASS: painted art loaded: firewood_birch
+PASS: painted art loaded: firewood_spruce
+PASS: painted art loaded: firewood_beech
+PASS: painted art loaded: firewood_oak
+PASS: painted art loaded: axe
+PASS: painted art loaded: lantern
+PASS: painted art loaded: compass
+PASS: painted art loaded: matches
+PASS: painted art loaded: knife
+PASS: painted art loaded: bedroll
+PASS: painted art loaded: campfire
+PASS: case-insensitive search filters original slots
+PASS: placeables category
+PASS: sort changes visuals, not authoritative inventory order
+PASS: recipe picker only accepts matching species
+PASS: refresh does not rebuild control tree
+PASS: refresh retains keyboard focus
+PASS: tab switch preserves active job
+PASS: cancelled split awards no items
+PASS: quantity drop removes exactly three
+PASS: available filter retains possible recipe
+PASS: full backpack explains missing output capacity
+PASS: recipe capacity preview has zero inventory mutation
+PASS: free slot enables same recipe
+PASS: (800, 600) tab 0 shell in viewport
+PASS: (800, 600) tab 0 content above footer
+PASS: footer visible (800, 600) tab 0
+PASS: (800, 600) tab 1 shell in viewport
+PASS: (800, 600) tab 1 content above footer
+PASS: footer visible (800, 600) tab 1
+PASS: craft primary action stays visible (800, 600)
+PASS: (800, 600) tab 2 shell in viewport
+PASS: (800, 600) tab 2 content above footer
+PASS: footer visible (800, 600) tab 2
+PASS: (1280, 720) tab 0 shell in viewport
+PASS: (1280, 720) tab 0 content above footer
+PASS: footer visible (1280, 720) tab 0
+PASS: (1280, 720) tab 1 shell in viewport
+PASS: (1280, 720) tab 1 content above footer
+PASS: footer visible (1280, 720) tab 1
+PASS: craft primary action stays visible (1280, 720)
+PASS: (1280, 720) tab 2 shell in viewport
+PASS: (1280, 720) tab 2 content above footer
+PASS: footer visible (1280, 720) tab 2
+PASS: (1920, 1080) tab 0 shell in viewport
+PASS: (1920, 1080) tab 0 content above footer
+PASS: footer visible (1920, 1080) tab 0
+PASS: (1920, 1080) tab 1 shell in viewport
+PASS: (1920, 1080) tab 1 content above footer
+PASS: footer visible (1920, 1080) tab 1
+PASS: craft primary action stays visible (1920, 1080)
+PASS: (1920, 1080) tab 2 shell in viewport
+PASS: (1920, 1080) tab 2 content above footer
+PASS: footer visible (1920, 1080) tab 2
+PASS: (2560, 1440) tab 0 shell in viewport
+PASS: (2560, 1440) tab 0 content above footer
+PASS: footer visible (2560, 1440) tab 0
+PASS: (2560, 1440) tab 1 shell in viewport
+PASS: (2560, 1440) tab 1 content above footer
+PASS: footer visible (2560, 1440) tab 1
+PASS: craft primary action stays visible (2560, 1440)
+PASS: (2560, 1440) tab 2 shell in viewport
+PASS: (2560, 1440) tab 2 content above footer
+PASS: footer visible (2560, 1440) tab 2
+FIELD JOURNAL SUMMARY: 74 PASS, 0 FAIL

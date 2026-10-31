@@ -1,0 +1,12 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[SettingsManager] Settings loaded successfully from: user://settings.cfg
+PASS: Tab opens inventory
+PASS: Opening inventory cancels held tool use
+PASS: Inventory panel fits the viewport
+PASS: Inventory exposes all sixteen slots
+PASS: Selecting an occupied slot enables item actions
+PASS: Drop-one button removes one item from the stack
+PASS: Escape closes inventory without opening pause
+PASS: Next Escape opens pause
+INVENTORY MENU SUMMARY: 8 PASSED, 0 FAILED

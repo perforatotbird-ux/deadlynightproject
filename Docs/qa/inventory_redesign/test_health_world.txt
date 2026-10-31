@@ -1,0 +1,50 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[SettingsManager] Settings loaded successfully from: user://settings.cfg
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+PASS: real forest contains health supplies and Dev Menu
+PASS: old always-visible debug teleport panel removed
+PASS: camp supply is reachable by the real interaction ray
+PASS: real E input picks up finite ration
+PASS: collector is reachable through real interaction
+PASS: real E input collects stored raw water
+PASS: full forest disk save succeeds
+PASS: Dev scene transition exits pause and enters real mine
+PASS: mine retains nutrition and injury
+PASS: scene transition resets cheats and retains DEV provenance
+PASS: needs continue advancing inside mine
+PASS: mine disk save succeeds
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+PASS: Dev return uses real forest scene
+PASS: consumed starting supply does not duplicate across scene round trip
+PASS: exterior door and water reserve survive mine round trip
+[SaveManager] Changing scene to MineInterior for save payload application...
+PASS: SaveManager accepts saved health state inside mine
+[SaveManager] Loaded game state successfully applied to active scene.
+PASS: disk load chooses correct scene and restores body
+PASS: disk load never restores cheats/time overrides
+[SaveManager] Deleted save slot: health_world_forest
+[SaveManager] Deleted save slot: health_world_mine
+HEALTH WORLD SUMMARY: 18 PASS, 0 FAIL

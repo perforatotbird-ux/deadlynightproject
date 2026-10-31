@@ -977,6 +977,7 @@ func _toggle_inventory() -> void:
 	_cancel_chop()
 	_is_lmb_held = false
 	_is_inventory_open = not _is_inventory_open
+	_backpack_ui.set_journal_visible(_is_inventory_open)
 	if _is_inventory_open:
 		_inv_layer.visible = true
 		_backpack_ui.focus_condition()

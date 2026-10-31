@@ -1,0 +1,92 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[SettingsManager] Settings loaded successfully from: user://settings.cfg
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+PASS: real Escape opens pause and releases mouse
+PASS: Continue has initial keyboard focus
+PASS: pause has no central boxed panel
+PASS: six plain-language actions without emoji
+PASS: real clock and localized metadata, no slot identifier
+PASS: authoritative world clock stops on pause
+PASS: crosshair, belt, survival HUD and FPS are hidden
+PASS: unsaved slot is not described as saved
+PASS: actual Window size is (800, 600)
+PASS: (800, 600) action fits: Продолжить
+PASS: (800, 600) action fits: Сохранить игру
+PASS: (800, 600) action fits: Загрузить игру
+PASS: (800, 600) action fits: Настройки
+PASS: (800, 600) action fits: В главное меню
+PASS: (800, 600) action fits: Выйти из игры
+PASS: (800, 600) navigation and metadata do not overlap
+PASS: (800, 600) footer fits viewport
+PASS: (800, 600) pause caption fits viewport
+PASS: actual Window size is (1280, 720)
+PASS: (1280, 720) action fits: Продолжить
+PASS: (1280, 720) action fits: Сохранить игру
+PASS: (1280, 720) action fits: Загрузить игру
+PASS: (1280, 720) action fits: Настройки
+PASS: (1280, 720) action fits: В главное меню
+PASS: (1280, 720) action fits: Выйти из игры
+PASS: (1280, 720) navigation and metadata do not overlap
+PASS: (1280, 720) footer fits viewport
+PASS: (1280, 720) pause caption fits viewport
+PASS: actual Window size is (1920, 1080)
+PASS: (1920, 1080) action fits: Продолжить
+PASS: (1920, 1080) action fits: Сохранить игру
+PASS: (1920, 1080) action fits: Загрузить игру
+PASS: (1920, 1080) action fits: Настройки
+PASS: (1920, 1080) action fits: В главное меню
+PASS: (1920, 1080) action fits: Выйти из игры
+PASS: (1920, 1080) navigation and metadata do not overlap
+PASS: (1920, 1080) footer fits viewport
+PASS: (1920, 1080) pause caption fits viewport
+PASS: actual Window size is (2560, 1440)
+PASS: (2560, 1440) action fits: Продолжить
+PASS: (2560, 1440) action fits: Сохранить игру
+PASS: (2560, 1440) action fits: Загрузить игру
+PASS: (2560, 1440) action fits: Настройки
+PASS: (2560, 1440) action fits: В главное меню
+PASS: (2560, 1440) action fits: Выйти из игры
+PASS: (2560, 1440) navigation and metadata do not overlap
+PASS: (2560, 1440) footer fits viewport
+PASS: (2560, 1440) pause caption fits viewport
+PASS: actual Window size is (1280, 720)
+PASS: Down moves keyboard focus to save
+PASS: actual mouse save writes slot and reports success
+PASS: F5 write fault is reported and previous slot is intact
+PASS: mouse opens settings and hides underlying navigation
+PASS: Escape from settings returns to pause with focus restored
+PASS: exit confirmation defaults to safe action
+PASS: Escape cancels only confirmation
+PASS: load screen lists the actual saved slot
+PASS: pause load details omit debug coordinates and slot IDs
+PASS: gamepad B returns from load to pause
+PASS: resume respects HUD disabled during pause
+PASS: resume does not carry a held axe attack
+[SaveManager] Loaded game state successfully applied to active scene.
+PASS: actual same-scene load exits pause
+PASS: same-scene load restores gameplay HUD layers
+PASS: gamepad B resumes from root pause
+PASS: repeated open/close does not lose HUD visibility
+PASS: controller Start opens real gameplay pause
+PASS: controller D-pad moves actual GUI focus
+PASS: controller A activates focused Settings
+PASS: controller B cancels key capture without closing settings
+PASS: controller Start resumes pause after returning from settings
+PASS: controller can open load menu after death
+PASS: repeated exit request creates only one confirmation
+PASS: controller B cancels exit without resuming the world
+PASS: pre-existing hidden HUD stays hidden
+[SaveManager] Deleted save slot: minimal_pause_qa
+MINIMAL PAUSE SUMMARY: 74 PASS, 0 FAIL
