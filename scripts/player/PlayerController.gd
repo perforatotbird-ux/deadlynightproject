@@ -822,6 +822,7 @@ func _setup_inventory_ui() -> void:
 	_backpack_ui.build(self)
 
 func _input(event: InputEvent) -> void:
+	if get_tree().get_first_node_in_group("menu_confirmation")!=null:return
 	if is_instance_valid(survival) and is_instance_valid(survival.dev_menu) and survival.dev_menu.visible:
 		return
 	if get_tree().paused:
@@ -854,6 +855,7 @@ func _input(event: InputEvent) -> void:
 			_toggle_inventory()
 			return
 		elif event.keycode == KEY_ESCAPE:
+			if is_instance_valid(survival) and survival.job.get("kind")=="harvest":survival.cancel_job()
 			get_viewport().set_input_as_handled()
 			if _is_inventory_open:
 				_toggle_inventory()
@@ -973,6 +975,7 @@ func _toggle_mouse_capture() -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func _toggle_inventory() -> void:
+	if is_instance_valid(survival) and survival.job.get("kind")=="harvest":survival.cancel_job()
 	if is_instance_valid(survival) and survival.placing: survival.cancel_placement()
 	_cancel_chop()
 	_is_lmb_held = false

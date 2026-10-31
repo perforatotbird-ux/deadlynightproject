@@ -67,6 +67,8 @@ var _saved_door_closed := true
 var _old_damaged:Dictionary={}
 var sleep_point:Node3D
 var _physics_ready:=false
+var vegetation:Node3D
+var foraging=preload("res://scripts/vegetation/ForagingActions.gd").new()
 
 func has_sleep_access() -> bool:
  return is_instance_valid(sleep_point) and sleep_point.has_method("is_sleep_point") and sleep_point.can_interact(player)
@@ -98,6 +100,8 @@ func _ready() -> void:
  player=get_parent().get_node_or_null("Player")
  if player==null: return
  player.survival=self
+ foraging.session=self
+ vegetation=preload("res://scripts/vegetation/VegetationDirector.gd").new();vegetation.session=self;add_child(vegetation)
  location="mine" if get_parent().name=="MineInterior" else "forest"
  ui=UI.new();ui.session=self;add_child(ui)
  weather_model.reset(clock,weather=="rain")
@@ -166,6 +170,7 @@ func advance(real_seconds: float) -> void:
   if not job.is_empty():dt=minf(dt,maxf(0.000001,float(job["duration"])-float(job.get("elapsed",0))))
   remaining-=dt
   var world_dt:=dt*factor
+  vegetation.advance(world_dt,weather=="rain")
   clock+=world_dt
   if weather=="rain":rain_reserve=minf(6,rain_reserve+world_dt/3600.0)
   weather_model.sample(clock,weather=="rain",weather_until,daylight())
@@ -186,9 +191,13 @@ func advance(real_seconds: float) -> void:
   if health<=0:
    _die();break
   if not job.is_empty():
+   if job.get("kind")=="harvest" and not vegetation.harvest_valid(job):
+    cancel_job();notify("Сбор прерван: цель недоступна или открыт журнал");continue
+   if job.get("kind")=="vegetation_cook" and not foraging.cooking_valid(job):
+    cancel_job();notify("Готовка прервана: огонь погас или недоступен; ингредиенты сохранены");continue
    if job.get("kind")=="rest":
-    if not has_sleep_access() or not safe_shelter() or warmth<20 or body.water<=0 or body.food<=0 or body.conditions.has("bleeding"):
-     cancel_job();notify("Отдых прерван: холод, открытая дверь, голод, жажда или кровотечение");continue
+    if not has_sleep_access() or not safe_shelter() or warmth<20 or body.water<=0 or body.food<=0 or body.conditions.has("bleeding") or body.poison_limits_effort():
+     cancel_job();notify("Отдых прерван: холод, открытая дверь, голод, жажда, кровотечение или отравление");continue
    elif player.global_position.distance_to(_v3(job.get("origin",[])))>0.7:
     cancel_job();notify("Действие прервано движением");continue
    job["elapsed"]=float(job.get("elapsed",0))+dt
@@ -272,11 +281,13 @@ func make_kit() -> bool:
  notify("Набор костра собран. Теперь разместите его." if ok else "Нужно 6 камней, 4 хвороста и место в рюкзаке")
  ui.refresh();return ok
 func valid_job(data:Dictionary) -> bool:
- if data.get("kind","") not in ["rest","split","ignite","boil"]:return false
+ if data.get("kind","") not in ["rest","split","ignite","boil","harvest","vegetation_cook"]:return false
  var duration=body.bounded(data.get("duration",0),0,100000)
  var elapsed=body.bounded(data.get("elapsed",0),0,100000)
  if duration<=0 or elapsed>duration:return false
  if not data.get("origin") is Array or data.origin.size()!=3:return false
+ if data.kind=="harvest":return data.get("plant") is Dictionary and data.get("point") is Array and data.get("group") is int and duration<=2
+ if data.kind=="vegetation_cook":return data.get("fire") is String and not foraging.cook_recipe(str(data.get("recipe","")),int(data.get("amount",0))).is_empty() and is_equal_approx(duration,float(foraging.cook_recipe(str(data.recipe),int(data.amount)).minutes))
  if data.kind=="split":return data.has("slot") and data.has("item_id") and data.has("weight") and data.has("species")
  if data.kind in ["ignite","boil"]:return data.get("fire") is String and (data.kind!="ignite" or data.has("success"))
  return duration<=12
@@ -338,6 +349,7 @@ func rest_block_reason() -> String:
  if warmth<20:return "Слишком холодно для сна. Сначала согрейтесь."
  if body.water<=0 or body.food<=0:return "Перед сном нужно поесть и попить."
  if body.conditions.has("bleeding"):return "Сначала остановите кровотечение."
+ if body.poison_limits_effort():return "Сначала примите средство от отравления: симптомы прерывают сон."
  return ""
 func begin_rest(hours: int = 1) -> bool:
  var reason:=rest_block_reason()
@@ -349,6 +361,8 @@ func cancel_job() -> void:
 func _finish_job() -> void:
  var done:=job.duplicate(true);job={}
  match done["kind"]:
+  "harvest":vegetation.commit_harvest(done)
+  "vegetation_cook":foraging.finish_cook(done)
   "split":
    var index:=int(done["slot"])
    var s=player.inventory_slots[index] if index>=0 and index<player.inventory_slots.size() else null
@@ -435,7 +449,7 @@ func _stream_resources() -> void:
    for i in types.size():
     var id:=key+":"+str(i)
     var pos:=Vector3(x*24+random.randf_range(2,22),player.global_position.y,z*24+random.randf_range(2,22))
-    if picked.has(id):continue
+    if picked.has(id) or types[i]=="berries":continue
     var query:=PhysicsRayQueryParameters3D.create(Vector3(pos.x,1024,pos.z),Vector3(pos.x,-512,pos.z),1)
     query.exclude=[player.get_rid()]
     var hit=player.get_world_3d().direct_space_state.intersect_ray(query)
@@ -459,7 +473,7 @@ func drop_resource(item: Dictionary, pos: Vector3) -> void:
  _spawn_pickup(item,id,pos)
 
 func export_state() -> Dictionary:
- var state:={"version":3,"body":body.export_state(),"rain_reserve":rain_reserve,"dev_tainted":dev_tainted,"sky_weather":weather_model.export_state(),"sky_events":sky_events.export_state() if is_instance_valid(sky_events) else {},"atmosphere":atmosphere.export_state(),"clock":clock,"weather":weather,"weather_until":weather_until,"wetness":wetness,"warmth":warmth,"energy":energy,"health":health,"matches":matches,"active_tool":player.active_hotbar_slot,"belt_items":player.belt_items.duplicate(),"lantern_on":player._is_lantern_on,"fires":fires.duplicate(true),"picked":picked.duplicate(),"dropped":dropped.duplicate(true),"job":job.duplicate(true),"rng_state":str(rng.state),"location":location,"door_closed":shelter.door_closed if is_instance_valid(shelter) else _saved_door_closed,"exterior_felled":_old_felled if location=="mine" else {},"exterior_damaged":_old_damaged if location=="mine" else {},"exterior_logs":_old_logs if location=="mine" else [],"mine_logs":_mine_logs}
+ var state:={"version":4,"vegetation":vegetation.export_state(),"body":body.export_state(),"rain_reserve":rain_reserve,"dev_tainted":dev_tainted,"sky_weather":weather_model.export_state(),"sky_events":sky_events.export_state() if is_instance_valid(sky_events) else {},"atmosphere":atmosphere.export_state(),"clock":clock,"weather":weather,"weather_until":weather_until,"wetness":wetness,"warmth":warmth,"energy":energy,"health":health,"matches":matches,"active_tool":player.active_hotbar_slot,"belt_items":player.belt_items.duplicate(),"lantern_on":player._is_lantern_on,"fires":fires.duplicate(true),"picked":picked.duplicate(),"dropped":dropped.duplicate(true),"job":job.duplicate(true),"rng_state":str(rng.state),"location":location,"door_closed":shelter.door_closed if is_instance_valid(shelter) else _saved_door_closed,"exterior_felled":_old_felled if location=="mine" else {},"exterior_damaged":_old_damaged if location=="mine" else {},"exterior_logs":_old_logs if location=="mine" else [],"mine_logs":_mine_logs}
  return state
 func import_state(state: Dictionary) -> void:
  close_backpack();cancel_placement()
@@ -472,6 +486,7 @@ func import_state(state: Dictionary) -> void:
  player._is_lantern_on=bool(state.get("lantern_on",false));player.select_hotbar_slot(int(state.get("active_tool",player.active_hotbar_slot)))
  fires=state.get("fires",[]).duplicate(true);picked=state.get("picked",{}).duplicate();dropped=state.get("dropped",[]).duplicate(true)
  _old_damaged=state.get("exterior_damaged",{});_old_felled=state.get("exterior_felled",{});_old_logs=state.get("exterior_logs",[]);_mine_logs=state.get("mine_logs",[])
+ vegetation.import_state(state.get("vegetation",{}),picked)
  if state.has("rng_state"):rng.state=int(state["rng_state"])
  for n in fire_nodes:
   if is_instance_valid(n):n.free()
@@ -485,7 +500,7 @@ func import_state(state: Dictionary) -> void:
  for d in dropped:
   if d.get("location","forest")==location and not picked.has(d["id"]):_spawn_pickup(d["item"],d["id"],_v3(d["pos"]))
  var saved_job:Dictionary=state.get("job",{}).duplicate(true)
- if not saved_job.is_empty() and valid_job(saved_job):
+ if not saved_job.is_empty() and valid_job(saved_job) and saved_job.get("kind")!="harvest":
   job=saved_job
   if job.get("kind")=="rest":
    if is_instance_valid(shelter) and shelter.bed.can_interact(player):sleep_point=shelter.bed
@@ -569,11 +584,13 @@ func land(impact_speed:float) -> void:
  body.conditions["sprain"]={"remaining":240.0}
  if impact_speed>=16:body.conditions["bleeding"]={"remaining":-1.0}
  notify("Травма после падения. Откройте «Состояние» в журнале.")
-func use_supply(slot:int) -> bool:
+func request_use_supply(slot:int) -> bool:return foraging.request_use(slot)
+func use_supply(slot:int,confirmed_unknown:bool=false) -> bool:
  if health<=0 or not job.is_empty() or slot<0 or slot>=player.inventory_slots.size():return false
  var item=player.inventory_slots[slot]
  if item==null:return false
  var kind:String=item.get("type","")
+ if Items.Vegetation.is_food(kind) or kind=="antitoxin":return foraging.use(slot,confirmed_unknown)
  if kind=="raw_water":return begin_boil()
  if kind not in ["water","ration","berries","bandage","compress"]:return false
  if kind=="water" and body.water>=100:notify("Запас воды полон");return false
@@ -582,7 +599,7 @@ func use_supply(slot:int) -> bool:
  if kind=="compress" and not body.conditions.has("sprain"):notify("Нет травмы ноги");return false
  if not Items.transact(player,{item.id:1},[],slot):return false
  match kind:
-  "water":body.water=minf(100,body.water+35)
+  "water":body.water=minf(100,body.water+Items.WATER_RESTORE)
   "ration":body.food=minf(100,body.food+45)
   "berries":body.food=minf(100,body.food+12)
   "bandage":body.conditions.erase("bleeding")
@@ -602,7 +619,7 @@ func _setup_supplies() -> void:
 
 func _spawn_supplies() -> void:
  if not is_instance_valid(shelter):return
- var supply_ids:=["ration","ration","water","water","bandage","bandage","compress"]
+ var supply_ids:=["ration","ration","water","water","bandage","bandage","compress","antitoxin","antitoxin","field_notes"]
  for i in supply_ids.size():
   var id:="camp_supply_"+str(i)
   if not picked.has(id):_spawn_pickup(Items.item(supply_ids[i]),id,shelter.to_global(Vector3(-1.2+(i%4)*0.65,0.15,0.1+(i/4)*0.6)))

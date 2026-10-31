@@ -1,0 +1,15 @@
+{
+  "generator": "scripts/art/build_foraging_exclusions.py",
+  "size": [
+    512,
+    512
+  ],
+  "pooling": "8x8 maximum",
+  "mapping": "col=(game_x+2000)/4000*512, row=(game_z+2000)/4000*512",
+  "sources": {
+    "data/masks/road_mask.png": "ac22c786728cae0b22277e8abba531c86d33b6abe31c1917ebc64a21df833544",
+    "data/masks/path_mask.png": "ecbe9bb6dd395016c3942864d586285f5852e0fe26994bf35c628e1c4d55cea8",
+    "data/masks/river_mask.png": "c36aa059bff95bae505e80c85589e69e55b3f1d504423b35ef266bc2ce239854",
+    "data/masks/creek_mask.png": "4260cdc3931d7b3dd5092d472a3c397626bfa6f85d8b49f39c5b64cbe30f8515"
+  }
+}

@@ -6,7 +6,7 @@ static var cache:Dictionary={}
 static func texture(id: String) -> Texture2D:
  if id=="":return null
  if cache.has(id) and cache[id]!=null:return cache[id]
- var path:=ROOT+"icons/"+id+(".svg" if id in ["water","raw_water","ration","berries","bandage","compress"] else ".png")
+ var path:=ROOT+"icons/"+id+(".svg" if id in ["water","raw_water","ration","berries","bandage","compress","antitoxin","field_notes"] or preload("res://scripts/vegetation/VegetationCatalog.gd").is_food(id) else ".png")
  var loaded:Texture2D=load(path) if ResourceLoader.exists(path) else null
  # Source-checkout fallback if the editor import cache is absent/stale.
  # Exported PCKs continue to use ResourceLoader and their imported textures.

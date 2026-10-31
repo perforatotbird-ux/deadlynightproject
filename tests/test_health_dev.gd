@@ -68,7 +68,7 @@ func run() -> void:
  var supply_count:=0
  for id in s.resources:
   if str(id).begins_with("camp_supply_"):supply_count+=1
- check(supply_count==7,"finite authored camp supplies exist alongside streamed natural resources")
+ check(supply_count==10,"finite authored camp supplies exist alongside streamed natural resources")
  var supply=s.resources.camp_supply_0;supply.survival_interact();check(s.picked.has("camp_supply_0") and s.Items.count(p.inventory_slots,"ration")==1,"camp supplies are normal pickups and persist collected ID")
  s._spawn_supplies();check(not s.resources.has("camp_supply_0"),"collected camp supply cannot respawn")
  clear_items();var slot:=add("water");s.body.water=10
@@ -100,7 +100,7 @@ func run() -> void:
   if s.health<100:break
  p.set_physics_process(false)
  check(s.health<100 and s.body.conditions.has("sprain"),"real CharacterBody landing dispatches fall injury")
- var saved:Dictionary=s.export_state();check(saved.version==3 and saved.has("body"),"survival schema v3 includes body")
+ var saved:Dictionary=s.export_state();check(saved.version==4 and saved.has("body") and saved.has("vegetation"),"survival schema v4 includes body and vegetation")
  s.body.food=0;s.import_state(saved);check(s.body.conditions.has("sprain") and s.body.food>0,"SurvivalWorld restores conditions and needs")
  s.import_state({"clock":57600,"health":100});check(s.body.food==85 and not s.body.conditions.has("bleeding"),"SurvivalWorld accepts pre-health saves")
  var dev=s.dev_menu;var cmd=dev.commands

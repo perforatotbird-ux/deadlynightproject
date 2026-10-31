@@ -1,6 +1,9 @@
 extends RefCounted
 # All recipes use the existing backpack. Transactions commit only if outputs fit.
+const Vegetation = preload("res://scripts/vegetation/VegetationCatalog.gd")
+const WATER_RESTORE:=35.0
 const DEFINITIONS = {
+ "field_notes": {"name":"Памятка грибника","unit_weight":0.02,"description":"Вымышленные островные виды: признаки, приготовление и предупреждения об отравлении."},
  "water": {"name":"Питьевая вода · 0,5 л", "unit_weight":0.5, "description":"Безопасная вода. Восстанавливает 35% запаса воды."},
  "raw_water": {"name":"Сырая вода · 0,5 л", "unit_weight":0.5, "description":"Нужно кипятить у горящего костра. Пить сырой нельзя."},
  "ration": {"name":"Походный рацион", "unit_weight":0.3, "description":"Готовая еда. Восстанавливает 45% питания."},
@@ -14,7 +17,7 @@ const DEFINITIONS = {
  "camp_kit": {"name":"Набор костра", "unit_weight":2.58, "description":"6 камней и 4 хвороста. Выберите набор в рюкзаке и нажмите «Разместить» на ровной открытой земле."}
 }
 static func item(id: String, species: String = "", unit_weight: float = -1.0) -> Dictionary:
- var d: Dictionary = DEFINITIONS.get(id, {}).duplicate(true)
+ var d: Dictionary = DEFINITIONS.get(id, Vegetation.item_definition(id)).duplicate(true)
  if id == "firewood":
   d = {"burn_time":"%d мин" % {"birch":30,"spruce":36,"beech":50,"oak":60}.get(species,30), "name":"Поленце (%s)" % {"birch":"берёза","spruce":"ель","beech":"бук","oak":"дуб"}.get(species,species), "unit_weight":unit_weight, "description":"Расколотое топором бревно. Топливо для костра.", "species":species}
  d.merge({"id": id if species=="" else id+"_"+species, "type":id, "count":1, "color":Color(0.87,0.79,0.61), "burn_time":"—", "heat":"—"})
@@ -25,6 +28,13 @@ static func count(slots: Array, id: String) -> int:
   if s != null and (s.get("type","")==id or s.get("id","")==id): total += int(s.get("count",0))
  return total
 static func transact(player: Node, costs: Dictionary, outputs: Array = [], source_slot: int = -1, preview: bool = false) -> bool:
+ # Cooking reserves input types; all normal drop/use transactions pass this gate.
+ if is_instance_valid(player.get("survival")) and not preview:
+  var pending:Dictionary=player.survival.job
+  if pending.get("kind")=="vegetation_cook":
+   var reserved:Dictionary=player.survival.foraging.cook_recipe(str(pending.recipe),int(pending.amount)).get("costs",{})
+   for id in costs:
+    if reserved.has(id):return false
  var slots: Array = player.inventory_slots.duplicate(true)
  for id in costs:
   if not (costs[id] is int or costs[id] is float) or float(costs[id])<=0 or float(costs[id])!=int(costs[id]):return false

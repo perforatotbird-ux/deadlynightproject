@@ -1,0 +1,43 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+======================================================================
+RUNNING INVENTORY & STACKING SYSTEM TEST (Godot 4.7.2)
+======================================================================
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+
+[TEST 1] Initial Inventory State...
+  -> Initial weight: 0.0 kg, Slots count: 16
+  -> PASS: 16 empty slots, initial weight 0.0 kg.
+
+[TEST 2] Wood Stacking Logic...
+  -> Added log 1: Slot 0 has Birch x1 (weight: 4.0 kg)
+  -> Added log 2: Successfully stacked into Slot 0! Birch x2 (weight: 8.0 kg)
+  -> PASS: Wood logs stack properly in the same slot.
+  -> Added Oak log: Placed into Slot 1! Oak x1 (Total weight: 17.0 kg)
+  -> PASS: Different species occupies next slot.
+
+[TEST 3] TAB Inventory Open & Mouse Mode Toggle...
+  -> PASS: TAB key opened inventory, inventory layer visible.
+
+[TEST 4] Slot Selection & Drop Mechanics...
+  -> PASS: Slot 0 selected, inspector details populated.
+  -> PASS: Dropped 1 log. Remaining in stack: x1, backpack weight: 13.0 kg.
+
+[TEST 5] TAB Inventory Close...
+  -> PASS: TAB key closed inventory, returned to mouse look.
+
+======================================================================
+INVENTORY TEST SUMMARY: 7 PASSED, 0 FAILED.
+======================================================================

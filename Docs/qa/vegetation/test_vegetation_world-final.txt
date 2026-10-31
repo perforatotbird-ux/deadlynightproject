@@ -1,0 +1,76 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+PROFILE: {"cells":25,"interactive":0,"profiles_us":[1283,2040,765,2113,7558,1007,793,813,1526,1289,981,877,490,497],"records":40,"state_bytes":5835}
+PASS: real terrain prepares sparse deterministic patches under streaming budget
+PASS: interactive collider budget respected
+PASS: non-interactive distant vegetation batched as MultiMesh
+PASS: actual starting route contains berry bushes
+PASS: plant reachable with real E ray and terrain collision
+PASS: real E begins existing timed job, not instant proximity pickup
+PASS: one group issued atomically and disappears
+PASS: holding/elapsed time alone cannot repeat harvest
+PASS: movement cancels harvest without losing crop
+PASS: opening backpack cancels short collection
+PASS: full backpack leaves remaining berry cluster intact
+PASS: collection survives unloading visual nodes and JSON state import
+PASS: unknown mushroom opens explicit real confirmation dialog
+PASS: Escape cancels unknown-food confirmation without consuming or closing journal
+PASS: explicit confirmed consumption applies real delayed toxin
+PASS: normal medical use clears toxin without loading or Dev Menu
+PASS: finite camp note teaches dangerous species without eating poison
+PASS: treatment accessible before poisonous mushrooms enabled
+PASS: real cooking fire in reach and unoccluded
+PASS: tea begins through existing context job
+PASS: cancellation keeps safe water and fungus, gives no tea
+PASS: fire extinguishing immediately cancels cooking without item loss
+PASS: cooking can restart after fire relit
+PASS: five game minutes commits real tea recipe exactly once
+PASS: actual tea use restores short stamina only
+PASS: sleep can begin during saved delayed poison, before active symptoms
+PASS: poison onset during accelerated sleep applies damage and interrupts rest
+PASS: eligible existing tree available for real fracture
+PASS: actual cutting records permanent ID and no immediate fungi
+PASS: mature fungi attached to actual fractured stump surface
+PASS: fungus physically parented to real stump, not floating world node
+PASS: fungus physically parented to real stump, not floating world node
+PASS: fungus physically parented to real stump, not floating world node
+PASS: mature group has one available crop
+PASS: individual real stump group harvested once
+PASS: individual real stump group harvested once
+PASS: individual real stump group harvested once
+PASS: last harvested group starts five-day regrowth, not immediate refill
+PASS: regrowth respects full five-day minimum
+PASS: regrowth yields at most one bounded crop
+PASS: long absence cannot accumulate a backlog of harvests
+PASS: true pause stops world and growth clocks
+PASS: real SaveManager writes unified vegetation/body state
+PASS: forest to mine retains crop and stump cycles
+PASS: scene travel does not reset poison delay
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+PASS: mine round trip never restores collected crop or note
+PASS: round trip preserves growth start, not new tree timer
+VEGETATION WORLD SUMMARY: 47 PASS, 0 FAIL

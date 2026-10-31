@@ -74,7 +74,7 @@ func run():
  check(not s.open_sleep(s.shelter.bed),"disabled sleep point cannot open sleep UI")
  s.shelter.bed.sleep_enabled=true
  check(s.open_sleep(s.shelter.bed),"actual bed interaction authorizes contextual sleep panel");await settle()
- check(ui.sleep_page.visible and not ui.tabs.visible and ui.tabs.get_tab_count()==3,"sleep is not a general Tab page")
+ check(ui.sleep_page.visible and not ui.tabs.visible and ui.tabs.get_tab_count()==4,"sleep is not a general Tab page")
  s.warmth=80;s.energy=25;s.shelter.set_door(true);t=s.clock
  check(s.begin_rest(1),"bed starts one hour rest");s.advance(1)
  check(absf(s.clock-t-3600)<0.01 and s.energy>25,"bed rest advances same clock and restores fatigue")

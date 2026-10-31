@@ -359,6 +359,8 @@ func _on_fracture_ready(lower: ArrayMesh, upper: ArrayMesh, cut_y: float) -> voi
 	var info := {"species": species, "pos": [pos.x,pos.y,pos.z], "id": tree_id,
 		"cut_y": cut_y, "cuts": _voxel_trunk.export_cuts(),
 		"basis": [b.x.x,b.x.y,b.x.z,b.y.x,b.y.y,b.y.z,b.z.x,b.z.y,b.z.z]}
+	for session in get_tree().get_nodes_in_group("survival_session"):
+		if is_instance_valid(session.get("vegetation")):session.vegetation.record_felling(get_effective_id())
 	felled_tree_ids[get_effective_id()] = info
 	if tree_id != "": felled_tree_ids[tree_id] = info
 	felled_tree_ids["pos_%d_%d_%d" % [roundi(pos.x),roundi(pos.y),roundi(pos.z)]] = info
@@ -454,7 +456,7 @@ func _spawn_stump(mesh: ArrayMesh) -> void:
 	stump.global_transform = global_transform
 	stump.add_to_group("permanent_stumps")
 	stump.set_meta("cut_y",_break_height)
-	stump.set_meta("tree_id",tree_id)
+	stump.set_meta("tree_id",get_effective_id())
 	var visual := MeshInstance3D.new()
 	visual.mesh = mesh
 	stump.add_child(visual)
@@ -466,6 +468,9 @@ func _spawn_stump(mesh: ArrayMesh) -> void:
 	col.shape = shape
 	col.position.y = _break_height * 0.5
 	stump.add_child(col)
+	for session in get_tree().get_nodes_in_group("survival_session"):
+		if is_instance_valid(session.get("vegetation")):
+			session.vegetation.call_deferred("attach_stump",stump,get_effective_id())
 
 func _process(delta: float) -> void:
 	if not _is_falling or _fall_pivot == null:

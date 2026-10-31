@@ -1,0 +1,120 @@
+{
+  "fixture": "192 berry bushes inside active radius, half with harvested group; intentionally denser than world placement",
+  "full_save_ok": true,
+  "full_save_us": 2595,
+  "json_encoding_us": 1433,
+  "samples": [
+    {
+      "interactive": 12,
+      "loaded_cells": 2,
+      "stream_us": 5699,
+      "visited_cells": 2
+    },
+    {
+      "interactive": 24,
+      "loaded_cells": 4,
+      "stream_us": 2398,
+      "visited_cells": 4
+    },
+    {
+      "interactive": 36,
+      "loaded_cells": 6,
+      "stream_us": 2987,
+      "visited_cells": 6
+    },
+    {
+      "interactive": 48,
+      "loaded_cells": 8,
+      "stream_us": 2246,
+      "visited_cells": 8
+    },
+    {
+      "interactive": 60,
+      "loaded_cells": 10,
+      "stream_us": 3577,
+      "visited_cells": 10
+    },
+    {
+      "interactive": 72,
+      "loaded_cells": 12,
+      "stream_us": 5163,
+      "visited_cells": 12
+    },
+    {
+      "interactive": 84,
+      "loaded_cells": 14,
+      "stream_us": 2834,
+      "visited_cells": 14
+    },
+    {
+      "interactive": 96,
+      "loaded_cells": 16,
+      "stream_us": 2859,
+      "visited_cells": 16
+    },
+    {
+      "interactive": 96,
+      "loaded_cells": 18,
+      "stream_us": 2447,
+      "visited_cells": 18
+    },
+    {
+      "interactive": 96,
+      "loaded_cells": 20,
+      "stream_us": 3287,
+      "visited_cells": 20
+    },
+    {
+      "interactive": 96,
+      "loaded_cells": 22,
+      "stream_us": 3073,
+      "visited_cells": 22
+    },
+    {
+      "interactive": 96,
+      "loaded_cells": 24,
+      "stream_us": 2823,
+      "visited_cells": 24
+    },
+    {
+      "interactive": 96,
+      "loaded_cells": 25,
+      "stream_us": 2666,
+      "visited_cells": 25
+    },
+    {
+      "interactive": 96,
+      "loaded_cells": 25,
+      "stream_us": 2323,
+      "visited_cells": 25
+    },
+    {
+      "interactive": 96,
+      "loaded_cells": 25,
+      "stream_us": 2326,
+      "visited_cells": 25
+    },
+    {
+      "interactive": 96,
+      "loaded_cells": 25,
+      "stream_us": 2296,
+      "visited_cells": 25
+    }
+  ],
+  "save_pipeline": {
+    "assemble_us": 27,
+    "bytes": 30553,
+    "disk_us": 421,
+    "items_us": 4,
+    "logs": 0,
+    "memory_delta": 394732,
+    "metadata_us": 412,
+    "player_us": 31,
+    "serialize_us": 1165,
+    "total_us": 2334,
+    "trees": 0,
+    "voxel_us": 10,
+    "world_us": 257
+  },
+  "state_bytes_utf8": 28699
+}

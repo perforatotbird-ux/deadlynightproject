@@ -6,6 +6,12 @@ const Art=preload("res://scripts/ui/JournalArt.gd")
 const Card=preload("res://scripts/ui/JournalCard.gd")
 const ItemRow=preload("res://scripts/ui/JournalItemRow.gd")
 const Catalog=preload("res://scripts/survival/CraftCatalog.gd")
+const Plants=preload("res://scripts/vegetation/VegetationCatalog.gd")
+var cook_select:OptionButton
+var cook_amount:SpinBox
+var cook_info:Label
+var guide_entries:Dictionary={}
+var _guide_signature:=""
 var player:Node
 var buttons:Dictionary={}
 var tabs:TabContainer
@@ -116,7 +122,7 @@ func build(p:Node) -> void:
  button(head,"close","Закрыть · Tab / Esc",func():player._toggle_inventory()).size_flags_horizontal=0
  tabs=TabContainer.new();tabs.size_flags_vertical=Control.SIZE_EXPAND_FILL;tabs.add_theme_font_size_override("font_size",15);layout.add_child(tabs)
  tabs.tab_changed.connect(func(_index):call_deferred("_focus_page"))
- _build_inventory();_build_craft();_build_fire();_build_sleep();_build_condition()
+ _build_inventory();_build_craft();_build_fire();_build_sleep();_build_condition();_build_guide()
  _build_quick_strip(layout)
  layout.add_child(HSeparator.new())
  status=label(layout,"",13);status.custom_minimum_size.y=16
@@ -209,7 +215,8 @@ func p_inspector() -> void:
  player._inv_inspector_box.add_child(HSeparator.new());player._inv_details_desc=label(player._inv_inspector_box,"",16)
  application=label(player._inv_inspector_box,"",14);application.add_theme_color_override("font_color",Journal.MUTED)
  button(player._inv_inspector_box,"equip_tool","Выбрать инструмент",func():player.select_hotbar_slot(selected_tool);refresh_actions())
- button(player._inv_inspector_box,"use_supply","Использовать",func():player.survival.use_supply(player._selected_slot_index);refresh_actions())
+ button(player._inv_inspector_box,"use_supply","Использовать",func():player.survival.request_use_supply(player._selected_slot_index);refresh_actions())
+ button(player._inv_inspector_box,"cook_link","Приготовить у костра…",func():focus_fire())
  button(player._inv_inspector_box,"place","Разместить костёр",func():player.survival.begin_placement())
  button(player._inv_inspector_box,"recipe_link","Открыть рецепт раскола",func():select_recipe("split_"+str(player.inventory_slots[player._selected_slot_index].get("species","birch")));tabs.current_tab=1)
  button(player._inv_inspector_box,"fuel_link","Добавить в костёр…",func():focus_fire();fuel_select.select(fuel_select.get_item_index(player._selected_slot_index));refresh_actions())
@@ -265,6 +272,16 @@ func _build_fire() -> void:
  var matchbutton:=button(ignition,"match","Спичка",func():player.survival.begin_ignition(player.survival.selected_fire,"match"));matchbutton.icon=Art.texture("matches");matchbutton.expand_icon=true;matchbutton.add_theme_constant_override("icon_max_width",32)
  var sparkbutton:=button(ignition,"spark","Кремень + пирит",func():player.survival.begin_ignition(player.survival.selected_fire,"spark"));sparkbutton.icon=Art.texture("flint");sparkbutton.expand_icon=true;sparkbutton.add_theme_constant_override("icon_max_width",32)
  ignition_reason=label(ignition,"",12)
+ var cooking:=sheet(controls);heading(cooking,"04  /  Грибы и древесный чай",18)
+ cook_select=picker(cooking)
+ for r in Catalog.FIRE_RECIPES:cook_select.add_item(r.title)
+ cook_select.item_selected.connect(func(_i):refresh_actions())
+ var line:=row(cooking);cook_amount=SpinBox.new();cook_amount.min_value=1;cook_amount.max_value=10;cook_amount.step=1;cook_amount.value=1;cook_amount.custom_minimum_size=Vector2(80,44);line.add_child(cook_amount)
+ cook_amount.value_changed.connect(func(_v):refresh_actions())
+ button(line,"cook","Приготовить",func():player.survival.foraging.begin_cook(Catalog.FIRE_RECIPES[cook_select.selected].id,int(cook_amount.value));refresh_actions())
+ cook_info=label(cooking,"",13)
+ label(cooking,"Отмена, уход или погасший огонь сохраняют ингредиенты. Ядовитые грибы не обезвреживаются готовкой.",13)
+
 
 func _build_sleep() -> void:
  sleep_page=VBoxContainer.new();sleep_page.name="SleepInteraction";sleep_page.size_flags_vertical=Control.SIZE_EXPAND_FILL;tabs.get_parent().add_child(sleep_page);sleep_page.hide()
@@ -381,8 +398,8 @@ func refresh_inventory() -> void:
   var accepted:=category.selected!=6 and (search.text.is_empty() or title.to_lower().contains(search.text.to_lower()))
   if category.selected==1:accepted=accepted and kind in ["stone","flint","pyrite","brush","log"]
   elif category.selected==2:accepted=accepted and kind in ["firewood","brush"]
-  elif category.selected==4:accepted=accepted and kind in ["water","raw_water","ration","berries"]
-  elif category.selected==5:accepted=accepted and kind in ["bandage","compress"]
+  elif category.selected==4:accepted=accepted and (kind in ["water","raw_water","ration","berries"] or Plants.is_food(kind))
+  elif category.selected==5:accepted=accepted and kind in ["bandage","compress","antitoxin"]
   elif category.selected==3:accepted=accepted and kind=="camp_kit"
   card.visible=accepted
   if accepted:visible_count+=1
@@ -430,13 +447,18 @@ func refresh_inventory() -> void:
   return
  if item.is_empty():return
  inspector_image.texture=Art.texture(Art.item_key(item));player._inv_details_title.text=item.get("name","")
- player._inv_details_category.text={"log":"ДРЕВЕСИНА / БРЕВНО","firewood":"ТОПЛИВО","brush":"РАСТОПКА / ТОПЛИВО","camp_kit":"РАЗМЕЩАЕМЫЙ НАБОР","water":"ПИТЬЕВАЯ ВОДА","raw_water":"ВОДА / НУЖНО КИПЯТИТЬ","ration":"ПИТАНИЕ","berries":"ПИТАНИЕ / СБОР","bandage":"МЕДИЦИНА","compress":"МЕДИЦИНА"}.get(item.get("type",""),"ПРИРОДНЫЙ МАТЕРИАЛ")
+ player._inv_details_category.text={"log":"ДРЕВЕСИНА / БРЕВНО","firewood":"ТОПЛИВО","brush":"РАСТОПКА / ТОПЛИВО","camp_kit":"РАЗМЕЩАЕМЫЙ НАБОР","water":"ПИТЬЕВАЯ ВОДА","raw_water":"ВОДА / НУЖНО КИПЯТИТЬ","ration":"ПИТАНИЕ","berries":"ПИТАНИЕ / СБОР","bandage":"МЕДИЦИНА","compress":"МЕДИЦИНА","antitoxin":"МЕДИЦИНА / ОТРАВЛЕНИЕ","wood_tea":"НАПИТОК / ВЫНОСЛИВОСТЬ"}.get(item.get("type",""),"ПРИРОДНЫЙ МАТЕРИАЛ")
  var count:=int(item.get("count",1));var weight:=float(item.get("unit_weight",0))
  player._inv_details_stats.text="%d шт.   /   %.2f кг за шт.   /   %.2f кг всего" % [count,weight,count*weight]
  if item.get("type")=="firewood" and is_instance_valid(player.survival):player._inv_details_stats.text+="\nГорение: %d мин за поленце" % int(player.survival.Fire.FUEL_SECONDS.get(item.get("species","birch"),1800)/60)
  elif item.get("type")=="brush":player._inv_details_stats.text+="\nГорение: 5 мин за единицу"
  player._inv_details_desc.text=item.get("description","");drop_amount.max_value=maxi(1,count)
  application.text="ПРИМЕНЕНИЕ\n"+{"log":"Расколите во вкладке «Крафт», чтобы получить три поленца.","firewood":"Топливо для костра. Можно закрепить на поясе.","brush":"Растопка, топливо и материал для набора костра.","camp_kit":"Разместите на подходящей земле в лесу.","stone":"Материал для каменного кольца костра.","flint":"Розжиг костра вместе с пиритом. Не расходуется.","pyrite":"Розжиг костра вместе с кремнем. Не расходуется.","water":"Восстанавливает воду на 35 пунктов.","raw_water":"Кипятите у горящего костра, чтобы получить безопасную воду.","ration":"Восстанавливает питание на 45 пунктов.","berries":"Восстанавливают питание на 12 пунктов.","bandage":"Останавливает кровотечение.","compress":"Снимает травму ноги."}.get(item.get("type",""),item.get("description",""))
+ var plant_id:=Plants.item_species(str(item.get("type","")))
+ if plant_id!="" and is_instance_valid(player.survival):
+  player._inv_details_category.text="ПОЛЕВОЙ СБОР / "+("ПРИГОТОВЛЕН" if str(item.type).begins_with("cooked_") else "СЫРОЙ")
+  player._inv_details_desc.text=player.survival.vegetation.journal_text(plant_id)
+  application.text="ПРИМЕНЕНИЕ\n"+("Приготовить древесный чай: 1 гриб + 0,5 л безопасной воды у огня." if plant_id=="stump_fan" else "Съесть или приготовить у огня. Свойства вида — во вкладке «Растения».")
 func _slot_weight(index:int) -> float:
  var item=player.inventory_slots[index];return 0 if item==null else float(item.get("unit_weight",0))*int(item.get("count",0))
 func _refresh_recipe() -> void:
@@ -473,7 +495,8 @@ func refresh_actions() -> void:
  if player._selected_slot_index>=0 and player._selected_slot_index<player.inventory_slots.size() and player.inventory_slots[player._selected_slot_index]!=null:item=player.inventory_slots[player._selected_slot_index]
  var type:String=item.get("type","")
  var busy:bool=valid and (not s.job.is_empty() or s.health<=0)
- buttons["use_supply"].visible=type in ["water","raw_water","ration","berries","bandage","compress"]
+ buttons["use_supply"].visible=type in Plants.SUPPLY_IDS and type!="stump_fan"
+ buttons["cook_link"].visible=type in ["forest_fat","wood_fan","copper_false","pale_bell","stump_fan"];buttons["cook_link"].disabled=busy or not valid or (valid and s.nearby_fire().is_empty())
  var use_reason:=""
  if not valid:use_reason="Недоступно вне игрового мира."
  elif busy:use_reason="Завершите текущее действие."
@@ -481,10 +504,13 @@ func refresh_actions() -> void:
  elif type in ["ration","berries"] and s.body.food>=100:use_reason="Запас питания уже полон."
  elif type=="bandage" and not s.body.conditions.has("bleeding"):use_reason="Нет кровотечения."
  elif type=="compress" and not s.body.conditions.has("sprain"):use_reason="Нет травмы ноги."
+ elif type=="antitoxin" and not s.body.conditions.has("poison"):use_reason="Нет отравления."
  buttons["use_supply"].disabled=use_reason!="";buttons["use_supply"].tooltip_text=use_reason
  buttons["equip_tool"].disabled=busy
- buttons["use_supply"].text={"water":"Выпить · 0,5 л","raw_water":"Кипятить у костра · 5 мин","ration":"Съесть рацион","berries":"Съесть ягоды","bandage":"Перевязать рану","compress":"Наложить компресс"}.get(type,"Использовать")
- if valid:_refresh_condition(s)
+ buttons["use_supply"].text={"water":"Выпить · 0,5 л","raw_water":"Кипятить у костра · 5 мин","ration":"Съесть рацион","berries":"Съесть ягоды","bandage":"Перевязать рану","compress":"Наложить компресс","antitoxin":"Принять от отравления","wood_tea":"Выпить чай · +25 выносливости"}.get(type,"Использовать")
+ var plant_kind:=Plants.item_species(type)
+ if plant_kind!="" and plant_kind!="stump_fan":buttons["use_supply"].text="Съесть ягоды" if Plants.species(plant_kind).family=="berry" else "Съесть гриб"
+ if valid:_refresh_condition(s);_refresh_guide(s)
  # Assign final states once. No false→true visibility/disabled pulses across refreshes.
  buttons["drop_one"].disabled=busy;buttons["drop_all"].disabled=busy
  buttons["place"].visible=valid and type=="camp_kit";buttons["place"].disabled=busy or not valid or (valid and s.location!="forest")
@@ -515,6 +541,14 @@ func refresh_actions() -> void:
  buttons["kit"].disabled=busy or stones<6 or brush<4
  var f:Dictionary=s.find_fire(s.selected_fire)
  if f.is_empty() or not s._fire_in_reach(f):f=s.nearby_fire();s.selected_fire=f.get("id","")
+ var cooking_recipe:Dictionary=s.foraging.cook_recipe(str(Catalog.FIRE_RECIPES[cook_select.selected].id),int(cook_amount.value))
+ var cooking_ready:bool=not f.is_empty() and f.get("state")=="burning" and not cooking_recipe.is_empty()
+ buttons["cook"].disabled=busy or not cooking_ready or not s.Items.transact(player,cooking_recipe.costs,cooking_recipe.outputs,-1,true)
+ if Catalog.FIRE_RECIPES[cook_select.selected].id=="wood_tea" and not s.vegetation.inspected.has("stump_fan"):buttons["cook"].disabled=true
+ cook_amount.editable=not busy;cook_select.disabled=busy
+ var ingredients:PackedStringArray=[]
+ for id in cooking_recipe.get("costs",{}):ingredients.append("%s ×%d"%[s.Items.item(id).name,int(cooking_recipe.costs[id])])
+ cook_info.text=(" + ".join(ingredients)+" · %.0f игровых минут"%float(cooking_recipe.get("minutes",0))) if cooking_ready else "Нужен горящий костёр рядом и ингредиенты в рюкзаке."
  var ready:=not f.is_empty();var fuel_slot:=fuel_select.get_selected_id();var available:=0
  if fuel_slot>=0 and fuel_slot<player.inventory_slots.size() and player.inventory_slots[fuel_slot]!=null:available=int(player.inventory_slots[fuel_slot]["count"])
  fuel_amount.max_value=maxi(1,available);fuel_amount.editable=not busy and available>0
@@ -540,7 +574,7 @@ func refresh_actions() -> void:
  if "Dev Menu" in status.text:status.text="Мир не на паузе · Tab / Esc — закрыть журнал"
  if active:
   progress.max_value=float(s.job["duration"]);progress.value=float(s.job["elapsed"])
-  status.text="%s · %.1f / %.1f с" % [{"split":"Раскол","ignite":"Розжиг","rest":"Сон","boil":"Кипячение"}.get(s.job["kind"],"Действие"),s.job["elapsed"],s.job["duration"]]
+  status.text="%s · %.1f / %.1f с" % [{"split":"Раскол","ignite":"Розжиг","rest":"Сон","boil":"Кипячение","harvest":"Сбор","vegetation_cook":"Готовка"}.get(s.job["kind"],"Действие"),s.job["elapsed"],s.job["duration"]]
 
  # Refresh content in place; never hide/re-enable a pressed control as an intermediate state.
  buttons["recipe_link"].visible=type=="log";buttons["recipe_link"].disabled=busy
@@ -583,7 +617,7 @@ func _build_condition() -> void:
  var details:=column(scroll(body_row),12);heading(details,"Травмы и восстановление",24);condition_info=label(details,"")
  label(details,"Безопасная вода и готовая еда используются из рюкзака. У стоянки есть ограниченные припасы и дождесборник; съедобные ягоды встречаются в лесу. Сырую воду кипятите у горящего костра.",14)
  supply_select=picker(details)
- button(details,"condition_use","Использовать выбранный припас",func():player.survival.use_supply(supply_select.get_selected_id());refresh_actions())
+ button(details,"condition_use","Использовать выбранный припас",func():player.survival.request_use_supply(supply_select.get_selected_id());refresh_actions())
  label(details,"Сон — подойдите к кровати и нажмите E. Здесь меню сна не открывается.",13)
  label(details,"Восстановление здоровья: сон, тепло выше 45%, питание и вода, отсутствие кровотечения и переохлаждения. Травма ноги проходит за 4 игровых часа или быстрее во сне.",13)
 func _refresh_condition(s:Node) -> void:
@@ -594,5 +628,24 @@ func _refresh_condition(s:Node) -> void:
   var danger:bool=value>70 if id=="wetness" else value<20
   condition_values[id].value.add_theme_color_override("font_color",Color("f0a78e") if danger else Color("eee5d3"))
  condition_info.text=("Причина гибели: "+s.body.death_reason+"\n" if s.health<=0 else "")+s.body.describe()
- _update_picker(supply_select,["water","raw_water","ration","berries","bandage","compress"],"Нет еды, воды или медикаментов")
+ _update_picker(supply_select,Plants.SUPPLY_IDS,"Нет еды, воды или медикаментов")
  buttons["condition_use"].disabled=s.health<=0 or not s.job.is_empty() or supply_select.item_count==0
+
+func _build_guide() -> void:
+ var guide:=page("Растения")
+ label(guide,"ОСТРОВНОЙ ПОЛЕВОЙ СПРАВОЧНИК",12).add_theme_color_override("font_color",Journal.MUTED)
+ label(guide,"Вымышленные игровые виды. Не руководство по съедобности настоящих растений и грибов. Памятка у стоянки раскрывает свойства без рискованной дегустации.",14)
+ var entries:=column(scroll(guide),12)
+ for id in Plants.SPECIES:
+  var entry:=sheet(entries);var line:=row(entry,16);picture(line,id,64).custom_minimum_size.x=80
+  var text:=column(line,4);var title:=heading(text,"",20);var details:=label(text,"",14)
+  guide_entries[id]={"title":title,"details":details}
+func _refresh_guide(s:Node) -> void:
+ var signature:=str(s.vegetation.inspected)+str(s.vegetation.known)
+ if signature==_guide_signature:return
+ _guide_signature=signature
+ for id in guide_entries:
+  var found:bool=s.vegetation.inspected.has(id) or s.vegetation.known.has(id)
+  var e:Dictionary=guide_entries[id];var d:Dictionary=Plants.species(id)
+  e.title.text=d.name if found else "Неизученный вид"
+  e.details.text=s.vegetation.journal_text(id) if found else "Осмотрите растение в лесу, чтобы зарисовать признаки."
