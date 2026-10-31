@@ -72,9 +72,41 @@ func _load_terrain() -> void:
 			var inst = scene.instantiate()
 			_terrain_root.add_child(inst)
 			
+			prepare_terrain_lighting(inst)
 			# Build collision on chunks
 			_build_terrain_collisions(inst)
 			print("[WorldMap] Terrain chunks loaded successfully.")
+
+static func prepare_terrain_lighting(terrain: Node) -> void:
+	# The current terrain GLB binds a tangent-space normal map to surfaces
+	# without UV/tangent attributes. That rotates floor lighting sideways and
+	# produces a hard black half-plane under nearby lamps, even without shadows.
+	# Keep geometric slope normals and all other material properties intact.
+	# Valid normal-mapped replacement assets need no override.
+	var fallback: Dictionary = {}
+	for node in terrain.find_children("*", "MeshInstance3D", true, false):
+		var mesh: Mesh = node.mesh
+		if mesh == null:
+			continue
+		for surface in mesh.get_surface_count():
+			var has_basis := false
+			if mesh is ArrayMesh:
+				var format: int = mesh.surface_get_format(surface)
+				has_basis = (format & Mesh.ARRAY_FORMAT_TEX_UV) != 0 and (format & Mesh.ARRAY_FORMAT_TANGENT) != 0
+			else:
+				var arrays: Array = mesh.surface_get_arrays(surface)
+				has_basis = arrays[Mesh.ARRAY_TEX_UV] != null and arrays[Mesh.ARRAY_TANGENT] != null
+			if has_basis:
+				continue
+			var material := node.get_active_material(surface) as StandardMaterial3D
+			if material == null or not material.normal_enabled:
+				continue
+			var id := material.get_instance_id()
+			if not fallback.has(id):
+				var safe: StandardMaterial3D = material.duplicate()
+				safe.normal_enabled = false
+				fallback[id] = safe
+			node.set_surface_override_material(surface, fallback[id])
 
 func _build_terrain_collisions(root: Node) -> void:
 	var count = 0

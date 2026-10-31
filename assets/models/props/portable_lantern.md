@@ -28,3 +28,12 @@ Tests: `tests/test_lantern_status_hud.gd`: globe tracking under yaw/pitch,
 close-wall source retraction, stowing/toggling, real-render forward-wall
 luminance, and floor illumination at 3, 6 and 9 metres plus both sides while
 looking down. Native captures compare lamp-off and lamp-on ground coverage.
+
+Terrain regression: the current terrain GLB has a tangent-space normal texture
+but lacks the UV/tangent attributes needed to apply it. `WorldMap` supplies one
+shared material fallback for those surfaces, disabling only invalid normal
+mapping and retaining geometric normals, colour texture and roughness. This
+removes the black lighting half-plane present even with shadows disabled.
+Valid UV/tangent surfaces keep their normal maps. Source assets, mesh geometry
+and collision are unchanged. `tests/test_terrain_lantern_lighting.gd` renders
+lamp-off/on samples on the actual imported spawn chunk, not just a test plane.
