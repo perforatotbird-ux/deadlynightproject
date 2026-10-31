@@ -2,6 +2,7 @@ extends CharacterBody3D
 class_name PlayerController
 
 const AxeArmRigScript = preload("res://scripts/player/AxeArmRig.gd")
+const LANTERN_ENERGY := 2.2
 const AXE_REST_POS := Vector3(0.29, -0.29, -0.43)
 const AXE_REST_ROT := Vector3(-12.0, -18.0, -12.0)
 const AXE_WINDUP_POS := Vector3(0.36, -0.14, -0.48)
@@ -125,7 +126,7 @@ var belt_items: Array = ["", "", ""] # Item-ID shortcuts; items remain in the on
 var active_hotbar_slot: int = 0
 var _hotbar_icons: Array[TextureRect] = []
 var _is_lantern_on: bool = false
-var _lantern_light: SpotLight3D = null
+var _lantern_light: OmniLight3D = null
 var _lantern_model: Node3D = null
 
 # Camera and Viewmodel Nodes
@@ -311,7 +312,7 @@ func _setup_camera_and_viewmodel() -> void:
 	_axe_sway_pivot.add_child(_axe_arm_rig)
 	_axe_arm_rig.setup(_axe_anim_pivot)
 
-	# Carried storm lantern; the decorative model sways, the beam follows camera -Z.
+	# Carried storm lantern; world illumination originates at the swaying globe.
 	_lantern_model = preload("res://assets/models/props/portable_lantern.tscn").instantiate()
 	_axe_sway_pivot.add_child(_lantern_model)
 	_lantern_model.position = Vector3(0.31, -0.36, -0.8)
@@ -319,22 +320,36 @@ func _setup_camera_and_viewmodel() -> void:
 	_lantern_model.rotation_degrees.y = -15
 	_lantern_model.visible = false
 
-	# Kerosene Storm Lantern SpotLight (Slot 2)
-	_lantern_light = SpotLight3D.new()
+	# An exposed kerosene flame is an area source, not a camera flashlight.
+	# One bounded omni replaces the old spot: no cone cutting across the ground.
+	_lantern_light = OmniLight3D.new()
 	_lantern_light.name = "LanternLight"
-	_lantern_light.spot_range = 28.0
-	_lantern_light.spot_angle = 52.0
-	_lantern_light.spot_attenuation = 1.2
-	_lantern_light.light_color = Color(1.0, 0.84, 0.50) # Warm kerosene flame glow
-	_lantern_light.light_energy = 3.0
+	_lantern_light.omni_range = 14.0
+	_lantern_light.omni_attenuation = 1.35
+	_lantern_light.omni_shadow_mode = OmniLight3D.SHADOW_CUBE
+	_lantern_light.light_color = Color(1.0, 0.82, 0.58)
+	_lantern_light.light_energy = LANTERN_ENERGY
 	_lantern_light.shadow_enabled = true
-	# Source is in FRONT of the body and globe, not inside player collision.
-	_lantern_light.position = Vector3(0.28, -0.18, -0.94)
-	_lantern_light.rotation = Vector3.ZERO
 	_lantern_light.light_cull_mask = ((1 << 20) - 1) & ~(1 << 19)
-	_lantern_light.shadow_bias = 0.05
+	_lantern_light.shadow_bias = 0.03
+	_lantern_light.shadow_normal_bias = 0.6
 	_lantern_light.visible = false
 	_camera.add_child(_lantern_light)
+	_update_lantern_light_position()
+
+func _update_lantern_light_position() -> void:
+	if not is_instance_valid(_lantern_light) or not is_instance_valid(_lantern_model):
+		return
+	var origin := _camera.global_position
+	var target: Vector3 = _lantern_model.flame.global_position
+	# Keep the source on the camera side of a wall/trunk when the viewmodel clips.
+	# Decorative meshes are excluded from world lighting and cannot shadow it.
+	var query := PhysicsRayQueryParameters3D.create(origin, target, 1 | 2 | 8)
+	query.exclude = [get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	if not hit.is_empty():
+		target = hit.position + hit.normal * 0.12
+	_lantern_light.global_position = target
 
 func _setup_audio() -> void:
 	_audio_step = AudioStreamPlayer3D.new()
@@ -653,6 +668,7 @@ func _update_hotbar_ui() -> void:
 
 func _update_equipped_tool() -> void:
 	_cancel_chop()
+	_update_lantern_light_position()
 	if _lantern_model:
 		_lantern_model.visible = active_hotbar_slot == 1
 		_lantern_model.set_lit(_is_lantern_on and active_hotbar_slot == 1)
@@ -799,6 +815,7 @@ func _toggle_lantern() -> void:
 	if _lantern_light == null:
 		return
 	_is_lantern_on = not _is_lantern_on
+	_update_lantern_light_position()
 	_lantern_light.visible = _is_lantern_on and active_hotbar_slot == 1
 	if _lantern_model:
 		_lantern_model.set_lit(_is_lantern_on and active_hotbar_slot == 1)
@@ -827,7 +844,7 @@ func _strike_match() -> void:
 		await tw.finished
 		if is_instance_valid(_lantern_light):
 			_lantern_light.visible = _is_lantern_on and active_hotbar_slot == 1
-			_lantern_light.light_energy = 3.0
+			_lantern_light.light_energy = LANTERN_ENERGY
 
 func _use_knife() -> void:
 	_play_ui_sound("res://assets/sounds/level_01/axe/axe_swing_01.wav")
@@ -1129,6 +1146,8 @@ func _physics_process(delta: float) -> void:
 	
 	# Update viewmodel sway, bobbing and camera shake
 	_update_viewmodel_sway(delta, velocity.length())
+	if _is_lantern_on and active_hotbar_slot == 1:
+		_update_lantern_light_position()
 	_update_raycast_target()
 	
 	# Update Compass readout if compass is equipped

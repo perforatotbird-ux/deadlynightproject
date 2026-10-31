@@ -10,13 +10,21 @@ before the first-person scale of 0.8. The scene exposes `set_lit(bool)`.
 
 The first-person instance is mounted on the existing camera sway pivot. Slot 2
 equips it; the existing tool-use action toggles flame and light. Stowing it hides
-the model and disables the world beam, while preserving its switch state.
+the model and disables world illumination, while preserving its switch state.
 
-World illumination is a camera-child SpotLight3D, explicitly oriented along
-camera local -Z and placed ahead of the model. Its rotation is independent of
-the decorative model. Viewmodel geometry uses layer 20 (bit 19), casts no
-shadows, and is excluded from the world beam. A small viewmodel-only warm fill
-makes the globe and metal visible without illuminating terrain behind the player.
+World illumination uses one warm OmniLight3D (14 m range, smooth 1.35 distance
+attenuation, energy 2.2) instead of a directional flashlight cone. The source
+tracks the actual flame through camera pitch, yaw and viewmodel sway. A short
+camera-to-globe physics ray keeps it 12 cm on the visible side of close walls,
+trunks and props; after clearing the obstacle it returns to the globe.
 
-Tests: `tests/test_lantern_status_hud.gd`, including forward-axis checks under
-yaw/pitch and a real-render luminance comparison of a wall in front of the player.
+Cube shadow maps retain real obstacle shadows without a spotlight edge or a
+dual-paraboloid hemisphere seam. Viewmodel geometry uses layer 20 (bit 19), casts
+no shadows and is excluded from world illumination. The small viewmodel-only
+warm fill is unchanged; it does not illuminate terrain. No extra world lights
+were added. The surrounding forest remains dark beyond the local light radius.
+
+Tests: `tests/test_lantern_status_hud.gd`: globe tracking under yaw/pitch,
+close-wall source retraction, stowing/toggling, real-render forward-wall
+luminance, and floor illumination at 3, 6 and 9 metres plus both sides while
+looking down. Native captures compare lamp-off and lamp-on ground coverage.

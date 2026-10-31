@@ -31,7 +31,7 @@ func run():
  check(s.ui.health_bar.value==100 and s.ui.vitals.visible,"always-visible authoritative health bar")
  check(s.ui.find_children("*","PanelContainer",true,false).is_empty(),"no old black top strip returns")
  await capture("hud_healthy_1280")
- var light:SpotLight3D=p._lantern_light
+ var light:OmniLight3D=p._lantern_light
  p.select_hotbar_slot(1);await settle()
  check(p._lantern_model.visible and not light.visible,"slot 2 equips a real unlit lantern")
  check(p._lantern_model.find_children("*","MeshInstance3D",true,false).size()>50,"model has reservoir, globe, guards, vents and carry handle")
@@ -39,12 +39,15 @@ func run():
  for mesh in p._lantern_model.find_children("*","MeshInstance3D",true,false):
   if mesh.cast_shadow!=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:no_shadow=false
  check(no_shadow,"lantern cannot shadow its own world beam")
- check(light.position.z<-.8 and light.position.z<p._lantern_model.position.z,"world beam originates in front of body and globe")
+ check(light.global_position.distance_to(p._lantern_model.flame.global_position)<.001,"world illumination originates at the actual globe, not behind the player")
+ check(light.omni_range>=12 and light.omni_range<=16 and light.omni_attenuation>1,"bounded radial light has smooth distance falloff")
+ check(light.omni_shadow_mode==OmniLight3D.SHADOW_CUBE and light.shadow_enabled,"cube shadows preserve walls without a spotlight cone or dual-paraboloid seam")
  check((light.light_cull_mask & p._lantern_model.VIEWMODEL_LAYER)==0,"world beam excludes decorative viewmodel geometry")
  for pose in [Vector2(0,0),Vector2(1.2,.6),Vector2(-2.0,-.7)]:
   p.rotation.y=pose.x;p._camera_pivot.rotation.x=pose.y
-  check((-light.global_basis.z).dot(-p._camera.global_basis.z)>.999,"beam follows camera forward after yaw and pitch "+str(pose))
- p.rotation=Vector3.ZERO;p._camera_pivot.rotation=Vector3.ZERO
+  p._update_lantern_light_position()
+  check(light.global_position.distance_to(p._lantern_model.flame.global_position)<.001,"light stays with the carried globe after yaw and pitch "+str(pose))
+ p.rotation=Vector3.ZERO;p._camera_pivot.rotation=Vector3.ZERO;p._update_lantern_light_position()
  # Night test room: only the carried beam can illuminate the front wall.
  env.environment.ambient_light_source=Environment.AMBIENT_SOURCE_COLOR;env.environment.ambient_light_color=Color(.12,.15,.18);env.environment.ambient_light_energy=.12
  var wall:=MeshInstance3D.new();var wall_mesh:=BoxMesh.new();wall_mesh.size=Vector3(9,5,.2);wall.mesh=wall_mesh;wall.position=Vector3(0,1.5,-5)
@@ -57,6 +60,23 @@ func run():
  check(light.visible and p._lantern_model.flame.visible and p._lantern_model.glow.visible,"toggle powers beam, flame and model glow together")
  await capture("lantern_on_1280")
  if graphical:check(sample_center()>dark_sample+.025,"actual forward wall becomes brighter when lantern is switched on")
+ # Regression for the supplied screenshot: angled ground must not end at a cone edge.
+ wall.hide();p._camera_pivot.rotation.x=-.42;p._update_lantern_light_position()
+ var probes:Array[Vector3]=[Vector3(0,.051,-3),Vector3(0,.051,-6),Vector3(0,.051,-9),Vector3(-4,.051,-4),Vector3(4,.051,-4)]
+ p._toggle_lantern();await settle();var ground_dark:Array[float]=[]
+ if graphical:
+  for point in probes:ground_dark.append(sample_world(p._camera,point))
+ await capture("lantern_ground_off_1280")
+ p._toggle_lantern();await settle();await capture("lantern_ground_on_1280")
+ if graphical:
+  for i in probes.size():check(sample_world(p._camera,probes[i])>ground_dark[i]+.018,"ground receives light ahead and beside player: "+str(probes[i]))
+ # A real collider closer than the globe must not swallow the source.
+ var obstacle:=StaticBody3D.new();scene.add_child(obstacle);var shape:=CollisionShape3D.new();var shape_box:=BoxShape3D.new();shape_box.size=Vector3(3,3,.1);shape.shape=shape_box;obstacle.add_child(shape)
+ p._camera_pivot.rotation=Vector3.ZERO;obstacle.position=Vector3(0,1.5,-.4)
+ await physics_frame;p._update_lantern_light_position()
+ check(light.global_position.z>-.36,"source retracts in front of close walls instead of illuminating from inside them")
+ obstacle.queue_free();await physics_frame;await settle();p._update_lantern_light_position()
+ check(light.global_position.distance_to(p._lantern_model.flame.global_position)<.001,"source returns to globe after obstacle is cleared")
  p.select_hotbar_slot(0);await settle()
  check(not light.visible and not p._lantern_model.visible,"stowing lantern hides model and turns off world beam")
  p.select_hotbar_slot(1);await settle();check(light.visible and p._lantern_model.visible,"re-equipping restores remembered switch state")
@@ -89,3 +109,9 @@ func sample_center()->float:
   for x in range(450,750,8):
    sum+=image.get_pixel(x,y).get_luminance();count+=1
  return sum/maxf(1,count)
+
+func sample_world(camera:Camera3D,point:Vector3)->float:
+ var image:=root.get_texture().get_image();var pixel:=camera.unproject_position(point);var sum:=0.0
+ for y in range(-2,3):
+  for x in range(-2,3):sum+=image.get_pixel(clampi(int(pixel.x)+x,0,image.get_width()-1),clampi(int(pixel.y)+y,0,image.get_height()-1)).get_luminance()
+ return sum/25.0
