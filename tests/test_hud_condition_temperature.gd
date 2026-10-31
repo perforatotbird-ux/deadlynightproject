@@ -22,7 +22,7 @@ func run():
  var collision:=CollisionShape3D.new();var box:=BoxShape3D.new();box.size=Vector3(150,1,150);collision.shape=box;collision.position.y=-0.5;ground.add_child(collision)
  var env:=WorldEnvironment.new();env.name="WorldEnvironment";env.environment=Environment.new();env.environment.background_mode=Environment.BG_COLOR;env.environment.background_color=Color("15201d");scene.add_child(env)
  var p=load("res://scenes/player/Player.tscn").instantiate();scene.add_child(p);p.position=Vector3(0,0.2,0);p.set_active(true);p.set_physics_process(false)
- var s=load("res://scripts/survival/SurvivalWorld.gd").new();scene.add_child(s);s.set_process(false);s.vegetation.set_physics_process(false);s.shelter.position=Vector3(40,0,40)
+ var s=load("res://scripts/survival/SurvivalWorld.gd").new();scene.add_child(s);s.set_process(false);s.set_physics_process(false);s.vegetation.set_physics_process(false);s.shelter.position=Vector3(40,0,40)
  await physics_frame;await settle()
  var ui=p._backpack_ui
  s.ui.refresh()

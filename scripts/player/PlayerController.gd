@@ -126,6 +126,7 @@ var active_hotbar_slot: int = 0
 var _hotbar_icons: Array[TextureRect] = []
 var _is_lantern_on: bool = false
 var _lantern_light: SpotLight3D = null
+var _lantern_model: Node3D = null
 
 # Camera and Viewmodel Nodes
 var _camera_pivot: Node3D = null
@@ -310,6 +311,14 @@ func _setup_camera_and_viewmodel() -> void:
 	_axe_sway_pivot.add_child(_axe_arm_rig)
 	_axe_arm_rig.setup(_axe_anim_pivot)
 
+	# Carried storm lantern; the decorative model sways, the beam follows camera -Z.
+	_lantern_model = preload("res://assets/models/props/portable_lantern.tscn").instantiate()
+	_axe_sway_pivot.add_child(_lantern_model)
+	_lantern_model.position = Vector3(0.31, -0.36, -0.8)
+	_lantern_model.scale = Vector3.ONE * 0.8
+	_lantern_model.rotation_degrees.y = -15
+	_lantern_model.visible = false
+
 	# Kerosene Storm Lantern SpotLight (Slot 2)
 	_lantern_light = SpotLight3D.new()
 	_lantern_light.name = "LanternLight"
@@ -319,7 +328,11 @@ func _setup_camera_and_viewmodel() -> void:
 	_lantern_light.light_color = Color(1.0, 0.84, 0.50) # Warm kerosene flame glow
 	_lantern_light.light_energy = 3.0
 	_lantern_light.shadow_enabled = true
-	_lantern_light.position = Vector3(0.15, -0.15, -0.25)
+	# Source is in FRONT of the body and globe, not inside player collision.
+	_lantern_light.position = Vector3(0.28, -0.18, -0.94)
+	_lantern_light.rotation = Vector3.ZERO
+	_lantern_light.light_cull_mask = ((1 << 20) - 1) & ~(1 << 19)
+	_lantern_light.shadow_bias = 0.05
 	_lantern_light.visible = false
 	_camera.add_child(_lantern_light)
 
@@ -640,6 +653,9 @@ func _update_hotbar_ui() -> void:
 
 func _update_equipped_tool() -> void:
 	_cancel_chop()
+	if _lantern_model:
+		_lantern_model.visible = active_hotbar_slot == 1
+		_lantern_model.set_lit(_is_lantern_on and active_hotbar_slot == 1)
 	if _axe_arm_rig:
 		_axe_arm_rig.visible = active_hotbar_slot == 0
 	if _axe_anim_pivot == null:
@@ -783,7 +799,9 @@ func _toggle_lantern() -> void:
 	if _lantern_light == null:
 		return
 	_is_lantern_on = not _is_lantern_on
-	_lantern_light.visible = _is_lantern_on
+	_lantern_light.visible = _is_lantern_on and active_hotbar_slot == 1
+	if _lantern_model:
+		_lantern_model.set_lit(_is_lantern_on and active_hotbar_slot == 1)
 	_play_ui_sound("res://assets/sounds/level_01/ui/ui_click.wav")
 	_show_tool_banner("ШТОРМОВОЙ ФОНАРЬ: " + ("ВКЛЮЧЕН" if _is_lantern_on else "ВЫКЛЮЧЕН"))
 
@@ -808,7 +826,7 @@ func _strike_match() -> void:
 		tw.tween_property(_lantern_light, "light_energy", 0.0, 0.5)
 		await tw.finished
 		if is_instance_valid(_lantern_light):
-			_lantern_light.visible = _is_lantern_on
+			_lantern_light.visible = _is_lantern_on and active_hotbar_slot == 1
 			_lantern_light.light_energy = 3.0
 
 func _use_knife() -> void:
