@@ -1,0 +1,43 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+PASS: actual MapViewer uses SkyRenderer's local Environment
+PASS: SaveManager writes sky/weather to disk
+[SaveManager] Loaded game state successfully applied to active scene.
+PASS: disk save restores model and active anomaly
+PASS: disk load produces no stale thunder
+PASS: actual forest schedules a delayed directional roll
+PASS: actual cabin does not switch off outside rain
+PASS: weather keeps actual backpack interactive
+PASS: switching to free camera does not pause the authoritative world clock
+PASS: forest to mine carries external weather interval
+PASS: mine has no exterior Environment writer or moon light
+PASS: mine has neither outdoor particles nor thunder backlog
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+PASS: mine to forest restores storm style
+PASS: round trip has exactly one moon
+PASS: returning never dumps missed outdoor events
+SKY WEATHER INTEGRATION SUMMARY: 14 PASS, 0 FAIL

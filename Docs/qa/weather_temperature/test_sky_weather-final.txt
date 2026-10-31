@@ -1,0 +1,61 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+PASS: sun continuous through midnight
+PASS: moon continuous through midnight
+PASS: no daily integration drift
+PASS: lunar phase evolves over days, not a single night
+PASS: unit celestial directions at hour 0
+PASS: phase matches sun/moon elongation at hour 0
+PASS: unit celestial directions at hour 6
+PASS: phase matches sun/moon elongation at hour 6
+PASS: unit celestial directions at hour 12
+PASS: phase matches sun/moon elongation at hour 12
+PASS: unit celestial directions at hour 18
+PASS: phase matches sun/moon elongation at hour 18
+PASS: unit celestial directions at hour 23
+PASS: phase matches sun/moon elongation at hour 23
+PASS: clouds precede rain without wetness penalty
+PASS: no cloud discontinuity when binary weather changes
+PASS: rain ramps in under cloud cover
+PASS: weather transition survives JSON
+PASS: legacy rain gets safe populated defaults
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+PASS: live sky installed in exterior Environment
+PASS: one moon light, no per-star light nodes
+PASS: weather profile clear
+PASS: weather profile broken
+PASS: weather profile overcast
+PASS: weather profile light_rain
+PASS: weather profile heavy_rain
+PASS: weather profile storm
+PASS: weather profile mist
+PASS: weather visuals never consume survival/ignition RNG
+PASS: moon above horizon lights the forest
+PASS: moon light direction matches visible disk
+PASS: new moon does not fill the night with light
+PASS: bounded visible rain field
+PASS: cabin roof mask enabled independently of player cover
+PASS: shelter keeps exterior rain visible through open door
+PASS: roof mask contains indoor rain fragments
+PASS: thunder delay is distance / 343 m/s
+PASS: thunder never plays simultaneously with flash
+PASS: reduced flashes preserve event with lower peak
+PASS: suspend cancels flash and thunder backlog
+PASS: meteor is brief, not an orbiting comet
+PASS: meteor clears without a persistent node
+PASS: anomaly has bounded sub-degree/second movement
+PASS: long anomaly survives session JSON load
+PASS: load never replays a pending thunder roll
+PASS: pause freezes real-time sky events
+PASS: sleep clears ephemeral effects
+PASS: mine drops exterior events without catch-up
+PASS: mine has no outdoor rain
+PASS: legacy session save migration
+PASS: loads do not duplicate moon lights
+PASS: no replay after 1-hour clock jump
+PASS: no replay after 6-hour clock jump
+PASS: no replay after 12-hour clock jump
+PASS: no replay after 48-hour clock jump
+PASS: no replay after 72-hour clock jump
+WEATHER_CPU_UPDATE_US: 22.5666666666667
+SKY WEATHER SUMMARY: 56 PASS, 0 FAIL

@@ -1,0 +1,55 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+PASS: exactly three berries and five fungi
+PASS: real weighted item: krasnitsa
+PASS: actual distinguishable mesh: krasnitsa
+PASS: real weighted item: sizovka
+PASS: actual distinguishable mesh: sizovka
+PASS: real weighted item: bolotnitsa
+PASS: actual distinguishable mesh: bolotnitsa
+PASS: real weighted item: forest_fat
+PASS: actual distinguishable mesh: forest_fat
+PASS: real weighted item: wood_fan
+PASS: actual distinguishable mesh: wood_fan
+PASS: real weighted item: copper_false
+PASS: actual distinguishable mesh: copper_false
+PASS: real weighted item: pale_bell
+PASS: actual distinguishable mesh: pale_bell
+PASS: real weighted item: stump_fan
+PASS: actual distinguishable mesh: stump_fan
+PASS: tea fungus differs from food fan by tiers and silhouette, not only colour
+PASS: mushroom silhouette differs beyond colour
+PASS: low trailing berry bush has distinct silhouette
+PASS: one picked berry cluster disappears, bush remains
+PASS: placement stable across recreation
+PASS: ID includes placement version, cell, patch, plant
+PASS: legacy berry slots retain compatibility
+PASS: legacy consumed berry excludes whole corresponding new patch cell
+PASS: fresh player-felled stump has no fungi
+PASS: rain cannot bypass three-day minimum
+PASS: three days with sufficient accumulated moisture produces bounded crop
+PASS: growth survives JSON round trip, crop capped at three
+PASS: three dry days are insufficient; present weather cannot retroactively grant moisture
+PASS: old unknown stump age starts at migration time
+PASS: severe poison has delayed onset
+PASS: delayed toxin causes no premature damage
+PASS: remaining poison delay survives JSON save
+PASS: crossing onset integrates exactly the active minute, not entire step
+PASS: poison identical over accelerated sleep and minute steps
+PASS: active poison limits sprint
+PASS: poison blocks sleep health regeneration
+PASS: repeat doses bounded to one toxic burden at max 3
+PASS: food disorder halves short stamina recovery
+PASS: unknown cooked poison requires explicit confirmation: copper_false
+PASS: cooking does not detoxify: copper_false
+PASS: unknown cooked poison requires explicit confirmation: pale_bell
+PASS: cooking does not detoxify: pale_bell
+PASS: raw tea fungus cannot be eaten or lost
+PASS: tea restores clamped stamina and existing water amount
+PASS: tea cannot remove injury or sprint restriction
+PASS: available medicine removes delayed or active toxic burden
+PASS: tea recipe uses real fungus and safe water with five minutes each
+PASS: invalid amounts and recipes rejected
+PASS: reserved safe water cannot be dropped or consumed during cooking
+PASS: completion commits inputs and output as single transaction
+VEGETATION UNIT SUMMARY: 52 PASS, 0 FAIL

@@ -1,0 +1,12 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+PASS: quality controls have three supported profiles
+[SettingsManager] Settings saved to: user://settings.cfg
+PASS: UI applies sky and rain quality
+PASS: UI applies reduced lightning
+PASS: separate weather and thunder gains apply
+[SettingsManager] Settings saved to: user://settings.cfg
+[SettingsManager] Settings loaded successfully from: user://settings.cfg
+PASS: weather settings survive disk reload
+WEATHER SETTINGS SUMMARY: 5 PASS, 0 FAIL

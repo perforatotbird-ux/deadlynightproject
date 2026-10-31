@@ -1,0 +1,47 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+PASS: source PNG fallback brush
+PASS: source PNG fallback stone
+PASS: source PNG fallback flint
+PASS: source PNG fallback pyrite
+PASS: source PNG fallback camp_kit
+PASS: source PNG fallback log_birch
+PASS: source PNG fallback log_spruce
+PASS: source PNG fallback log_beech
+PASS: source PNG fallback log_oak
+PASS: source PNG fallback firewood_birch
+PASS: source PNG fallback firewood_spruce
+PASS: source PNG fallback firewood_beech
+PASS: source PNG fallback firewood_oak
+PASS: source PNG fallback axe
+PASS: source PNG fallback lantern
+PASS: source PNG fallback compass
+PASS: source PNG fallback matches
+PASS: source PNG fallback knife
+PASS: source PNG fallback bedroll
+PASS: source PNG fallback campfire
+PASS: failed/null cache entry is retried
+PASS: LFS pointer is not passed to PNG decoder
+PASS: launcher waits for import before game start
+PASS: launcher reports import errors / undownloaded LFS
+[SettingsManager] Settings loaded successfully from: user://settings.cfg
+PASS: compact inventory list and retained recipe grid
+PASS: inventory uses compact 60px rows
+PASS: recipe card minimum is half old 110x190
+PASS: actual inventory card height is compact, not stretched back to 150
+PASS: compact cards retain actual art and readable font
+PASS: actual recipe height is compact
+PASS: compact responsive list (800, 600)
+PASS: compact responsive list (1920, 1080)
+PASS: bounded shared surface cache is populated
+PASS: surface cache reads actual terrain height
+PASS: terrain clipping is CPU-based, independent of renderer custom-data precision
+PASS: no visible drop centers below sampled ground
+PASS: rain cannot project a comb of shadows
+PASS: splash specks face camera, no coplanar ground rings
+PASS: rain has no transparent depth writes or specular stripe highlights
+UI / RAIN HOTFIX SUMMARY: 39 PASS, 0 FAIL
+WARNING: 10 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)

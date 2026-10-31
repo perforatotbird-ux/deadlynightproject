@@ -6,6 +6,8 @@ const Pickup = preload("res://scripts/survival/ResourcePickup.gd")
 const FireVisual = preload("res://scripts/survival/Campfire.gd")
 const Shelter = preload("res://scripts/survival/Shelter.gd")
 const UI = preload("res://scripts/survival/SurvivalHUD.gd")
+const Thermal = preload("res://scripts/survival/ThermalModel.gd")
+const WeatherSchedule = preload("res://scripts/weather/WeatherSchedule.gd")
 const TIME_SCALE := 60.0
 const SPLIT_SECONDS := 10.0
 const CAMP_COST := {"stone":6,"brush":4}
@@ -14,7 +16,7 @@ var player: Node3D
 var location := "forest"
 var clock := 16.0*3600.0
 var weather := "clear"
-var weather_until := 18.0*3600.0
+var weather_until := 16.0*3600.0+WeatherSchedule.FIRST_DRY_SECONDS
 var wetness := 0.0
 var warmth := 80.0
 var energy := 100.0
@@ -165,27 +167,33 @@ func advance(real_seconds: float) -> void:
  var remaining:=real_seconds
  # Bounded integration preserves fuel/temperature order during accelerated sleep.
  while remaining>0.00001:
+  # Change state at the persisted boundary, not at the end of an oversized
+  # step. A loaded active interval is preserved; only future intervals change.
+  _advance_weather_if_due()
   var factor:=3600.0 if job.get("kind")=="rest" else TIME_SCALE
   var dt:=minf(remaining,60.0/factor)
+  dt=minf(dt,(weather_until-clock)/factor)
   if not job.is_empty():dt=minf(dt,maxf(0.000001,float(job["duration"])-float(job.get("elapsed",0))))
+  var precipitation:=rain_intensity()
+  # Split at fuel/ember depletion too, so the body still gets the heat for
+  # the fraction of the minute during which the fire was actually burning.
+  for f in fires:
+   var lifetime:=Fire.time_to_change(f,precipitation)
+   if lifetime>0:dt=minf(dt,lifetime/factor)
   remaining-=dt
   var world_dt:=dt*factor
   vegetation.advance(world_dt,weather=="rain")
-  clock+=world_dt
-  if weather=="rain":rain_reserve=minf(6,rain_reserve+world_dt/3600.0)
-  weather_model.sample(clock,weather=="rain",weather_until,daylight())
-  if clock>=weather_until:
-   weather="rain" if weather=="clear" else "clear"
-   weather_until=clock+rng.randf_range(2.0,4.0)*3600.0
-   weather_model.sample(clock,weather=="rain",weather_until,daylight())
-   notify("Начинается дождь: хворост сложнее разжечь" if weather=="rain" else "Дождь закончился")
+  if precipitation>0:rain_reserve=minf(6,rain_reserve+world_dt/3600.0*precipitation)
+  _update_body(world_dt,job.get("kind")=="rest")
   for f in fires:
-   Fire.advance(f,world_dt,weather=="rain")
+   Fire.advance(f,world_dt,precipitation>0,precipitation)
    if f["state"]=="burning" and f["fuel"]<600 and not f.get("low_warning",false) and _fire_in_reach(f):
     f["low_warning"]=true
     notify("Костёр скоро погаснет: осталось меньше 10 игровых минут")
    elif f["fuel"]>=600:f["low_warning"]=false
-  _update_body(world_dt,job.get("kind")=="rest")
+  clock+=world_dt
+  _advance_weather_if_due()
+  weather_model.sample(clock,weather=="rain",weather_until,daylight())
   if warmth<20 and not _cold_warned:_cold_warned=true;notify("Опасный холод! Найдите огонь или закрытое укрытие.")
   elif warmth>35:_cold_warned=false
   if health<=0:
@@ -203,9 +211,23 @@ func advance(real_seconds: float) -> void:
    job["elapsed"]=float(job.get("elapsed",0))+dt
    if job["elapsed"]+0.000001>=float(job["duration"]):_finish_job()
 
+func _advance_weather_if_due() -> void:
+ if clock<weather_until:return
+ weather="rain" if weather=="clear" else "clear"
+ weather_until=clock+WeatherSchedule.duration(weather,rng)
+ weather_model.sample(clock,weather=="rain",weather_until,daylight())
+ notify("Начинается дождь: хворост сложнее разжечь" if weather=="rain" else "Дождь закончился")
+
 func hour() -> float:return fposmod(clock,86400.0)/3600.0
 func daylight() -> float:return smoothstep(5.0,7.0,hour())*(1.0-smoothstep(18.0,20.0,hour()))
-func air_temperature() -> float:return lerpf(4,15,daylight())-(3 if weather=="rain" else 0)
+func rain_intensity() -> float:
+ return clampf(float(weather_model.sample(clock,weather=="rain",weather_until,daylight()).rain),0,1)
+func weather_description() -> String:
+ var state:Dictionary=weather_model.sample(clock,weather=="rain",weather_until,daylight())
+ if weather=="clear" and float(state.rain)>0.01:return "дождь стихает"
+ if weather=="rain" and float(state.rain)<0.01:return "начинается дождь"
+ return {"clear":"ясно","broken":"переменная облачность","overcast":"пасмурно","mist":"туман","light_rain":"небольшой дождь","heavy_rain":"ливень","storm":"гроза"}.get(str(state.kind),"облачно")
+func air_temperature() -> float:return lerpf(4,15,daylight())-3.0*rain_intensity()
 func safe_shelter() -> bool:return location=="forest" and is_instance_valid(shelter) and shelter.contains(player.global_position) and shelter.door_closed
 func covered() -> bool:return location=="mine" or (is_instance_valid(shelter) and shelter.contains(player.global_position))
 func heat_at_player() -> float:
@@ -214,23 +236,28 @@ func heat_at_player() -> float:
  for f in fires:
   if f["state"] not in ["burning","embers"]:continue
   var pos:=_v3(f["pos"]);var dist:=player.global_position.distance_to(pos)
-  if dist>4.5:continue
+  if dist>Thermal.HEAT_RADIUS:continue
   var q:=PhysicsRayQueryParameters3D.create(pos+Vector3.UP*0.7,player.global_position+Vector3.UP,1)
   q.exclude=[player.get_rid()]
   if player.is_inside_tree() and not player.get_world_3d().direct_space_state.intersect_ray(q).is_empty():continue
-  heat=maxf(heat,(1.0-dist/4.5)*(20 if f["state"]=="burning" else 6))
+  heat=maxf(heat,Thermal.fire_heat(dist,str(f["state"])))
  return heat
+func thermal_status(seconds:float=0.0) -> Dictionary:
+ var state:Dictionary=weather_model.sample(clock,weather=="rain",weather_until,daylight())
+ var precipitation:=clampf(float(state.rain),0,1)
+ return Thermal.step(wetness,seconds,lerpf(4,15,daylight())-3.0*precipitation,heat_at_player(),float(state.wind),precipitation,covered(),safe_shelter(),location=="mine")
+func thermal_description() -> String:
+ var t:=thermal_status()
+ var warmth_rate:float=t.warmth_rate;var wet_rate:float=t.wet_rate
+ if (warmth>=100 and warmth_rate>0) or (warmth<=0 and warmth_rate<0):warmth_rate=0
+ if (wetness>=100 and wet_rate>0) or (wetness<=0 and wet_rate<0):wet_rate=0
+ return "Воздух %.1f °C · ощущается %.1f °C\nТепло: %+.1f%%/игр. мин · сырость: %+.1f%%/игр. мин\n%s" % [air_temperature(),float(t.felt),warmth_rate,wet_rate,"Огонь согревает и сушит; сильнее всего в 1–2 м." if float(t.heat)>0 else ("Под крышей: защита от осадков, постепенная сушка." if covered() else "Сырость усиливает холод. Ищите огонь или укрытие.")]
 func _update_body(world_dt: float, resting: bool) -> void:
  if body.freeze_needs:body.causes.clear();return
  var minutes:=world_dt/60.0
- var under_roof:=covered();var heat:=heat_at_player()
- if weather=="rain" and not under_roof:wetness=minf(100,wetness+minutes*1.5)
- else:wetness=maxf(0,wetness-minutes*(0.25+heat*0.1))
- var wind_chill:=float(weather_model.sample(clock,weather=="rain",weather_until,daylight()).wind)*3.0 if not under_roof else 0.0
- var felt:=air_temperature()-wetness*0.09+heat-wind_chill
- if location=="mine":felt=8.0-wetness*0.04
- elif safe_shelter():felt+=5.0
- warmth=clampf(warmth+minutes*(felt-7.0)*0.16,0,100)
+ var thermal:=thermal_status(world_dt)
+ wetness=float(thermal.wetness)
+ warmth=clampf(warmth+float(thermal.warmth_delta),0,100)
  var sprinting:bool=player.velocity.length()>5
  var effort:=0.09+(0.10 if sprinting else 0.0)+(0.08 if job.get("kind")=="split" or player._is_lmb_held else 0.0)
  if not body.freeze_needs:energy=clampf(energy+minutes*(0.5 if resting and warmth>=20 else -effort),0,100)
@@ -313,7 +340,7 @@ func add_tinder(id: String) -> bool:
  if f.is_empty() or not _fire_in_reach(f) or not job.is_empty():return false
  if not Items.transact(player,{"brush":1}):notify("Нужен хворост для растопки");return false
  f["tinder"]+=1;ui.refresh();return true
-func ignition_chance(method: String) -> float:return Fire.chance(method,wetness,weather=="rain")
+func ignition_chance(method: String) -> float:return Fire.chance(method,wetness,rain_intensity()>0,rain_intensity())
 func begin_ignition(id: String, method: String) -> bool:
  var f:=find_fire(id)
  if method not in ["match","spark"] or not job.is_empty() or f.is_empty() or not _fire_in_reach(f):return false

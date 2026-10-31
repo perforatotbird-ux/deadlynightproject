@@ -22,7 +22,7 @@ func refresh() -> void:
  var s=session;var slots:Array=s.player.inventory_slots
  if s.player._hotbar_status_labels.size()>3:s.player._hotbar_status_labels[3].text="%d шт." % s.matches
  var h:=int(s.hour());var m:=int(s.hour()*60)%60
- hud.text="День %d · %02d:%02d · %s · [Tab] состояние" % [int(s.clock/86400)+1,h,m,"дождь" if s.weather=="rain" else "ясно"]
+ hud.text="День %d · %02d:%02d · %s · [Tab] состояние" % [int(s.clock/86400)+1,h,m,s.weather_description()]
  if s.dev_tainted:hud.text+=" · DEV"
  if s.health<=0:hud.text="ВЫ ПОГИБЛИ · "+s.body.death_reason+"\nEsc — меню загрузки · F8 — Dev Menu"
  hud.add_theme_color_override("font_color",Color("f0a78e") if s.health<=0 else Color("eee5d3"))

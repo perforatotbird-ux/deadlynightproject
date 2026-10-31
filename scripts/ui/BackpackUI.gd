@@ -627,7 +627,7 @@ func _refresh_condition(s:Node) -> void:
   condition_values[id].value.text="%.0f%%" % value
   var danger:bool=value>70 if id=="wetness" else value<20
   condition_values[id].value.add_theme_color_override("font_color",Color("f0a78e") if danger else Color("eee5d3"))
- condition_info.text=("Причина гибели: "+s.body.death_reason+"\n" if s.health<=0 else "")+s.body.describe()
+ condition_info.text=("Причина гибели: "+s.body.death_reason+"\n" if s.health<=0 else "")+s.body.describe()+"\n\n"+s.thermal_description()
  _update_picker(supply_select,Plants.SUPPLY_IDS,"Нет еды, воды или медикаментов")
  buttons["condition_use"].disabled=s.health<=0 or not s.job.is_empty() or supply_select.item_count==0
 

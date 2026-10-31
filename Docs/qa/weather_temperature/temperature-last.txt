@@ -1,0 +1,46 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+PASS: comfort zone does not require standing inside fire
+PASS: heat decreases beyond comfort zone
+PASS: no heat from distant/cold fire
+PASS: embers never equal a burning fire
+PASS: fully soaked player warms AND dries at 2m in night storm
+PASS: storm still wets and chills without fire
+PASS: drizzle is less wetting/chilling than a storm
+PASS: spring daytime and nighttime remain meaningfully different
+PASS: roof blocks rain and direct wind but does not magically dry instantly
+PASS: closed shelter adds insulation independently of roof
+PASS: mine has its own damp temperature, no outdoor weather/heat
+PASS: drying boundary integrates consistently at 1s and 10min
+THERMAL CALIBRATION: 20->60 warmth in 24 game minutes / real seconds at TIME_SCALE=60; 2m, storm, full initial wetness; remaining wetness=53.1999999999999
+PASS: fire recovery is usable without removing storm risk
+PASS: all schedule intervals obey dry 6-10h / rain 45-105min bounds
+WEATHER SCHEDULE: seed20261031, 10000 cycles, rain fraction=0.13531738887939
+PASS: rain no longer occupies approximately half of the schedule
+PASS: persisted RNG resumes the same next interval
+PASS: light rain fuel penalty is proportional to rendered rain
+PASS: light rain does not get full storm ignition penalty
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+PASS: new game has a six-hour first dry window
+WORLD THERMAL: heat=26.6067504882812 warmth=75.8217659166793 wetness=41.7156982421875
+PASS: real world tick warms/dries storm-exposed player without sleep or Dev time
+PASS: wall blocks heat, not just interaction
+PASS: player outside heat radius cannot warm from this fire
+PASS: last half-minute of burning fuel supplies burning heat before embers
+PASS: save preserves active rain deadline and RNG rather than rerolling
+PASS: weather boundary uses new interval without one-minute delay
+PASS: exact final-step deadline changes weather immediately
+PASS: rain onset does not apply a full storm penalty before visible precipitation
+PASS: precipitation builds during visual transition
+PASS: wetting intensity fades out instead of vanishing on binary switch
+PASS: clear weather has no lingering rain penalty after transition
+PASS: HUD reports actual dry weather profile instead of always clear
+PASS: condition diagnostics explain temperature and actual rates
+PASS: diagnostics respect saturated warmth and dry clothing limits
+PASS: rest fixture uses the real bed
+PASS: accelerated sleep agrees across caller frame sizes
+WEATHER TEMPERATURE SUMMARY: 35 PASS, 0 FAIL
+WARNING: 10 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
