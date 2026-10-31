@@ -6,8 +6,8 @@ const DEFINITIONS = {
  "field_notes": {"name":"Памятка грибника","unit_weight":0.02,"description":"Вымышленные островные виды: признаки, приготовление и предупреждения об отравлении."},
  "water": {"name":"Питьевая вода · 0,5 л", "unit_weight":0.5, "description":"Безопасная вода. Восстанавливает 35% запаса воды."},
  "raw_water": {"name":"Сырая вода · 0,5 л", "unit_weight":0.5, "description":"Нужно кипятить у горящего костра. Пить сырой нельзя."},
- "ration": {"name":"Походный рацион", "unit_weight":0.3, "description":"Готовая еда. Восстанавливает 45% питания."},
- "berries": {"name":"Перезимовавшая клюква", "unit_weight":0.15, "description":"Ограниченный тестовый весенний сбор перезимовавших ягод. Восстанавливает 12% питания."},
+ "ration": {"name":"Походный рацион", "unit_weight":0.3, "description":"Готовая еда. 1125 ккал на порцию."},
+ "berries": {"name":"Перезимовавшая клюква", "unit_weight":0.15, "description":"Ограниченный тестовый весенний сбор перезимовавших ягод. 300 ккал на порцию."},
  "bandage": {"name":"Бинт", "unit_weight":0.05, "description":"Останавливает кровотечение, но не возвращает здоровье."},
  "compress": {"name":"Компресс для ноги", "unit_weight":0.1, "description":"Снимает травму ноги. Без лечения она проходит со временем."},
  "brush": {"name":"Хворост", "unit_weight":0.12, "burn_time":"5 мин", "description":"Сухие веточки для костра и розжига."},
@@ -16,11 +16,20 @@ const DEFINITIONS = {
  "pyrite": {"name":"Пирит", "unit_weight":0.2, "description":"В паре с кремнем позволяет высекать искры без спичек."},
  "camp_kit": {"name":"Набор костра", "unit_weight":2.58, "description":"6 камней и 4 хвороста. Выберите набор в рюкзаке и нажмите «Разместить» на ровной открытой земле."}
 }
+# kcal per inventory portion; unrelated to short-term stamina or fatigue.
+static func calories_for(id:String) -> float:
+ if id=="ration":return 1125.0
+ if id=="berries":return 300.0
+ if id=="wood_tea":return 20.0
+ var d:=Vegetation.species(Vegetation.item_species(id))
+ return float(d.get("cooked_calories",0) if id.begins_with("cooked_") else d.get("calories",0))
 static func item(id: String, species: String = "", unit_weight: float = -1.0) -> Dictionary:
  var d: Dictionary = DEFINITIONS.get(id, Vegetation.item_definition(id)).duplicate(true)
  if id == "firewood":
   d = {"burn_time":"%d мин" % {"birch":30,"spruce":36,"beech":50,"oak":60}.get(species,30), "name":"Поленце (%s)" % {"birch":"берёза","spruce":"ель","beech":"бук","oak":"дуб"}.get(species,species), "unit_weight":unit_weight, "description":"Расколотое топором бревно. Топливо для костра.", "species":species}
  d.merge({"id": id if species=="" else id+"_"+species, "type":id, "count":1, "color":Color(0.87,0.79,0.61), "burn_time":"—", "heat":"—"})
+ var kcal:=calories_for(id)
+ if kcal>0:d["calories"]=kcal
  return d
 static func count(slots: Array, id: String) -> int:
  var total := 0

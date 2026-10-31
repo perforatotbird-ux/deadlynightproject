@@ -1,9 +1,29 @@
 extends RefCounted
-# Percent reserves; rates are per GAME minute. Stamina alone uses real seconds.
+# Calories are kcal; activity rates are per GAME hour. Other needs use game minutes.
+# Stamina alone uses real seconds; food is a legacy percentage projection.
 const LABELS:={"cold":"Переохлаждение","dehydration":"Обезвоживание","starvation":"Голодание","exhaustion":"Истощение","bleeding":"Кровопотеря","fall":"Падение","poison":"Отравление"}
 const DEFAULT_TUNING:={"food_awake":0.05,"food_rest":0.035,"food_sprint":0.075,"water_awake":0.085,"water_rest":0.06,"water_sprint":0.14,"cold_damage":0.6,"thirst_damage":0.12,"hunger_damage":0.025,"exhaustion_damage":0.025,"bleed_damage":0.1,"sleep_heal":0.08}
 var tuning:Dictionary=DEFAULT_TUNING.duplicate()
-var food:=85.0
+const MAX_CALORIES:=2500.0
+const CALORIE_RATES:={"sleep":75.0,"idle":100.0,"walk":180.0,"sprint":350.0,"work":250.0}
+var calories:=2125.0
+# Compatibility projection for alerts, dev controls and pre-calorie saves.
+var food:float:
+ get:return calories/MAX_CALORIES*100.0
+ set(value):calories=bounded(value,0,100)*MAX_CALORIES/100.0
+var calorie_rate:=100.0
+var calories_burned:=0.0
+func burn_rate(resting:bool,sprinting:bool,moving:bool=false,working:bool=false,load_ratio:float=0.0,warmth:float=100.0) -> float:
+ var activity:="sleep" if resting else ("sprint" if sprinting else ("work" if working else ("walk" if moving else "idle")))
+ var legacy_key:="food_rest" if resting else ("food_sprint" if sprinting else "food_awake")
+ var rate:=float(CALORIE_RATES[activity])*float(tuning[legacy_key])/float(DEFAULT_TUNING[legacy_key])
+ if not resting and (moving or working or sprinting):rate*=1.0+clampf(load_ratio,0,2)*0.25
+ if warmth<35:rate*=1.0+(35.0-maxf(0,warmth))/35.0*0.25
+ return rate
+func add_calories(amount:float) -> float:
+ var before:=calories
+ if is_finite(amount):calories=clampf(calories+maxf(0,amount),0,MAX_CALORIES)
+ return calories-before
 var water:=85.0
 var stamina:=100.0
 var cold_minutes:=0.0
@@ -15,11 +35,16 @@ var death_reason:=""
 var invulnerable:=false
 var freeze_needs:=false
 var _winded:=false
-func tick(minutes:float,resting:bool,warmth:float,energy:float,sprinting:bool) -> float:
+func tick(minutes:float,resting:bool,warmth:float,energy:float,sprinting:bool,moving:bool=false,working:bool=false,load_ratio:float=0.0) -> float:
  causes.clear()
  if minutes<=0 or freeze_needs:return 0.0
+ var fed_minutes:=0.0 if calories<=0 else minutes
  if not freeze_needs:
-  food=maxf(0,food-minutes*float(tuning["food_rest" if resting else ("food_sprint" if sprinting else "food_awake")]))
+  calorie_rate=burn_rate(resting,sprinting,moving,working,load_ratio,warmth)
+  if calorie_rate>0:fed_minutes=minf(minutes,calories/calorie_rate*60.0)
+  var spent:=minf(calories,minutes/60.0*calorie_rate)
+  calories_burned+=spent
+  calories=maxf(0,calories-spent)
   water=maxf(0,water-minutes*float(tuning["water_rest" if resting else ("water_sprint" if sprinting else "water_awake")]))
  if warmth<12:
   cold_minutes+=minutes;warm_minutes=0
@@ -40,7 +65,9 @@ func tick(minutes:float,resting:bool,warmth:float,energy:float,sprinting:bool) -
  var poison_damage:=_tick_poison(minutes)
  var damage:=poison_damage
  for id in causes:
-  if id!="poison":damage+=float(causes[id])*minutes;last_damage=LABELS.get(id,id)
+  if id!="poison":
+   damage+=float(causes[id])*(minutes-fed_minutes if id=="starvation" else minutes)
+   last_damage=LABELS.get(id,id)
  if invulnerable:return 0.0
  if damage>0:return -damage
  if resting and warmth>45 and food>0 and water>0 and not conditions.has("hypothermia") and not conditions.has("bleeding") and not conditions.has("poison"):return float(tuning.sleep_heal)*minutes
@@ -53,9 +80,11 @@ func update_stamina(seconds:float,sprinting:bool) -> void:
 func can_sprint(energy:float) -> bool:
  return not _winded and stamina>5 and energy>=10 and not conditions.has("sprain") and not conditions.has("hypothermia") and not poison_limits_effort()
 func export_state() -> Dictionary:
- return {"food":food,"water":water,"stamina":stamina,"cold_minutes":cold_minutes,"warm_minutes":warm_minutes,"conditions":conditions.duplicate(true),"last_damage":last_damage,"death_reason":death_reason}
+ return {"nutrition_version":1,"calories":calories,"calories_burned":calories_burned,"food":food,"water":water,"stamina":stamina,"cold_minutes":cold_minutes,"warm_minutes":warm_minutes,"conditions":conditions.duplicate(true),"last_damage":last_damage,"death_reason":death_reason}
 func import_state(data:Dictionary) -> void:
  food=bounded(data.get("food",85),0,100);water=bounded(data.get("water",85),0,100);stamina=bounded(data.get("stamina",100),0,100)
+ if data.has("calories"):calories=bounded(data.calories,0,MAX_CALORIES)
+ calories_burned=bounded(data.get("calories_burned",0),0,1e12);calorie_rate=100.0
  cold_minutes=bounded(data.get("cold_minutes",0),0,100000);warm_minutes=bounded(data.get("warm_minutes",0),0,100000)
  conditions.clear();causes.clear()
  var saved:Variant=data.get("conditions",{})

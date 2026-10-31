@@ -75,6 +75,13 @@ func run() -> void:
  check(s.use_supply(slot) and s.body.water==45 and s.Items.count(p.inventory_slots,"water")==0,"drinking consumes exactly one portion atomically")
  slot=add("ration");s.body.food=20;check(s.use_supply(slot) and s.body.food==65,"ration restores nutrition")
  slot=add("berries");check(s.use_supply(slot) and s.body.food==77,"edible berries restore nutrition")
+ check(s.body.calories==1925,"ration and berries use canonical kcal through real world consumption")
+ s.ui.refresh();check(s.ui.calorie_value.text.contains("1925"),"HUD displays actual calorie reserve")
+ var saved_food:float=s.body.food
+ s.body.calories=2490;slot=add("ration")
+ check(s.use_supply(slot) and s.body.calories==2500,"near-full reserve caps whole ration without overflow")
+ slot=add("ration");check(not s.use_supply(slot) and s.Items.count(p.inventory_slots,"ration")==1,"full reserve refuses ration without consuming inventory")
+ clear_items();s.body.food=saved_food
  slot=add("bandage");check(not s.use_supply(slot) and s.Items.count(p.inventory_slots,"bandage")==1,"bandage is not wasted without bleeding")
  s.body.conditions.bleeding={"remaining":-1};var hp:float=s.health;check(s.use_supply(slot) and not s.body.conditions.has("bleeding") and s.health==hp,"bandage removes bleeding without instant healing")
  slot=add("compress");s.body.conditions.sprain={"remaining":100};check(s.use_supply(slot) and not s.body.conditions.has("sprain"),"compress treats sprain")

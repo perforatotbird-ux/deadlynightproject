@@ -58,6 +58,7 @@ var drop_amount:SpinBox
 var belt_buttons:Array[Button]=[]
 var item_empty:Label
 var condition_temperature:Label
+var condition_calories:Label
 var condition_info:Label
 var condition_values:Dictionary={}
 var supply_select:OptionButton
@@ -454,12 +455,13 @@ func refresh_inventory() -> void:
  if item.get("type")=="firewood" and is_instance_valid(player.survival):player._inv_details_stats.text+="\nГорение: %d мин за поленце" % int(player.survival.Fire.FUEL_SECONDS.get(item.get("species","birch"),1800)/60)
  elif item.get("type")=="brush":player._inv_details_stats.text+="\nГорение: 5 мин за единицу"
  player._inv_details_desc.text=item.get("description","");drop_amount.max_value=maxi(1,count)
- application.text="ПРИМЕНЕНИЕ\n"+{"log":"Расколите во вкладке «Крафт», чтобы получить три поленца.","firewood":"Топливо для костра. Можно закрепить на поясе.","brush":"Растопка, топливо и материал для набора костра.","camp_kit":"Разместите на подходящей земле в лесу.","stone":"Материал для каменного кольца костра.","flint":"Розжиг костра вместе с пиритом. Не расходуется.","pyrite":"Розжиг костра вместе с кремнем. Не расходуется.","water":"Восстанавливает воду на 35 пунктов.","raw_water":"Кипятите у горящего костра, чтобы получить безопасную воду.","ration":"Восстанавливает питание на 45 пунктов.","berries":"Восстанавливают питание на 12 пунктов.","bandage":"Останавливает кровотечение.","compress":"Снимает травму ноги."}.get(item.get("type",""),item.get("description",""))
+ application.text="ПРИМЕНЕНИЕ\n"+{"log":"Расколите во вкладке «Крафт», чтобы получить три поленца.","firewood":"Топливо для костра. Можно закрепить на поясе.","brush":"Растопка, топливо и материал для набора костра.","camp_kit":"Разместите на подходящей земле в лесу.","stone":"Материал для каменного кольца костра.","flint":"Розжиг костра вместе с пиритом. Не расходуется.","pyrite":"Розжиг костра вместе с кремнем. Не расходуется.","water":"Восстанавливает воду на 35 пунктов.","raw_water":"Кипятите у горящего костра, чтобы получить безопасную воду.","ration":"1125 ккал на порцию.","berries":"300 ккал на порцию.","bandage":"Останавливает кровотечение.","compress":"Снимает травму ноги."}.get(item.get("type",""),item.get("description",""))
  var plant_id:=Plants.item_species(str(item.get("type","")))
  if plant_id!="" and is_instance_valid(player.survival):
   player._inv_details_category.text="ПОЛЕВОЙ СБОР / "+("ПРИГОТОВЛЕН" if str(item.type).begins_with("cooked_") else "СЫРОЙ")
   player._inv_details_desc.text=player.survival.vegetation.journal_text(plant_id)
   application.text="ПРИМЕНЕНИЕ\n"+("Приготовить древесный чай: 1 гриб + 0,5 л безопасной воды у огня." if plant_id=="stump_fan" else "Съесть или приготовить у огня. Свойства вида — во вкладке «Растения».")
+ if is_instance_valid(player.survival) and player.survival.Items.calories_for(str(item.get("type","")))>0:application.text+="\nЭнергия: %.0f ккал/порция · %.0f ккал/кг. Порция съедается целиком; избыток не запасается." % [player.survival.Items.calories_for(str(item.type)),player.survival.Items.calories_for(str(item.type))/maxf(0.001,float(item.get("unit_weight",0)))]
 func _slot_weight(index:int) -> float:
  var item=player.inventory_slots[index];return 0 if item==null else float(item.get("unit_weight",0))*int(item.get("count",0))
 func _refresh_recipe() -> void:
@@ -502,7 +504,7 @@ func refresh_actions() -> void:
  if not valid:use_reason="Недоступно вне игрового мира."
  elif busy:use_reason="Завершите текущее действие."
  elif type=="water" and s.body.water>=100:use_reason="Запас воды уже полон."
- elif type in ["ration","berries"] and s.body.food>=100:use_reason="Запас питания уже полон."
+ elif type!="wood_tea" and s.Items.calories_for(type)>0 and s.body.food>=100:use_reason="Запас калорий уже полон."
  elif type=="bandage" and not s.body.conditions.has("bleeding"):use_reason="Нет кровотечения."
  elif type=="compress" and not s.body.conditions.has("sprain"):use_reason="Нет травмы ноги."
  elif type=="antitoxin" and not s.body.conditions.has("poison"):use_reason="Нет отравления."
@@ -568,7 +570,7 @@ func refresh_actions() -> void:
  var wake:=fposmod(s.hour()+remaining,24)
  sleep_value.text="%d ч · пробуждение около %02d:%02d" % [hours,int(wake),int(wake*60)%60]
  var reason:String=s.rest_block_reason()
- sleep_info.text="Отдых %.0f%% · тепло %.0f%% · здоровье %.0f%%\nВода %.0f%% → ~%.0f%% · питание %.0f%% → ~%.0f%%\n%s" % [s.energy,s.warmth,s.health,s.body.water,maxf(0,s.body.water-hours*3.6),s.body.food,maxf(0,s.body.food-hours*2.1),reason if reason!="" else "Потребности расходуются. Сон прервётся при опасном состоянии."]
+ sleep_info.text="Отдых %.0f%% · тепло %.0f%% · здоровье %.0f%%\nВода %.0f%% → ~%.0f%% · калории %.0f → ~%.0f ккал\nСон: ~%.0f ккал/ч (при текущем тепле)\n%s" % [s.energy,s.warmth,s.health,s.body.water,maxf(0,s.body.water-hours*3.6),s.body.calories,maxf(0,s.body.calories-hours*s.body.burn_rate(true,false,false,false,0,s.warmth)),s.body.burn_rate(true,false,false,false,0,s.warmth),reason if reason!="" else "Прогноз приблизительный: тепло может измениться. Сон прервётся при опасном состоянии."]
  rest.text="Спать %d ч" % hours;rest.disabled=busy or reason!=""
  sleep_hours.editable=not busy
  status.text=s.message if s.message_time>0 else "Мир не на паузе. Tab / Esc закрывает рюкзак и отменяет действие."
@@ -613,8 +615,9 @@ func _build_condition() -> void:
  heading(overview,"Состояние персонажа",24)
  condition_temperature=label(overview,"",18)
  condition_temperature.name="AirTemperature"
+ condition_calories=label(overview,"",14)
  for id in ["health","warmth","water","food","energy","stamina","wetness"]:
-  var line:=row(overview,8);var text:=label(line,{"health":"Здоровье","warmth":"Тепло","water":"Вода","food":"Питание","energy":"Отдых","stamina":"Выносливость","wetness":"Промокание"}[id],14)
+  var line:=row(overview,8);var text:=label(line,{"health":"Здоровье","warmth":"Тепло","water":"Вода","food":"Калории","energy":"Отдых","stamina":"Выносливость","wetness":"Промокание"}[id],14)
   var bar:=ProgressBar.new();bar.custom_minimum_size=Vector2(90,20);bar.size_flags_horizontal=Control.SIZE_EXPAND_FILL;bar.show_percentage=false;line.add_child(bar);var value_text:=label(line,"100%",14);value_text.size_flags_horizontal=0;value_text.custom_minimum_size.x=55;value_text.autowrap_mode=TextServer.AUTOWRAP_OFF;value_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_RIGHT;condition_values[id]={"label":text,"bar":bar,"value":value_text}
  label(overview,"Здоровье — последствия. Выносливость возвращается после передышки; усталость требует сна. Лечение останавливает причину, а не мгновенно возвращает здоровье.",14)
  var details:=column(scroll(body_row),12);heading(details,"Травмы и восстановление",24);condition_info=label(details,"")
@@ -625,10 +628,11 @@ func _build_condition() -> void:
  label(details,"Восстановление здоровья: сон, тепло выше 45%, питание и вода, отсутствие кровотечения и переохлаждения. Травма ноги проходит за 4 игровых часа или быстрее во сне.",13)
 func _refresh_condition(s:Node) -> void:
  condition_temperature.text="Температура воздуха: %.1f °C" % s.air_temperature()
+ condition_calories.text="Запас энергии: %.0f / %.0f ккал\nРасход сейчас: %.0f ккал/игр. час" % [s.body.calories,s.body.MAX_CALORIES,s.body.calorie_rate]
  for id in condition_values:
   var value:float=s.body.get(id) if id in ["water","food","stamina"] else s.get(id)
   condition_values[id].bar.value=value
-  condition_values[id].value.text="%.0f%%" % value
+  condition_values[id].value.text=("%.0f ккал" % s.body.calories) if id=="food" else ("%.0f%%" % value)
   var danger:bool=value>70 if id=="wetness" else value<20
   condition_values[id].value.add_theme_color_override("font_color",Color("f0a78e") if danger else Color("eee5d3"))
  condition_info.text=("Причина гибели: "+s.body.death_reason+"\n" if s.health<=0 else "")+s.body.describe()+"\n\n"+s.thermal_description()

@@ -95,6 +95,11 @@ func run():
  check(s.body.conditions.has("sprain") and not s.body.can_sprint(100),"tea cannot remove injury or sprint restriction")
  s.player.inventory_slots.fill(null);Items.transact(s.player,{},[Items.item("antitoxin")]);s.body.add_poison("severe")
  check(s.foraging.use(0) and not s.body.conditions.has("poison"),"available medicine removes delayed or active toxic burden")
+ s.player.inventory_slots.fill(null);Items.transact(s.player,{},[Items.item("krasnitsa")]);s.body.food=100
+ check(not s.foraging.use(0) and Items.count(s.player.inventory_slots,"krasnitsa")==1,"full calorie reserve refuses edible plant without losing it")
+ s.body.calories=1000;check(s.foraging.use(0) and s.body.calories==1125,"plant consumption uses canonical calorie amount")
+ s.player.inventory_slots.fill(null);Items.transact(s.player,{},[Items.item("wood_tea")]);s.body.calories=1000
+ check(s.foraging.use(0) and s.body.calories==1020,"tea supplies 20 kcal alongside water and stamina")
  var recipe:=s.foraging.cook_recipe("wood_tea",2)
  check(recipe.costs=={"stump_fan":2,"water":2} and recipe.minutes==10 and recipe.outputs[0].count==2,"tea recipe uses real fungus and safe water with five minutes each")
  check(s.foraging.cook_recipe("wood_tea",0).is_empty() and s.foraging.cook_recipe("water",1).is_empty(),"invalid amounts and recipes rejected")

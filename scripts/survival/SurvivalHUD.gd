@@ -5,6 +5,7 @@ const MAX_ALERTS:=12
 var vitals:VBoxContainer
 var health_bar:ProgressBar
 var health_value:Label
+var calorie_value:Label
 var alert_labels:Array[Label]=[]
 var active_alerts:Array=[]
 var session: Node
@@ -28,6 +29,7 @@ func _build_vitals()->void:
  health_bar=ProgressBar.new();health_bar.name="HealthBar";health_bar.show_percentage=false;health_bar.custom_minimum_size.y=8;health_bar.mouse_filter=Control.MOUSE_FILTER_IGNORE
  var bg:=StyleBoxFlat.new();bg.bg_color=Color(.04,.07,.06,.8);bg.corner_radius_top_left=3;bg.corner_radius_top_right=3;bg.corner_radius_bottom_left=3;bg.corner_radius_bottom_right=3;health_bar.add_theme_stylebox_override("background",bg)
  var fill:=bg.duplicate();fill.bg_color=Color("90bda3");health_bar.add_theme_stylebox_override("fill",fill);vitals.add_child(health_bar)
+ calorie_value=Label.new();calorie_value.add_theme_font_size_override("font_size",14);vitals.add_child(calorie_value)
  for i in MAX_ALERTS:
   var label:=Label.new();label.name="Status%d"%i;label.mouse_filter=Control.MOUSE_FILTER_IGNORE;label.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;label.add_theme_font_size_override("font_size",14);label.add_theme_color_override("font_shadow_color",Color(0,0,0,.95));label.add_theme_constant_override("shadow_offset_x",1);label.add_theme_constant_override("shadow_offset_y",1);label.hide();vitals.add_child(label);alert_labels.append(label)
  vitals.resized.connect(_place_vitals)
@@ -62,6 +64,7 @@ func _refresh_vitals(s:Node)->void:
  vitals.visible=s.player._hud_enabled and not s.player._is_inventory_open and s.player._is_active
  health_bar.value=clampf(s.health,0,100)
  health_value.text="ЗДОРОВЬЕ  %.0f / 100" % s.health
+ calorie_value.text="КАЛОРИИ  %.0f / %.0f · −%.0f ккал/ч" % [s.body.calories,s.body.MAX_CALORIES,s.body.calorie_rate]
  var color:=Color("e98e7c") if s.health<=25 else Color("90bda3")
  health_value.add_theme_color_override("font_color",color)
  var fill:StyleBoxFlat=health_bar.get_theme_stylebox("fill");fill.bg_color=color

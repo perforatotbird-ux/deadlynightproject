@@ -261,10 +261,11 @@ func _update_body(world_dt: float, resting: bool) -> void:
  var thermal:=thermal_status(world_dt)
  wetness=float(thermal.wetness)
  warmth=clampf(warmth+float(thermal.warmth_delta),0,100)
- var sprinting:bool=player.velocity.length()>5
+ var moving:bool=Vector2(player.velocity.x,player.velocity.z).length()>0.2
+ var sprinting:bool=moving and (player._is_action_down("sprint") or player._is_sprint_jumping) and not player._is_crouching and body.can_sprint(energy)
  var effort:=0.09+(0.10 if sprinting else 0.0)+(0.08 if job.get("kind")=="split" or player._is_lmb_held else 0.0)
  if not body.freeze_needs:energy=clampf(energy+minutes*(0.5 if resting and warmth>=20 else -effort),0,100)
- health=clampf(health+body.tick(minutes,resting,warmth,energy,sprinting),0,100)
+ health=clampf(health+body.tick(minutes,resting,warmth,energy,sprinting,moving,job.get("kind")=="split" or player._is_lmb_held,player.backpack_weight/maxf(1,player.max_backpack_kg)),0,100)
  var warning:=""
  if body.water<15:warning="Мало воды. Пейте безопасную воду; сырую кипятите у костра."
  elif body.food<15:warning="Вы голодны. Найдите еду или соберите съедобные ягоды."
@@ -630,8 +631,8 @@ func use_supply(slot:int,confirmed_unknown:bool=false) -> bool:
  if not Items.transact(player,{item.id:1},[],slot):return false
  match kind:
   "water":body.water=minf(100,body.water+Items.WATER_RESTORE)
-  "ration":body.food=minf(100,body.food+45)
-  "berries":body.food=minf(100,body.food+12)
+  "ration":body.add_calories(Items.calories_for(kind))
+  "berries":body.add_calories(Items.calories_for(kind))
   "bandage":body.conditions.erase("bleeding")
   "compress":body.conditions.erase("sprain")
  notify("Использовано: "+str(item.name));ui.refresh();return true

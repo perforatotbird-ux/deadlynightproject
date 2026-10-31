@@ -53,13 +53,15 @@ func use(slot:int,confirmed:bool=false) -> bool:
  if id=="wood_tea":
   if not Items.transact(session.player,{item.id:1},[],slot):return false
   session.body.stamina=minf(100,session.body.stamina+25);session.body.water=minf(100,session.body.water+Items.WATER_RESTORE)
+  session.body.add_calories(Items.calories_for(id))
   session.body.refresh_winded();session.notify("Древесный чай: +25 выносливости. Сон и ограничения бега не изменены.");return true
  if species=="":return false
  var d:=Catalog.species(species);var cooked:=id.begins_with("cooked_")
  if d.family=="tea":session.notify("Используется для приготовления чая у костра");return false
  if d.family=="mushroom" and not session.vegetation.known.has(species) and not confirmed:session.notify("Для неизвестного гриба требуется явное подтверждение");return false
+ if Items.calories_for(id)>0 and session.body.food>=100:session.notify("Запас калорий полон");return false
  if not Items.transact(session.player,{item.id:1},[],slot):return false
- session.body.food=minf(100,session.body.food+float(d.get("cooked_food",0) if cooked else d.get("food",0)))
+ session.body.add_calories(Items.calories_for(id))
  session.body.water=minf(100,session.body.water+float(d.get("water",0)))
  var toxin:=str(d.get("toxin",d.get("raw_toxin","") if not cooked else ""))
  if toxin!="":session.body.add_poison(toxin)
