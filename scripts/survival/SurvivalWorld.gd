@@ -39,6 +39,7 @@ var dropped: Array = []
 var fire_nodes: Array = []
 var shelter: Node3D
 var ui: CanvasLayer
+var woodland:Node3D
 var atmosphere: Node3D
 var job: Dictionary = {}
 var rng := RandomNumberGenerator.new()
@@ -113,6 +114,7 @@ func _ready() -> void:
  rain_field=preload("res://scripts/weather/RainField.gd").new();rain_field.session=self;add_child(rain_field)
  sky_events=preload("res://scripts/weather/SkyEvents.gd").new();sky_events.session=self;sky_events.sky=sky_renderer;add_child(sky_events)
  atmosphere=preload("res://scripts/atmosphere/AtmosphereDirector.gd").new();atmosphere.session=self;add_child(atmosphere)
+ woodland=preload("res://scripts/atmosphere/WoodlandLife.gd").new();woodland.session=self;add_child(woodland)
  if not travel.is_empty():
   var payload:=travel;travel={}
   player.inventory_slots=payload["inventory"].duplicate(true)
@@ -153,6 +155,7 @@ func _process(delta: float) -> void:
  sky_events.advance(delta,weather_visual,sleeping)
  rain_field.update_field(delta,weather_visual,int(load("res://scripts/core/SettingsManager.gd").get_instance().get_setting("graphics","rain_quality",1)))
  atmosphere.advance(delta,sleeping)
+ woodland.advance(delta,weather_visual,sleeping)
  _visual_tick-=delta
  if _visual_tick<=0:
   _visual_tick=0.2;_update_lighting();ui.refresh()
@@ -585,7 +588,7 @@ func _update_lighting() -> void:
  if _rain_audio:_rain_audio.volume_db=lerpf(-60,-15,weather_visual.rain)+(-12 if covered() else 0)+weather_gain
  if _wind_audio:_wind_audio.volume_db=lerpf(-44,-21,maxf(day*0.5,weather_visual.wind))+weather_gain
  if _gust_audio:_gust_audio.volume_db=lerpf(-55,-19,weather_visual.wind)+weather_gain+(-10 if covered() else 0)
- if _night_audio:_night_audio.volume_db=lerpf(-20,-65,day)
+ if _night_audio:_night_audio.volume_db=lerpf(-20,-65,day)-(10*woodland.quiet_gain if is_instance_valid(woodland) else 0)
  var phase:="ночь" if day<0.1 else ("сумерки" if hour()>18 else "день")
  if phase!=_last_phase:
   if _last_phase!="":notify("Наступает "+phase+". Подготовьте свет и укрытие.")
