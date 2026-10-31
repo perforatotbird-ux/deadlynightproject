@@ -1,0 +1,93 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+PASS: real process advances authoritative world clock
+PASS: controller deactivation no longer hides time or stops simulation
+PASS: distributed resources at (-900.0, 26.0, 1100.0) count=98
+PASS: distributed resources at (-400.0, 100.0, -400.0) count=99
+PASS: distributed resources at (-1400.0, 300.0, 600.0) count=99
+PASS: distributed resources at (1100.0, 900.0, -1180.0) count=41
+PASS: natural stone is reached by actual interaction ray
+PASS: real resource pickup stores finite ID
+PASS: collecting a resource does not shift RNG positions of remaining items
+PASS: distance streaming restores drops but never duplicates collected resources
+PASS: being inside or using a door cannot authorize sleep
+PASS: birch log splitting starts inside real cabin
+PASS: split produces three authoritative pieces
+PASS: disabled sleep point cannot open sleep UI
+PASS: actual bed interaction authorizes contextual sleep panel
+PASS: sleep is not a general Tab page
+PASS: bed starts one hour rest
+PASS: bed rest advances same clock and restores fatigue
+PASS: moving away revokes sleep lease and closes UI
+PASS: exiting cabin preserves HUD instance and advancing clock
+PASS: cabin split/exit preserves all exterior item identities
+PASS: Tab opens live character state first
+PASS: all actual survival values including wetness live in Tab
+PASS: Escape closes Tab before pause
+PASS: Escape opens true pause
+PASS: true pause stops world time
+PASS: Escape resumes true pause
+PASS: clock resumes after pause
+PASS: campfire remains an ordinary shared catalog recipe
+PASS: shared recipe creates camp kit
+PASS: recipe debits exact resources once
+PASS: general journal contains no campfire or sleep tabs
+PASS: initial disk save succeeds
+PASS: write failure open returns false
+PASS: write failure open leaves old slot intact
+PASS: write failure write returns false
+PASS: write failure write leaves old slot intact
+PASS: write failure rename returns false
+PASS: write failure rename leaves old slot intact
+PASS: replacement succeeds after failure
+PASS: previous generation is readable backup
+ERROR: Parse JSON failed. Error at line 0: Expected key
+   at: parse_string (core/io/json.cpp:629)
+   GDScript backtrace (most recent call first):
+       [0] _read_save_file (res://scripts/core/SaveManager.gd:300)
+       [1] run (res://tests/test_world_bugfixes.gd:115)
+PASS: truncated current file recovers previous valid generation
+[SaveManager] Save already in progress. Skipping.
+PASS: reentrant save rejected
+PASS: invalid slot paths are rejected
+[SaveManager] Deleted save slot: bugfix_atomic
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+PASS: clean new world 2 has natural resources without inherited collected IDs
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+PASS: clean new world 3 has natural resources without inherited collected IDs
+WORLD BUGFIX SUMMARY: 46 PASS, 0 FAIL

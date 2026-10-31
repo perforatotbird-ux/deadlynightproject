@@ -1,0 +1,38 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+PASS: birch: no second trunk/halo
+PASS: birch: instance-local real mesh damage
+FAIL: birch: exposed wood uses vertex blend
+PASS: birch: local elliptical cavity
+PASS: birch: opposite side unchanged
+PASS: birch: repeat strike deepens same cut
+PASS: birch: cached bark collider retained; axe impact analytically projected
+TIME birch: two strikes 85 ms
+PASS: spruce: no second trunk/halo
+PASS: spruce: instance-local real mesh damage
+FAIL: spruce: exposed wood uses vertex blend
+PASS: spruce: local elliptical cavity
+PASS: spruce: opposite side unchanged
+PASS: spruce: repeat strike deepens same cut
+PASS: spruce: cached bark collider retained; axe impact analytically projected
+TIME spruce: two strikes 89 ms
+PASS: beech: no second trunk/halo
+PASS: beech: instance-local real mesh damage
+FAIL: beech: exposed wood uses vertex blend
+PASS: beech: local elliptical cavity
+PASS: beech: opposite side unchanged
+PASS: beech: repeat strike deepens same cut
+PASS: beech: cached bark collider retained; axe impact analytically projected
+TIME beech: two strikes 103 ms
+PASS: oak: no second trunk/halo
+PASS: oak: instance-local real mesh damage
+FAIL: oak: exposed wood uses vertex blend
+PASS: oak: local elliptical cavity
+PASS: oak: opposite side unchanged
+PASS: oak: repeat strike deepens same cut
+PASS: oak: cached bark collider retained; axe impact analytically projected
+TIME oak: two strikes 103 ms
+WARNING: 6 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)

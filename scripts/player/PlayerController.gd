@@ -297,7 +297,7 @@ func _setup_camera_and_viewmodel() -> void:
 	_axe_anim_pivot.scale = Vector3(0.75, 0.75, 0.75)
 	_axe_sway_pivot.add_child(_axe_anim_pivot)
 	
-	var axe_path = "res://assets/models/props/axe_iron.glb"
+	var axe_path = preload("res://scripts/core/ExternalModels.gd").axe_path()
 	if ResourceLoader.exists(axe_path):
 		var axe_scene = load(axe_path)
 		if axe_scene:

@@ -235,9 +235,9 @@ func _update_mesh_stage(stage: int) -> void:
 		_visual_node.hide()
 		_visual_node.queue_free()
 		
-	var path = "res://assets/models/trees/tree_%s_stage_%d.glb" % [species, stage]
-	if not ResourceLoader.exists(path):
-		path = "res://assets/models/trees/tree_%s.glb" % species
+	# Damage/fracture is cut from the same authored model as the distant forest.
+	# Legacy stage silhouettes must not reappear after activation or save reload.
+	var path = preload("res://scripts/core/ExternalModels.gd").tree_path(species)
 		
 	if ResourceLoader.exists(path):
 		var scene = load(path)

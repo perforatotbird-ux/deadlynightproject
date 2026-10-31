@@ -1,0 +1,37 @@
+{
+  "author": "Quaternius",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source_pages": [
+    "https://quaternius.com/packs/ultimatenature.html",
+    "https://quaternius.com/packs/survival.html"
+  ],
+  "files": [
+    {
+      "file": "source/BirchTree_1.blend",
+      "download_url": "https://drive.google.com/uc?export=download&id=1T0ylZ4MdV191RLgJ8x12CXJvaOyHNLEN",
+      "sha256": "b3305802cd2211a2ff44320af9d8ac67d02618a79bd07992d8769d17ba6cb703"
+    },
+    {
+      "file": "source/PineTree_1.blend",
+      "download_url": "https://drive.google.com/uc?export=download&id=1c5vLMiTeN59-9kFmSTKuyhLXwUJBnzf0",
+      "sha256": "624f6ce21abafe627a6e5526e9508f0d496370e86be961be62831fe2bc17cbb8"
+    },
+    {
+      "file": "source/CommonTree_3.blend",
+      "download_url": "https://drive.google.com/uc?export=download&id=1g2Ms77FxDaqsKz9pB6s2gOTSp0ugpV0B",
+      "sha256": "f3763c64720d5f1af27522d4ba2365b7e7d375d774a02e1d6f90b0b460e80b67"
+    },
+    {
+      "file": "source/CommonTree_1.blend",
+      "download_url": "https://drive.google.com/uc?export=download&id=1gTeHYxmHtKUFx_UR6XB-O5Lgg_AXF1NW",
+      "sha256": "8aefc720ef688a30b995437538acf4466e1481062fa92ba05b58acbeea6147d2"
+    },
+    {
+      "file": "source/Axe.blend",
+      "download_url": "https://drive.google.com/uc?export=download&id=1wXReycG0V3pbOS0LP94WwfWTevahdqFi",
+      "sha256": "84820feb20b5a9891449f0249cf4b594d865af7e3dbd02db99c2f86b7b082313"
+    }
+  ],
+  "adaptations": "Baked world transforms, root at ground / handle heel, gameplay scale, merged single mesh, named bark surfaces, PBR materials, minor palette tuning; no changes to hits, loot, controls or save formats. The lower birch stem is recentered per height to preserve radial carving; original topology retained."
+}

@@ -1,0 +1,24 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+PASS: two hands attached to grip
+PASS: both Blender-authored anatomical hands imported
+PASS: continuous model mesh replaces runtime primitive fingers
+PASS: forearm attached to wrist, not handle centre
+PASS: all swing phases play at exactly half speed
+PASS: wind-up from right shoulder
+PASS: wind-up does not apply damage early
+PASS: half speed: no contact before 0.44 seconds
+PASS: one contact callback per swing
+PASS: player does not duplicate tree impact sound
+PASS: recovery and cooldown complete
+PASS: tool switch cancels pending impact
+PASS: arms hidden with unequipped axe
+PASS: pause cancels pending swing
+PASS: one fixed impact sample
+PASS: 256 splinters/sawdust particles per hit
+PASS: both particle bursts emit at contact
+WARNING: 2 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)

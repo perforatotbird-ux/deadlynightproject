@@ -1,0 +1,113 @@
+[
+  {
+    "model": "tree_birch",
+    "vertices": 866,
+    "triangles": 1704,
+    "blender_bounds": [
+      [
+        -2.9053401947021484,
+        -4.867939472198486,
+        0.0
+      ],
+      [
+        3.556648015975952,
+        4.5476298332214355,
+        18.0
+      ]
+    ],
+    "materials": [
+      "M_Bark_birch",
+      "M_Bark_birch_markings",
+      "M_Foliage_birch_green",
+      "M_Foliage_birch_darkgreen"
+    ]
+  },
+  {
+    "model": "tree_spruce",
+    "vertices": 972,
+    "triangles": 1920,
+    "blender_bounds": [
+      [
+        -2.011521577835083,
+        -2.1949172019958496,
+        0.0
+      ],
+      [
+        2.2581636905670166,
+        1.767448902130127,
+        24.0
+      ]
+    ],
+    "materials": [
+      "M_Bark_spruce",
+      "M_Foliage_spruce_green",
+      "M_Foliage_spruce_darkgreen"
+    ]
+  },
+  {
+    "model": "tree_beech",
+    "vertices": 798,
+    "triangles": 1584,
+    "blender_bounds": [
+      [
+        -4.055304527282715,
+        -4.432094097137451,
+        0.0
+      ],
+      [
+        3.2848126888275146,
+        4.557840347290039,
+        24.0
+      ]
+    ],
+    "materials": [
+      "M_Bark_beech",
+      "M_Foliage_beech_green",
+      "M_Foliage_beech_darkgreen"
+    ]
+  },
+  {
+    "model": "tree_oak",
+    "vertices": 1450,
+    "triangles": 2888,
+    "blender_bounds": [
+      [
+        -6.239553928375244,
+        -10.838851928710938,
+        0.0
+      ],
+      [
+        6.645007610321045,
+        8.075114250183105,
+        20.0
+      ]
+    ],
+    "materials": [
+      "M_Bark_oak",
+      "M_Foliage_oak_green",
+      "M_Foliage_oak_darkgreen"
+    ]
+  },
+  {
+    "model": "axe_quaternius",
+    "vertices": 122,
+    "triangles": 236,
+    "blender_bounds": [
+      [
+        -0.01980467326939106,
+        -0.08367861807346344,
+        0.0
+      ],
+      [
+        0.01980467326939106,
+        0.17914168536663055,
+        0.6779999732971191
+      ]
+    ],
+    "materials": [
+      "M_Axe_Handle_Quaternius",
+      "M_Axe_Iron_Quaternius",
+      "M_Axe_PaintedHead_Quaternius"
+    ]
+  }
+]

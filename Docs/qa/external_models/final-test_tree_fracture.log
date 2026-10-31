@@ -1,0 +1,71 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+PASS: birch: two strikes do not destroy entire tree
+PASS: birch: asynchronous mesh applied
+PASS: birch: rounded cut retained
+PASS: birch: distributed damage does not trip global HP
+PASS: birch: sufficiently thinned section fractures
+PASS: birch: global weakest section, not last/root height
+PASS: birch: upper mesh pivots at cut
+PASS: birch: retained lower trunk has actual height
+PASS: birch: lower geometry clipped at fracture plane
+PASS: birch: upper geometry starts at fracture plane
+PASS: birch: no per-strike collision BVH rebuild
+PERF birch main_hit_us=867 worker_us=273966 upload_us=3867
+PASS: birch: hit submission below 10ms
+PASS: birch: fracture metadata serializable
+PASS: birch: JSON reload preserves real remnant height
+PASS: spruce: two strikes do not destroy entire tree
+PASS: spruce: asynchronous mesh applied
+PASS: spruce: rounded cut retained
+PASS: spruce: distributed damage does not trip global HP
+PASS: spruce: sufficiently thinned section fractures
+PASS: spruce: global weakest section, not last/root height
+PASS: spruce: upper mesh pivots at cut
+PASS: spruce: retained lower trunk has actual height
+PASS: spruce: lower geometry clipped at fracture plane
+PASS: spruce: upper geometry starts at fracture plane
+PASS: spruce: no per-strike collision BVH rebuild
+PERF spruce main_hit_us=1143 worker_us=598941 upload_us=8273
+PASS: spruce: hit submission below 10ms
+PASS: spruce: fracture metadata serializable
+PASS: spruce: JSON reload preserves real remnant height
+PASS: beech: two strikes do not destroy entire tree
+PASS: beech: asynchronous mesh applied
+PASS: beech: rounded cut retained
+PASS: beech: distributed damage does not trip global HP
+PASS: beech: sufficiently thinned section fractures
+PASS: beech: global weakest section, not last/root height
+PASS: beech: upper mesh pivots at cut
+PASS: beech: retained lower trunk has actual height
+PASS: beech: lower geometry clipped at fracture plane
+PASS: beech: upper geometry starts at fracture plane
+PASS: beech: no per-strike collision BVH rebuild
+PERF beech main_hit_us=943 worker_us=513896 upload_us=5551
+PASS: beech: hit submission below 10ms
+PASS: beech: fracture metadata serializable
+PASS: beech: JSON reload preserves real remnant height
+PASS: oak: two strikes do not destroy entire tree
+PASS: oak: asynchronous mesh applied
+PASS: oak: rounded cut retained
+PASS: oak: distributed damage does not trip global HP
+PASS: oak: sufficiently thinned section fractures
+PASS: oak: global weakest section, not last/root height
+PASS: oak: upper mesh pivots at cut
+PASS: oak: retained lower trunk has actual height
+PASS: oak: lower geometry clipped at fracture plane
+PASS: oak: upper geometry starts at fracture plane
+PASS: oak: no per-strike collision BVH rebuild
+PERF oak main_hit_us=1001 worker_us=552177 upload_us=8363
+PASS: oak: hit submission below 10ms
+PASS: oak: fracture metadata serializable
+PASS: oak: JSON reload preserves real remnant height
+PASS: fracture above 3.2m follows earlier weakest cut, not last hit at 1m
+PASS: world reload recreates saved lower trunk
+PASS: saved remnant keeps yaw and scale
+PASS: world reload keeps local cut height
+PASS: remnant restoration is deduplicated
+WARNING: 4 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)

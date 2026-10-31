@@ -1,0 +1,48 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+======================================================================
+TESTING AUTO-CHOP (HOLD LMB) & NO TREE RESPAWN (Godot 4.7.2)
+======================================================================
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+Target tree identified: ID='tree_055432', pos=(-900.0, 24.99, 1096.0), initial HP=8
+
+[TEST 1] Holding LMB down for continuous auto-chop...
+  -> PASS: player.is_lmb_held is true on mouse button press.
+  -> Holding LMB and awaiting continuous auto-chop...
+     [Auto-chop] Tree HP dropped to 7 (strike #1, elapsed 0.43s)
+     [Auto-chop] Tree HP dropped to 6 (strike #2, elapsed 1.41s)
+     [Auto-chop] Tree HP dropped to 5 (strike #3, elapsed 1.47s)
+     [Auto-chop] Tree HP dropped to 4 (strike #4, elapsed 2.38s)
+     [Auto-chop] Tree HP dropped to 3 (strike #5, elapsed 3.36s)
+     [Auto-chop] Tree HP dropped to 2 (strike #6, elapsed 4.34s)
+     [Auto-chop] Tree HP dropped to 1 (strike #7, elapsed 5.31s)
+  -> PASS: Continuous auto-chop occurred while holding LMB (7 strikes registered).
+  -> PASS: player.is_lmb_held is false after release.
+
+[TEST 2] Verifying felled tree persistence in felled_tree_ids...
+  -> PASS: Felled tree ID 'tree_055432' is persistently recorded in felled_tree_ids.
+
+[TEST 3] Verifying permanent stump presence...
+  -> PASS: Permanent stump exists at felled tree location.
+
+[TEST 4] Testing prevention of standing tree re-instantiation...
+  -> FAIL: Re-instantiated tree was NOT culled!
+
+[TEST 5] Testing WorldMap streaming with a dynamic tree...
+  -> PASS: WorldMap refused to activate dynamic tree recorded in felled_tree_ids.
+
+======================================================================
+AUTO-CHOP & NO RESPAWN TEST SUMMARY: 6 PASSED, 1 FAILED.
+======================================================================

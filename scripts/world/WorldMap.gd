@@ -39,7 +39,7 @@ func _ready() -> void:
 func _load_tree_models() -> void:
 	var species = ["birch", "spruce", "beech", "oak"]
 	for sp in species:
-		var path = "res://assets/models/trees/tree_%s.glb" % sp
+		var path = preload("res://scripts/core/ExternalModels.gd").tree_path(sp)
 		if ResourceLoader.exists(path):
 			var scene = load(path)
 			if scene:
