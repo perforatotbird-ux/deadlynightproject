@@ -88,7 +88,7 @@ func run():
  check(s.rain_intensity()>0,"wetting intensity fades out instead of vanishing on binary switch")
  s.advance(15);check(s.rain_intensity()==0,"clear weather has no lingering rain penalty after transition")
  configure(s,"clear");s.weather_model.dry_style="mist";s.ui.refresh()
- check(s.weather_description()=="туман" and "туман" in s.ui.hud.text,"HUD reports actual dry weather profile instead of always clear")
+ check(s.weather_description()=="туман" and not s.ui.context_label.visible,"actual dry weather profile remains correct without a persistent HUD strip")
  var status:String=s.thermal_description();check("игр. мин" in status and "ощущается" in status,"condition diagnostics explain temperature and actual rates")
  s.warmth=100;s.wetness=0;s.clock=12*3600;configure(s,"clear")
  check(s.thermal_description().count("+0.0%")>=2,"diagnostics respect saturated warmth and dry clothing limits")

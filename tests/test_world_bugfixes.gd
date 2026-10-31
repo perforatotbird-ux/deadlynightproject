@@ -25,7 +25,7 @@ func run():
  var sm=load("res://scripts/core/SaveManager.gd").get_instance()
  var t:float=s.clock;await create_timer(0.2).timeout;check(s.clock>t,"real process advances authoritative world clock")
  p.set_active(false);t=s.clock;await create_timer(0.2).timeout
- check(s.clock>t and s.ui.hud_panel.visible,"controller deactivation no longer hides time or stops simulation")
+ check(s.clock>t and not s.ui.context_label.visible,"controller deactivation preserves simulation without restoring the removed top strip")
  p.set_active(true);p.set_physics_process(false);s.set_process(false)
  var positions=[Vector3(-900,26,1100),Vector3(-400,100,-400),Vector3(-1400,300,600),Vector3(1100,900,-1180)]
  for pos in positions:
@@ -81,7 +81,7 @@ func run():
  p.global_position=s.shelter.to_global(Vector3(10,0.2,0));await physics_frame;await settle()
  check(not p._is_inventory_open and not s.has_sleep_access() and not s.begin_rest(),"moving away revokes sleep lease and closes UI")
  s.set_process(true);t=s.clock;await create_timer(0.15).timeout;s.set_process(false)
- check(s.get_instance_id()==instance and s.ui.get_instance_id()==hud_id and s.ui.hud_panel.visible and s.clock>t,"exiting cabin preserves HUD instance and advancing clock")
+ check(s.get_instance_id()==instance and s.ui.get_instance_id()==hud_id and not s.ui.context_label.visible and s.clock>t,"exiting cabin preserves UI instance and advancing clock without top strip")
  var retained=0
  for id in outdoor_ids:
   if s.resources.has(id) or s.picked.has(id):retained+=1

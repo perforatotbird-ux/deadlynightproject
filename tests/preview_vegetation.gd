@@ -66,7 +66,7 @@ func run():
    await create_timer(5.0).timeout;await settle(8);s.clock+=Catalog.FIRST_GROWTH;s.vegetation.advance(Catalog.FIRST_GROWTH,true);s.vegetation._update_stumps(p.global_position)
    if not s.vegetation.stump_nodes.is_empty():
     var fungus:Node3D=s.vegetation.stump_nodes.values()[0];var direction:Vector3= fungus.global_position-pos;direction.y=0;direction=direction.normalized()
-    var cam:=Camera3D.new();game.add_child(cam);cam.global_position=pos+direction*1.4+Vector3.UP*1.35;cam.look_at(pos+Vector3.UP*0.3);cam.current=true;cam.far=100;cam.fov=60;p._hud_layer.hide();s.ui.hud_panel.hide()
+    var cam:=Camera3D.new();game.add_child(cam);cam.global_position=pos+direction*1.4+Vector3.UP*1.35;cam.look_at(pos+Vector3.UP*0.3);cam.current=true;cam.far=100;cam.fov=60;p._hud_layer.hide();s.ui.hide()
     await settle();await capture("world_stump_fungi");cam.free();p._camera.current=true
  s.clock=12*3600
  s.vegetation.learn_notes()

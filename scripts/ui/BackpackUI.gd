@@ -57,6 +57,7 @@ var ignition_reason:Label
 var drop_amount:SpinBox
 var belt_buttons:Array[Button]=[]
 var item_empty:Label
+var condition_temperature:Label
 var condition_info:Label
 var condition_values:Dictionary={}
 var supply_select:OptionButton
@@ -610,6 +611,8 @@ func _build_condition() -> void:
  var health_page:=page("Состояние");var body_row:=row(health_page,20);body_row.size_flags_vertical=Control.SIZE_EXPAND_FILL
  var overview:=column(scroll(body_row),12)
  heading(overview,"Состояние персонажа",24)
+ condition_temperature=label(overview,"",18)
+ condition_temperature.name="AirTemperature"
  for id in ["health","warmth","water","food","energy","stamina","wetness"]:
   var line:=row(overview,8);var text:=label(line,{"health":"Здоровье","warmth":"Тепло","water":"Вода","food":"Питание","energy":"Отдых","stamina":"Выносливость","wetness":"Промокание"}[id],14)
   var bar:=ProgressBar.new();bar.custom_minimum_size=Vector2(90,20);bar.size_flags_horizontal=Control.SIZE_EXPAND_FILL;bar.show_percentage=false;line.add_child(bar);var value_text:=label(line,"100%",14);value_text.size_flags_horizontal=0;value_text.custom_minimum_size.x=55;value_text.autowrap_mode=TextServer.AUTOWRAP_OFF;value_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_RIGHT;condition_values[id]={"label":text,"bar":bar,"value":value_text}
@@ -621,6 +624,7 @@ func _build_condition() -> void:
  label(details,"Сон — подойдите к кровати и нажмите E. Здесь меню сна не открывается.",13)
  label(details,"Восстановление здоровья: сон, тепло выше 45%, питание и вода, отсутствие кровотечения и переохлаждения. Травма ноги проходит за 4 игровых часа или быстрее во сне.",13)
 func _refresh_condition(s:Node) -> void:
+ condition_temperature.text="Температура воздуха: %.1f °C" % s.air_temperature()
  for id in condition_values:
   var value:float=s.body.get(id) if id in ["water","food","stamina"] else s.get(id)
   condition_values[id].bar.value=value
