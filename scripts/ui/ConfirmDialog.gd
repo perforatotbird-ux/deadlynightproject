@@ -17,6 +17,8 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	add_to_group("menu_confirmation")
 	_build_ui()
+	if _minimal_pause_owner():
+		preload("res://scripts/ui/PauseTheme.gd").apply_screen(self)
 	UITheme.trap_focus(self)
 
 func setup(title: String, message: String, confirm_txt: String = "Подтвердить", cancel_txt: String = "Отмена", is_danger: bool = false) -> void:
@@ -27,7 +29,7 @@ func setup(title: String, message: String, confirm_txt: String = "Подтвер
 	if _btn_confirm:
 		_btn_confirm.text = confirm_txt
 		if is_danger:
-			_btn_confirm.add_theme_color_override("font_color", UITheme.COLOR_DANGER)
+			_btn_confirm.add_theme_color_override("font_color", preload("res://scripts/ui/PauseTheme.gd").DANGER if _minimal_pause_owner() else UITheme.COLOR_DANGER)
 	if _btn_cancel:
 		_btn_cancel.text = cancel_txt
 		_btn_cancel.grab_focus()
@@ -90,10 +92,17 @@ func _build_ui() -> void:
 	_btn_cancel.grab_focus()
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_ESCAPE:
+	if event.is_action_pressed("ui_cancel"):
+		if not (event is InputEventKey and event.echo):
 			get_viewport().set_input_as_handled()
 			_on_cancel()
+
+func _minimal_pause_owner() -> bool:
+	var node = get_parent()
+	while node != null:
+		if node.has_meta("minimal_pause_style"): return true
+		node = node.get_parent()
+	return false
 
 func set_message(message: String) -> void:
 	_message_label.text = message

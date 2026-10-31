@@ -1,0 +1,76 @@
+[
+  {
+    "suite": "audit_scripts",
+    "exit_code": 0,
+    "errors": [],
+    "summary": [
+      "SCRIPT AUDIT: 47 scripts, 0 failures"
+    ],
+    "seconds": 1.32
+  },
+  {
+    "suite": "test_minimal_pause",
+    "exit_code": 0,
+    "errors": [],
+    "summary": [
+      "MINIMAL PAUSE SUMMARY: 74 PASS, 0 FAIL"
+    ],
+    "seconds": null,
+    "source_log": "minimal-headless.log"
+  },
+  {
+    "suite": "test_menu_navigation",
+    "exit_code": 0,
+    "errors": [],
+    "summary": [
+      "MENU NAVIGATION SUMMARY: 57 PASSED, 0 FAILED"
+    ],
+    "seconds": 20.72
+  },
+  {
+    "suite": "test_main_menu_and_persistence",
+    "exit_code": 0,
+    "errors": [],
+    "summary": [
+      "TEST RUN SUMMARY: 15 PASSED, 0 FAILED",
+      "SUCCESS: ALL MAIN MENU & PERSISTENCE ACCEPTANCE TESTS PASSED (100%)"
+    ],
+    "seconds": 8.54
+  },
+  {
+    "suite": "test_first_night",
+    "exit_code": 0,
+    "errors": [],
+    "summary": [
+      "FIRST NIGHT SUMMARY: 97 PASS, 0 FAIL"
+    ],
+    "seconds": 11.74
+  },
+  {
+    "suite": "test_backpack_tabs_actions",
+    "exit_code": 0,
+    "errors": [],
+    "summary": [
+      "BACKPACK TABS SUMMARY: 30 PASS, 0 FAIL"
+    ],
+    "seconds": 6.65
+  },
+  {
+    "suite": "test_world_bugfixes",
+    "exit_code": 0,
+    "errors": [],
+    "summary": [
+      "WORLD BUGFIX SUMMARY: 46 PASS, 0 FAIL"
+    ],
+    "seconds": 28.15
+  },
+  {
+    "suite": "test_health_dev",
+    "exit_code": 0,
+    "errors": [],
+    "summary": [
+      "HEALTH DEV SUMMARY: 97 PASS, 0 FAIL"
+    ],
+    "seconds": 4.03
+  }
+]

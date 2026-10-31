@@ -29,6 +29,7 @@ func _ready() -> void:
 func _setup_fps_counter() -> void:
 	var canvas = CanvasLayer.new()
 	canvas.name = "MineFPSOverlay"
+	canvas.add_to_group("gameplay_hud")
 	canvas.layer = 120
 	add_child(canvas)
 	

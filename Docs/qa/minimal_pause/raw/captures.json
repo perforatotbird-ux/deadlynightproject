@@ -1,0 +1,72 @@
+{
+  "gameplay_restored.png": {
+    "size": [
+      1280,
+      720
+    ],
+    "sha256": "bf0c71bd990083df729c36752d21d45966349e64eb4d3a1124c2f61311e06977"
+  },
+  "pause_1280x720.png": {
+    "size": [
+      1280,
+      720
+    ],
+    "sha256": "9c9a79323c0f0a9bb4bfa64f80f1dee195f5c90ed1abbf4303de5922320bff1a"
+  },
+  "pause_1920x1080.png": {
+    "size": [
+      1920,
+      1080
+    ],
+    "sha256": "77c4d67023b9fbb00cb6ec0f222a17dfb00d7f0292a4b4b52b0efc626e921891"
+  },
+  "pause_2560x1440.png": {
+    "size": [
+      2560,
+      1440
+    ],
+    "sha256": "4e82dc0c762d2356bc2b5418565112dce185d0fd40f9b07ca03764835d9ea2d9"
+  },
+  "pause_800x600.png": {
+    "size": [
+      800,
+      600
+    ],
+    "sha256": "31bd41d3585441967af5a4f8ad4036fedbcf31b4c817b004767fe4382faed952"
+  },
+  "pause_confirm.png": {
+    "size": [
+      1280,
+      720
+    ],
+    "sha256": "022a78c063dcdcb4b3effc5c7a8a37507eb222ce734e319bf2dcee41ffdb8d89"
+  },
+  "pause_load.png": {
+    "size": [
+      1280,
+      720
+    ],
+    "sha256": "f76073c707f428983821c23d3ef6dc00c9abf6d5019086cdeca3ef776f112c92"
+  },
+  "pause_save_error.png": {
+    "size": [
+      1280,
+      720
+    ],
+    "sha256": "fc6b9523ff9006e87e891b17c95673479f82d0e78c9be743ad934f8c014a160e"
+  },
+  "pause_save_success.png": {
+    "size": [
+      1280,
+      720
+    ],
+    "sha256": "34e0d935a33cf232fb1ad20b67647e3f487dcc90bf24aef16255af55d8dbae56"
+  },
+  "pause_settings.png": {
+    "size": [
+      1280,
+      720
+    ],
+    "sha256": "ad01007f70ba4bbc7a3aa31981f5c13909727e47fa77b582aaa3048204562f51"
+  }
+}

@@ -346,6 +346,7 @@ func _setup_audio() -> void:
 func _setup_hud() -> void:
 	_hud_layer = CanvasLayer.new()
 	_hud_layer.name = "PlayerHUD"
+	_hud_layer.add_to_group("gameplay_hud")
 	_hud_layer.layer = 90
 	add_child(_hud_layer)
 	
@@ -829,10 +830,21 @@ func _input(event: InputEvent) -> void:
 		return
 		
 	if is_instance_valid(survival) and survival.health<=0:
-		if not (event is InputEventKey and event.keycode==KEY_ESCAPE):return
+		if not ((event is InputEventKey and event.keycode==KEY_ESCAPE) or (event is InputEventJoypadButton and event.button_index==JOY_BUTTON_START)):return
 	# Survival owns modal/placement input before tools and movement.
 	if is_instance_valid(survival) and survival.handle_input(event):
 		get_viewport().set_input_as_handled()
+		return
+
+	# Controller menu button uses the same real pause, not a separate overlay.
+	if event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_START:
+		get_viewport().set_input_as_handled()
+		if _is_inventory_open:
+			_toggle_inventory()
+		elif is_instance_valid(_pause_menu):
+			_is_lmb_held = false
+			_cancel_chop()
+			_pause_menu.open_pause()
 		return
 
 	# Keyboard Events (TAB toggles inventory!)
@@ -1541,7 +1553,7 @@ func _apply_player_settings() -> void:
 	if _camera:
 		_camera.fov = _base_fov
 	if _hud_layer:
-		_hud_layer.visible = _is_active and _hud_enabled
+		_hud_layer.visible = _is_active and _hud_enabled and not (is_instance_valid(_pause_menu) and _pause_menu.visible)
 
 func _event_matches_action(event: InputEventKey, action: String) -> bool:
 	return SettingsManagerScript.get_instance().event_matches_action(event, action)

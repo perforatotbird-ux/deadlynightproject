@@ -206,13 +206,17 @@ func _refresh_list() -> void:
 	for i in range(_save_data_list.size()):
 		var data = _save_data_list[i]
 		var btn = Button.new()
-		btn.custom_minimum_size = Vector2(460, 68)
+		btn.custom_minimum_size = Vector2(460, 76 if has_meta("minimal_pause_style") else 68)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		UITheme.style_button(btn)
 		
 		# Inner container for card layout
 		var card_vbox = VBoxContainer.new()
 		card_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+		card_vbox.offset_left = 16
+		card_vbox.offset_top = 8
+		card_vbox.offset_right = -16
+		card_vbox.offset_bottom = -8
 		card_vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn.add_child(card_vbox)
 		
@@ -245,7 +249,7 @@ func _refresh_list() -> void:
 		card_vbox.add_child(row2)
 		
 		var loc_lbl = Label.new()
-		loc_lbl.text = "📍 %s" % data.get("location_name", "Лес")
+		loc_lbl.text = ("%s" if has_meta("minimal_pause_style") else "📍 %s") % _display_location(data)
 		loc_lbl.add_theme_font_size_override("font_size", 11)
 		loc_lbl.add_theme_color_override("font_color", UITheme.COLOR_TEXT_MUTED)
 		loc_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -253,7 +257,7 @@ func _refresh_list() -> void:
 		row2.add_child(loc_lbl)
 		
 		var time_lbl = Label.new()
-		time_lbl.text = "🕒 %s" % data.get("datetime_str", "")
+		time_lbl.text = ("%s" if has_meta("minimal_pause_style") else "🕒 %s") % data.get("datetime_str", "")
 		time_lbl.add_theme_font_size_override("font_size", 11)
 		time_lbl.add_theme_color_override("font_color", UITheme.COLOR_TEXT_MUTED)
 		time_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -265,6 +269,9 @@ func _refresh_list() -> void:
 		_list_container.add_child(btn)
 		_save_cards.append(btn)
 		
+	if has_meta("minimal_pause_style"):
+		preload("res://scripts/ui/PauseTheme.gd").apply_screen(self)
+
 	# Select first save by default
 	if not _save_cards.is_empty():
 		_select_save_slot(0)
@@ -277,9 +284,9 @@ func _select_save_slot(idx: int) -> void:
 	for i in range(_save_cards.size()):
 		var card = _save_cards[i]
 		if i == idx:
-			card.add_theme_stylebox_override("normal", UITheme.create_button_stylebox("hover"))
+			card.add_theme_stylebox_override("normal", preload("res://scripts/ui/PauseTheme.gd").box("hover") if has_meta("minimal_pause_style") else UITheme.create_button_stylebox("hover"))
 		else:
-			card.add_theme_stylebox_override("normal", UITheme.create_button_stylebox("normal"))
+			card.add_theme_stylebox_override("normal", preload("res://scripts/ui/PauseTheme.gd").box("normal") if has_meta("minimal_pause_style") else UITheme.create_button_stylebox("normal"))
 			
 	var data = _save_data_list[idx]
 	_btn_load.disabled = false
@@ -314,8 +321,14 @@ func _select_save_slot(idx: int) -> void:
 	info_text += "• Вес рюкзака: %.1f / 25.0 кг\n" % data.get("backpack_weight", 0.0)
 	info_text += "• Предметов в инвентаре: %d шт.\n" % data.get("items_count", 0)
 	
-	_detail_info_lbl.add_theme_color_override("font_color", UITheme.COLOR_TEXT_PRIMARY)
+	if has_meta("minimal_pause_style"):
+		info_text = "%s\n%s\n\nСохранено: %s\nВ игре: %s\n\nРюкзак: %.1f / 25 кг\nПредметов: %d" % [_display_location(data), diff_ru, data.get("datetime_str", ""), playtime_str, data.get("backpack_weight", 0.0), data.get("items_count", 0)]
+	_detail_info_lbl.add_theme_color_override("font_color", preload("res://scripts/ui/PauseTheme.gd").TEXT if has_meta("minimal_pause_style") else UITheme.COLOR_TEXT_PRIMARY)
 	_detail_info_lbl.text = info_text
+
+func _display_location(data: Dictionary) -> String:
+	var value = str(data.get("location_name", "Лес"))
+	return value.replace(" (SPAWN)", "") if has_meta("minimal_pause_style") else value
 
 func _on_load_pressed() -> void:
 	if _selected_idx < 0 or _selected_idx >= _save_data_list.size():

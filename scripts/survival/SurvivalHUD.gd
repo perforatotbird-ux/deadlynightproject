@@ -4,6 +4,7 @@ var session: Node
 var hud_panel: PanelContainer
 var hud: Label
 func _ready() -> void:
+ add_to_group("gameplay_hud")
  layer=95
  hud_panel=PanelContainer.new();hud_panel.mouse_filter=Control.MOUSE_FILTER_IGNORE
  hud_panel.add_theme_stylebox_override("panel",Style.create_panel_stylebox(Color(0.035,0.055,0.05,0.88)));add_child(hud_panel)

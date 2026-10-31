@@ -28,6 +28,7 @@ func set_active(active: bool) -> void:
 func _setup_hud() -> void:
 	var canvas = CanvasLayer.new()
 	canvas.name = "FreeFlyHUD"
+	canvas.add_to_group("gameplay_hud")
 	add_child(canvas)
 	
 	var panel = PanelContainer.new()

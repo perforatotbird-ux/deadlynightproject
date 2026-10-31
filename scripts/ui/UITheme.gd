@@ -164,3 +164,18 @@ static func _collect_focusable(node: Node, result: Array[Control]) -> void:
 			result.append(node)
 	for child in node.get_children(true):
 		_collect_focusable(child, result)
+
+
+static func ensure_gamepad_navigation() -> void:
+	# Godot's default project actions here contain keyboard events only. Extend,
+	# never replace them, so native focus/navigation also works on a controller.
+	var buttons = {"ui_accept": JOY_BUTTON_A, "ui_cancel": JOY_BUTTON_B, "ui_up": JOY_BUTTON_DPAD_UP, "ui_down": JOY_BUTTON_DPAD_DOWN, "ui_left": JOY_BUTTON_DPAD_LEFT, "ui_right": JOY_BUTTON_DPAD_RIGHT}
+	for action in buttons:
+		var event = InputEventJoypadButton.new()
+		event.button_index = buttons[action]
+		if not InputMap.action_has_event(action, event): InputMap.action_add_event(action, event)
+	for action in ["ui_up", "ui_down", "ui_left", "ui_right"]:
+		var event = InputEventJoypadMotion.new()
+		event.axis = JOY_AXIS_LEFT_Y if action in ["ui_up", "ui_down"] else JOY_AXIS_LEFT_X
+		event.axis_value = -1.0 if action in ["ui_up", "ui_left"] else 1.0
+		if not InputMap.action_has_event(action, event): InputMap.action_add_event(action, event)
