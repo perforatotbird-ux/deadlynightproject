@@ -1,0 +1,378 @@
+{
+  "version": 1,
+  "art_direction": "Original AI-painted field-journal objects, matching existing Deadly Night tool art. No text, brands or third-party game assets.",
+  "size": [
+    320,
+    320
+  ],
+  "sheets": {
+    "supplies_and_botany.jpg": {
+      "size": [
+        1024,
+        1024
+      ],
+      "sha256": "e9e9083746214450e5fd214f2c1a7dae3246031a3f5101522e22b44ee28e7a52"
+    },
+    "cooked_and_navigation.jpg": {
+      "size": [
+        1200,
+        896
+      ],
+      "sha256": "0235f5677d1c9485bc6ce6004cd31057e2eb53f3daa762ee32d9e9b8f8b931c1"
+    }
+  },
+  "icons": {
+    "water": {
+      "sheet": "supplies_and_botany.jpg",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "sha256": "3169505208b84ada8fa4730c89c7d70e573cc94f38ef76807fb6bd9fc6150c2a"
+    },
+    "raw_water": {
+      "sheet": "supplies_and_botany.jpg",
+      "cell": 1,
+      "crop": [
+        256,
+        0,
+        512,
+        256
+      ],
+      "sha256": "d661eab22a7725ccb83c35711ca5c316f0362105602fba6c2931285d12443281"
+    },
+    "ration": {
+      "sheet": "supplies_and_botany.jpg",
+      "cell": 2,
+      "crop": [
+        512,
+        0,
+        768,
+        256
+      ],
+      "sha256": "d02f8f46bdcb5cc763db9fa6b1387e0a739f3178d90f0d89e49f817dff512760"
+    },
+    "berries": {
+      "sheet": "supplies_and_botany.jpg",
+      "cell": 3,
+      "crop": [
+        768,
+        0,
+        1024,
+        256
+      ],
+      "sha256": "a607782a43673adb91481a231f0b50e9c094d292689d0e5057d5c681411c16b8"
+    },
+    "bandage": {
+      "sheet": "supplies_and_botany.jpg",
+      "cell": 4,
+      "crop": [
+        0,
+        256,
+        256,
+        512
+      ],
+      "sha256": "da03f5b4e6a2e0bee688d72f53283268956f22b34a960604c8f049272bfaf109"
+    },
+    "compress": {
+      "sheet": "supplies_and_botany.jpg",
+      "cell": 5,
+      "crop": [
+        256,
+        256,
+        512,
+        512
+      ],
+      "sha256": "89b62ec52fe516b100f53153342a16476614159ff12fd8f8173fca139d9716fb"
+    },
+    "antitoxin": {
+      "sheet": "supplies_and_botany.jpg",
+      "cell": 6,
+      "crop": [
+        512,
+        256,
+        768,
+        512
+      ],
+      "sha256": "0c20e2b9a1c2372c97ecfa6cb20753074e475e69ce6abf262e6d9485688fa72d"
+    },
+    "field_notes": {
+      "sheet": "supplies_and_botany.jpg",
+      "cell": 7,
+      "crop": [
+        768,
+        256,
+        1024,
+        512
+      ],
+      "sha256": "639bbb57e84e56d137039f3d9a62263531751f73b63653910eff02faf8c69ef5"
+    },
+    "krasnitsa": {
+      "sheet": "supplies_and_botany.jpg",
+      "cell": 8,
+      "crop": [
+        0,
+        512,
+        256,
+        768
+      ],
+      "sha256": "3c309311cc17353057985863a13534b39075bbf55010be49a5355bb609ed0e6c"
+    },
+    "sizovka": {
+      "sheet": "supplies_and_botany.jpg",
+      "cell": 9,
+      "crop": [
+        256,
+        512,
+        512,
+        768
+      ],
+      "sha256": "a3d037fdebccd26e1cf2fb683504e0d713346ce1dae54bb05e57f906b5b3d369"
+    },
+    "bolotnitsa": {
+      "sheet": "supplies_and_botany.jpg",
+      "cell": 10,
+      "crop": [
+        512,
+        512,
+        768,
+        768
+      ],
+      "sha256": "7929e70b76f1a11f004f8b04a0e7363042e55adda4dc4f3cf4b318914ff68791"
+    },
+    "forest_fat": {
+      "sheet": "supplies_and_botany.jpg",
+      "cell": 11,
+      "crop": [
+        768,
+        512,
+        1024,
+        768
+      ],
+      "sha256": "c9f9093f881f2f84c6a8b2c081b10181a8893787414686cf8986f66cf86b22d3"
+    },
+    "wood_fan": {
+      "sheet": "supplies_and_botany.jpg",
+      "cell": 12,
+      "crop": [
+        0,
+        768,
+        256,
+        1024
+      ],
+      "sha256": "2b682188798467ae7f9c9159a233f7c08ce0896e14aef36d95173dec1ac02703"
+    },
+    "copper_false": {
+      "sheet": "supplies_and_botany.jpg",
+      "cell": 13,
+      "crop": [
+        256,
+        768,
+        512,
+        1024
+      ],
+      "sha256": "8037fd7480bcff87a4cc008a9f93d974c8f0d074b414adeea07665b024aac692"
+    },
+    "pale_bell": {
+      "sheet": "supplies_and_botany.jpg",
+      "cell": 14,
+      "crop": [
+        512,
+        768,
+        768,
+        1024
+      ],
+      "sha256": "0aa58bd266cf92217a224758e7e647e0851678b1f87ac8041023948c6bdd2dd4"
+    },
+    "stump_fan": {
+      "sheet": "supplies_and_botany.jpg",
+      "cell": 15,
+      "crop": [
+        768,
+        768,
+        1024,
+        1024
+      ],
+      "sha256": "2d4eb2b1c975fd8fec6b85307622d89e3d320ca7c1c72907194d35b85557bd2a"
+    },
+    "cooked_forest_fat": {
+      "sheet": "cooked_and_navigation.jpg",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        300,
+        250
+      ],
+      "sha256": "0be214f381693ff1e8b4205e660d778425f34d8d98f2940dfce074a392a0d0c0"
+    },
+    "cooked_wood_fan": {
+      "sheet": "cooked_and_navigation.jpg",
+      "cell": 1,
+      "crop": [
+        300,
+        0,
+        600,
+        250
+      ],
+      "sha256": "fed665b3419a6fbe7fd5bdb7f2f9b9967c17d8172203a6d3a878469cf522a43d"
+    },
+    "cooked_copper_false": {
+      "sheet": "cooked_and_navigation.jpg",
+      "cell": 2,
+      "crop": [
+        600,
+        0,
+        900,
+        250
+      ],
+      "sha256": "67521c6eaf4790a13a15a6ade3f434772bf4e1e6914bb4211cdb38a5a65ef32b"
+    },
+    "cooked_pale_bell": {
+      "sheet": "cooked_and_navigation.jpg",
+      "cell": 3,
+      "crop": [
+        900,
+        0,
+        1200,
+        250
+      ],
+      "sha256": "e4bed5c6875999bf2065031b3c108bedf330c64ad4f4969b92761ba80e0c9ac4"
+    },
+    "wood_tea": {
+      "sheet": "cooked_and_navigation.jpg",
+      "cell": 4,
+      "crop": [
+        0,
+        250,
+        300,
+        500
+      ],
+      "sha256": "46530ba6e09e20deab2b93f32895d4a66735b63d407bc6590c5105ccfad7939b"
+    },
+    "difficulty_explorer": {
+      "sheet": "cooked_and_navigation.jpg",
+      "cell": 5,
+      "crop": [
+        300,
+        250,
+        600,
+        500
+      ],
+      "sha256": "9d2763192ad08cf95298e51f673915568d99f58323aa4d322987bd0fb220854e"
+    },
+    "difficulty_traveler": {
+      "sheet": "cooked_and_navigation.jpg",
+      "cell": 6,
+      "crop": [
+        600,
+        250,
+        900,
+        500
+      ],
+      "sha256": "f541abc979ef743c040368f2c6da01ec35acfe0cd78c1c6cc892b2015629e0f8"
+    },
+    "difficulty_survivor": {
+      "sheet": "cooked_and_navigation.jpg",
+      "cell": 7,
+      "crop": [
+        900,
+        250,
+        1200,
+        500
+      ],
+      "sha256": "b97d02e595bed00a8c4402a80f5a0c1a0a87a568ad773532a7aed69d9b1ebd4a"
+    },
+    "difficulty_custom": {
+      "sheet": "cooked_and_navigation.jpg",
+      "cell": 8,
+      "crop": [
+        0,
+        500,
+        300,
+        705
+      ],
+      "sha256": "1f465cecaeb5a5280625c4ca4bfe9384196a37e4bdc72494dee533ff0b64dee0"
+    },
+    "category_all": {
+      "sheet": "cooked_and_navigation.jpg",
+      "cell": 9,
+      "crop": [
+        300,
+        500,
+        600,
+        705
+      ],
+      "sha256": "db31a875483e7031f3d9b97843c15c65d25765a0b6c608e9e596f6216c377013"
+    },
+    "category_resources": {
+      "sheet": "cooked_and_navigation.jpg",
+      "cell": 10,
+      "crop": [
+        600,
+        500,
+        900,
+        705
+      ],
+      "sha256": "d8ce35ba7166d32537f2e5b331f0107957b04b579020bf56a127ae99bbb198b3"
+    },
+    "category_fuel": {
+      "sheet": "cooked_and_navigation.jpg",
+      "cell": 11,
+      "crop": [
+        900,
+        500,
+        1200,
+        705
+      ],
+      "sha256": "3ef05102542ddf509030712a244c3d73bdc873c589fb0be103e58ee02120a1ad"
+    },
+    "category_equipment": {
+      "sheet": "cooked_and_navigation.jpg",
+      "cell": 12,
+      "crop": [
+        0,
+        705,
+        300,
+        896
+      ],
+      "sha256": "3d7b59b6b15f56057d6b987426e71ddf41a50326e1e17daa8028c7daec8598ac"
+    },
+    "category_food": {
+      "sheet": "cooked_and_navigation.jpg",
+      "cell": 13,
+      "crop": [
+        300,
+        705,
+        600,
+        896
+      ],
+      "sha256": "296f55486742ae534db7396af29a0b1323976484d925e99e58e6fd7aaf763b2d"
+    },
+    "category_medicine": {
+      "sheet": "cooked_and_navigation.jpg",
+      "cell": 14,
+      "crop": [
+        600,
+        705,
+        900,
+        896
+      ],
+      "sha256": "cc5de8b8d3f23c6b83e468c3d635ed394f20de8c9367f0ee3bf522f73d52a902"
+    },
+    "category_tools": {
+      "sheet": "cooked_and_navigation.jpg",
+      "cell": 15,
+      "crop": [
+        900,
+        705,
+        1200,
+        896
+      ],
+      "sha256": "bd0fb04e26bae8797bea33a8fa4f02a192fd013757767559edc9e81492c66cc6"
+    }
+  }
+}

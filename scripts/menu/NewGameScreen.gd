@@ -11,25 +11,25 @@ const DIFFICULTIES = [
 	{
 		"id": "explorer",
 		"name": "Исследователь",
-		"icon": "🌲",
+		"icon": "difficulty_explorer",
 		"desc": "Мягкий климат ранней весны. Дикие звери осторожны, ресурсы встречаются чаще, выносливость расходуется медленнее. Идеально для изучения мира."
 	},
 	{
 		"id": "traveler",
 		"name": "Путешественник",
-		"icon": "🏕️",
+		"icon": "difficulty_traveler",
 		"desc": "Сбалансированное выживание. Реалистичные погодные условия, умеренная усталость, необходимость регулярного сбора древесины и поддержания тепла."
 	},
 	{
 		"id": "survivor",
 		"name": "Выживший",
-		"icon": "❄️",
+		"icon": "difficulty_survivor",
 		"desc": "Суровое противостояние дикой природе. Быстрое наступление холода, высокий расход калорий, ценные инструменты и минимальный запас припасов."
 	},
 	{
 		"id": "custom",
 		"name": "Пользовательский",
-		"icon": "⚙️",
+		"icon": "difficulty_custom",
 		"desc": "Индивидуальная настройка сложности выживания под ваш персональный стиль игры."
 	}
 ]
@@ -133,7 +133,10 @@ func _build_ui() -> void:
 	for i in range(DIFFICULTIES.size()):
 		var d = DIFFICULTIES[i]
 		var btn = Button.new()
-		btn.text = "%s %s" % [d["icon"], d["name"]]
+		btn.text = d["name"]
+		btn.icon = preload("res://scripts/ui/JournalArt.gd").texture(d["icon"])
+		btn.expand_icon = true
+		btn.add_theme_constant_override("icon_max_width", 28)
 		btn.custom_minimum_size = Vector2(335, 42)
 		UITheme.style_button(btn)
 		var idx = i

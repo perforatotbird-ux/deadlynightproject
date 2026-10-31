@@ -137,7 +137,7 @@ func _build_inventory() -> void:
  navigation=column(scroll(body),4);navigation.get_parent().size_flags_horizontal=Control.SIZE_FILL
  label(navigation,"КАТЕГОРИИ",11).add_theme_color_override("font_color",Journal.MUTED)
  category=OptionButton.new();category.hide();navigation.add_child(category)
- var icons=["bedroll","stone","firewood_birch","camp_kit","ration","bandage","axe"]
+ var icons=["category_all","category_resources","category_fuel","category_equipment","category_food","category_medicine","category_tools"]
  for i in CATEGORY_NAMES.size():
   category.add_item(CATEGORY_NAMES[i]);var index:int=i
   var nav:=button(navigation,"category_%d" % i,CATEGORY_NAMES[i],func():category.select(index);_change_category())

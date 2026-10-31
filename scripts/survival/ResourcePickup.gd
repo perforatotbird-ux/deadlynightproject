@@ -15,12 +15,12 @@ func _ready() -> void:
   var mesh:=MeshInstance3D.new();mesh.mesh=preload("res://scripts/vegetation/VegetationVisuals.gd").mesh(str(item_data.plant_species));add_child(mesh)
  elif item_data.get("type") in ["antitoxin","field_notes","wood_tea"]:
   var mesh:=MeshInstance3D.new();var box:=BoxMesh.new();box.size=Vector3(0.22,0.12,0.17);mesh.mesh=box;mesh.position.y=0.08;mat.albedo_color=Color("c7c3a4");mesh.material_override=mat;add_child(mesh)
-  var icon:=Sprite3D.new();icon.texture=load("res://assets/ui/field_journal/icons/"+str(item_data.type)+".svg");icon.pixel_size=0.0022;icon.billboard=BaseMaterial3D.BILLBOARD_ENABLED;icon.position.y=0.32;add_child(icon)
+  var icon:=Sprite3D.new();icon.texture=preload("res://scripts/ui/JournalArt.gd").texture(str(item_data.type));icon.pixel_size=0.28/maxf(1,icon.texture.get_width()) if icon.texture!=null else 0.0022;icon.billboard=BaseMaterial3D.BILLBOARD_ENABLED;icon.position.y=0.32;add_child(icon)
  elif item_data.get("type") in ["water","raw_water","ration","bandage","compress","berries"]:
   var mesh:=MeshInstance3D.new();var box:=BoxMesh.new();box.size=Vector3(0.24,0.18,0.18);mesh.mesh=box;mesh.position.y=0.10
   mat.albedo_color={"water":Color("729a9a"),"raw_water":Color("777953"),"ration":Color("a48c55"),"bandage":Color("d6cfb3"),"compress":Color("b2b59a"),"berries":Color("754651")}[item_data.type]
   mesh.material_override=mat;add_child(mesh)
-  var icon:=Sprite3D.new();icon.texture=load("res://assets/ui/field_journal/icons/"+str(item_data.type)+".svg");icon.pixel_size=0.0022;icon.billboard=BaseMaterial3D.BILLBOARD_ENABLED;icon.position.y=0.4;add_child(icon)
+  var icon:=Sprite3D.new();icon.texture=preload("res://scripts/ui/JournalArt.gd").texture(str(item_data.type));icon.pixel_size=0.28/maxf(1,icon.texture.get_width()) if icon.texture!=null else 0.0022;icon.billboard=BaseMaterial3D.BILLBOARD_ENABLED;icon.position.y=0.4;add_child(icon)
  else:
   var mesh := MeshInstance3D.new()
   var sphere:=SphereMesh.new();sphere.radius=0.16;sphere.height=0.24;sphere.radial_segments=7;sphere.rings=3;mesh.mesh=sphere
