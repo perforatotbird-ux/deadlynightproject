@@ -1,0 +1,107 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+PASS: healthy awake body does not lose health
+PASS: food and water decrease with game time
+PASS: sleep reduces food consumption
+PASS: damage sources are explicit and additive
+PASS: 30 cold minutes cause hypothermia
+PASS: hypothermia disables sprint
+PASS: hypothermia is not cured immediately by warmth
+PASS: two warm hours cure hypothermia
+PASS: bleeding blocks regeneration and damages
+PASS: warm nourished sleep regenerates health
+PASS: sleep accelerates sprain recovery
+PASS: sprint exhausts short-term stamina
+PASS: exhaustion has recovery hysteresis, no sprint oscillation
+PASS: breathing break restores sprint without sleep
+PASS: sprain blocks sprint
+PASS: god mode suppresses health damage
+PASS: cheats never restored from body save
+PASS: conditions and remaining duration round trip
+PASS: body migration clamps invalid data and ignores unknown conditions
+PASS: old saves get playable need defaults
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+PASS: finite authored camp supplies exist alongside streamed natural resources
+PASS: camp supplies are normal pickups and persist collected ID
+PASS: collected camp supply cannot respawn
+PASS: drinking consumes exactly one portion atomically
+PASS: ration restores nutrition
+PASS: edible berries restore nutrition
+PASS: bandage is not wasted without bleeding
+PASS: bandage removes bleeding without instant healing
+PASS: compress treats sprain
+PASS: raw water cannot be drunk without boiling
+PASS: boiling starts near accessible burning fire
+PASS: five-minute boiling produces one safe portion
+PASS: second boiling can start
+PASS: cancelled boiling never consumes input
+PASS: collector yields only stored raw water
+PASS: empty collector cannot duplicate water
+PASS: rain replenishes bounded water reserve
+PASS: ordinary jump landing causes no injury
+PASS: dangerous fall applies impact damage and injuries
+PASS: god mode protects against fall trauma
+PASS: real CharacterBody landing dispatches fall injury
+PASS: survival schema v3 includes body
+PASS: SurvivalWorld restores conditions and needs
+PASS: SurvivalWorld accepts pre-health saves
+PASS: Dev Menu exposes seven subsystem pages
+PASS: unknown commands cannot execute code
+PASS: developer setters clamp stats
+PASS: developer setter rejects NaN
+PASS: Dev tuning exposes need rates without arbitrary property access
+PASS: unknown item cannot be spawned
+PASS: dev grants use real stack limits and weight
+PASS: developer logs preserve canonical species weight
+PASS: developer split wood uses one third of log mass
+PASS: dev condition injection uses body model
+PASS: heal preset restores healthy state
+PASS: dev god toggle
+PASS: freeze-needs stops body changes
+PASS: world freeze stops game clock
+PASS: clock setter changes day/hour without simulation
+PASS: storm preset changes gameplay and visuals together
+PASS: time simulation applies needs and clock together
+PASS: teleport projects to free terrain
+PASS: teleport refuses out-of-map positions
+PASS: separate dev snapshot restores state but not cheats
+PASS: manual event animates while automatic scheduling is disabled
+PASS: diagnostic JSON written
+PASS: F8 opens modal Dev Menu with pause and mouse release
+PASS: real stat button requests confirmation before reducing health
+PASS: real confirmation click applies the chosen health stat
+PASS: world stays frozen behind developer panel
+PASS: Dev page 0 fits 720p
+PASS: Dev page 1 fits 720p
+PASS: Dev page 2 fits 720p
+PASS: Dev page 3 fits 720p
+PASS: Dev page 4 fits 720p
+PASS: Dev page 5 fits 720p
+PASS: Dev page 6 fits 720p
+PASS: destructive command waits for confirmation
+PASS: Escape dismisses confirmation before closing Dev Menu
+PASS: closing Dev Menu restores pause/mouse state
+PASS: Dev Menu remains available after death
+PASS: journal exposes all seven body indicators including wetness
+PASS: new supply icon loaded: water
+PASS: new supply icon loaded: raw_water
+PASS: new supply icon loaded: ration
+PASS: new supply icon loaded: berries
+PASS: new supply icon loaded: bandage
+PASS: new supply icon loaded: compress
+PASS: Dev page 0 fits 800x600
+PASS: Dev page 1 fits 800x600
+PASS: Dev page 2 fits 800x600
+PASS: Dev page 3 fits 800x600
+PASS: Dev page 4 fits 800x600
+PASS: Dev page 5 fits 800x600
+PASS: Dev page 6 fits 800x600
+PASS: SaveManager writes health schema to disk
+[SaveManager] Loaded game state successfully applied to active scene.
+PASS: SaveManager restores needs and trauma, not cheats
+[SaveManager] Deleted save slot: health_qa
+HEALTH DEV SUMMARY: 97 PASS, 0 FAIL
+WARNING: 10 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)

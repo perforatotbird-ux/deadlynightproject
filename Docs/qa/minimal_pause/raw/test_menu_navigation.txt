@@ -1,0 +1,96 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[SettingsManager] Settings loaded successfully from: user://settings.cfg
+[SettingsManager] Settings saved to: user://settings.cfg
+PASS: Continue disabled without saves
+PASS: Settings opens above the main-menu canvas
+PASS: Background menu cannot activate behind a subscreen
+PASS: Settings panel fits inside the viewport
+PASS: Settings panel is centered
+PASS: Settings scrim covers the full viewport
+PASS: Settings tab 0 has bounded scrolling
+PASS: Settings tab 1 has bounded scrolling
+PASS: Settings tab 2 has bounded scrolling
+PASS: Settings tab 3 has bounded scrolling
+PASS: Audio slider previews live
+PASS: Audio preview does not mutate persisted settings
+PASS: Escape cancels key capture without closing settings
+PASS: Key changes are staged until Apply
+PASS: Back closes settings and restores audio preview
+PASS: Defaults requires confirmation
+PASS: Escape dismisses only the confirmation
+[SettingsManager] Settings saved to: user://settings.cfg
+PASS: Resolution timeout closes its dialog and timer
+[SettingsManager] Settings saved to: user://settings.cfg
+PASS: Resolution Escape rolls back but keeps settings open
+[SettingsManager] Settings saved to: user://settings.cfg
+PASS: Keep resolution completes confirmation
+[SettingsManager] Settings saved to: user://settings.cfg
+PASS: Apply persists controls and keybindings
+PASS: Apply commits the audio preview
+PASS: Load menu handles an empty save list
+PASS: Credits opens
+PASS: Credits returns to main menu
+PASS: Quit requires confirmation
+PASS: Quit can be cancelled
+PASS: Continue enabled after a save exists
+PASS: New-game menu exposes five slots and four difficulty choices
+PASS: Difficulty selection 0 updates description
+PASS: Difficulty selection 1 updates description
+PASS: Difficulty selection 2 updates description
+PASS: Difficulty selection 3 updates description
+PASS: Occupied slot requires overwrite confirmation
+PASS: Overwrite cancellation keeps the new-game screen
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+PASS: Confirmed new game enters the real game scene
+PASS: Applied FOV and HUD settings reach the real player
+PASS: Camera bobbing preference reaches the player
+PASS: Rebound movement key is recognized in gameplay
+PASS: Graphics settings affect shadows and camera draw distance
+PASS: Escape opens in-game pause
+PASS: Pause settings hide background actions
+PASS: Escape from pause settings returns to pause, not gameplay
+PASS: Escape cancels exit-to-main without resuming gameplay
+PASS: Pause quick-save produces visible feedback
+PASS: Pause load menu lists saves
+PASS: Refreshing saves does not duplicate cards
+PASS: Delete confirmation cancellation leaves load menu intact
+[SaveManager] Loaded game state successfully applied to active scene.
+PASS: Loading from pause restores gameplay and closes pause
+PASS: Confirmed exit returns to unpaused main menu
+[SaveManager] Changing scene to MapViewer for save payload application...
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+[SaveManager] Loaded game state successfully applied to active scene.
+PASS: Continue loads the latest save into gameplay
+[SaveManager] Deleted save slot: slot_1
+PASS: Confirmed deletion removes the selected slot
+PASS: Failed load stays open with an actionable error
+[SettingsManager] Settings saved to: user://settings.cfg
+PASS: Confirmed defaults restore controls and bindings
+PASS: Confirmed defaults restore gameplay settings
+PASS: Failed Continue restores the main menu instead of a black screen
+PASS: Failed Continue explains the error
+[SaveManager] Deleted save slot: qa_stale_continue
+MENU NAVIGATION SUMMARY: 57 PASSED, 0 FAILED

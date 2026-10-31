@@ -1,0 +1,106 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+PASS: limited starting matches
+PASS: configured 85% / 25% dry ignition
+PASS: matches always more likely than sparks
+PASS: rain/wetness reduce success
+PASS: cannot craft without materials
+PASS: add stone
+PASS: add brush
+PASS: craft camp kit
+PASS: recipe consumes exact inputs
+PASS: craft conserves material weight
+PASS: repeated craft cannot duplicate kit
+PASS: reject steep surface
+PASS: accept clear level ground
+PASS: reject indoor placement
+PASS: reject occupied footprint
+PASS: place crafted camp on ground
+PASS: placement spends kit once
+PASS: double confirm cannot duplicate fire
+PASS: cannot ignite without fuel
+PASS: blocked ignition does not spend match
+PASS: begin axe split
+PASS: no output before 10 real seconds
+PASS: one log yields exactly 3 pieces at 10 seconds
+PASS: splitting preserves species weight
+PASS: begin cancellable split
+PASS: cancel keeps unconsumed log
+PASS: split automatically equips axe from toolbelt
+PASS: add a firewood piece
+PASS: fuel species/time and atomic consumption
+PASS: ordinary stones are not ignition pair
+PASS: add flint
+PASS: add pyrite
+PASS: spark fallback with real mineral pair
+PASS: failed spark spends tinder, not matches
+PASS: start match attempt
+PASS: match and tinder spent at attempt start
+PASS: loading preserves pre-rolled ignition result
+PASS: successful attempt ignites fire
+PASS: burning fire cannot spend another match
+PASS: one real second consumes one game minute
+PASS: overflow step accounts for embers
+PASS: embers eventually go cold
+PASS: cold fuel needs new ignition
+PASS: rain increases fuel use by 1.5
+PASS: rain and cold affect exposed body
+PASS: closed physical cabin is recognized
+PASS: under roof player dries instead of getting wet
+PASS: roof protection separate from closed-door warmth
+PASS: cannot sleep with open door
+PASS: rest allowed in closed cabin
+PASS: one-hour sleep advances clock and restores energy
+PASS: sleep completes
+PASS: near fire supplies heat
+PASS: fire warms and dries player
+PASS: full backpack rejects pickup
+PASS: failed transaction is atomic
+PASS: last match can start an attempt
+PASS: failed attempt consumes last match
+PASS: zero matches cannot start a free attempt
+PASS: spark fallback works with zero matches
+PASS: spark success lights fire without replenishing matches
+PASS: heat and fire interactions do not penetrate walls
+PASS: heat and interaction return after obstacle removal
+PASS: closed cabin door has physical collision
+PASS: open cabin door clears doorway
+PASS: split may begin with a full backpack
+PASS: failed split output rolls back consumed input
+PASS: midnight wraps hour without resetting elapsed world time
+PASS: weather changes at persisted world deadline
+PASS: prolonged dangerous cold damages health gradually
+PASS: begin rest for clock-boundary test
+PASS: rest ends at exactly one hour; leftover frame resumes normal time
+PASS: world actually contains gatherable resources
+PASS: gather spends world pickup once
+PASS: collected resource does not regenerate
+PASS: SaveManager writes actual survival save
+[SaveManager] Loaded game state successfully applied to active scene.
+PASS: SaveManager restores clock/body/matches
+PASS: SaveManager restores door and fires without duplicates
+PASS: gathered IDs persist through disk save
+PASS: JSON item colors normalized for inventory UI
+PASS: pause freezes clock and fire
+PASS: real-time split starts
+PASS: pause freezes 10-second action
+PASS: actual elapsed split = 10.24s including 0.2s paused
+PASS: selected log exposes recipe link in backpack
+PASS: split starts while matches were selected
+PASS: cannot drop job input while splitting
+PASS: cannot start second job
+PASS: closing backpack cancels job and actual UI
+PASS: split cannot start outside backpack
+PASS: negative recipe costs rejected atomically
+PASS: negative output rejected atomically
+PASS: negative output mass rejected
+PASS: add stone
+PASS: transaction consumes selected stack, not first identical stack
+PASS: duplicate same-frame pickup cannot duplicate resource
+PASS: standalone craft menu removed from project
+FIRST NIGHT SUMMARY: 97 PASS, 0 FAIL
+WARNING: 10 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
