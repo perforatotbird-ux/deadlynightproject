@@ -2,6 +2,7 @@ extends Node3D
 # A bounded, non-combat visual director. Timers are REAL unpaused seconds,
 # never accelerated world hours; it has its own RNG, separate from ignition/weather.
 const Visual=preload("res://scripts/atmosphere/NightVisual.gd")
+const ORB_APPROACH_DISTANCE:=4.0
 const MIN_DISTANCE:=14.0
 const MAX_DISTANCE:=90.0
 const MAX_ORBS:=3
@@ -11,6 +12,7 @@ const FADE_SECONDS:=1.8
 var session:Node
 var cooldown:=80.0
 var rng:=RandomNumberGenerator.new()
+var first_watcher_day:=2
 var last_kind:=""
 var last_dark:=false
 var event:Dictionary={}
@@ -23,9 +25,12 @@ var rejected_candidates:=0
 
 func _ready() -> void:
  name="AtmosphereDirector";rng.randomize();cooldown=rng.randf_range(70,120)
+ first_watcher_day=rng.randi_range(2,3)
  last_dark=is_dark()
 func is_dark() -> bool:
  return session!=null and session.daylight()<0.22
+func watcher_allowed() -> bool:
+ return is_instance_valid(session) and session.clock>=float(first_watcher_day-1)*86400.0
 func allowed() -> bool:
  return is_instance_valid(session) and is_instance_valid(session.player) and session.location=="forest" and session.player._is_active and session.health>0
 func advance(seconds: float, sleeping: bool=false) -> void:
@@ -47,6 +52,9 @@ func advance(seconds: float, sleeping: bool=false) -> void:
    if dark:
     kind="orbs" if rng.randf()<0.38 else "eyes"
     if kind==last_kind and rng.randf()<0.65:kind="eyes" if kind=="orbs" else "orbs"
+   if kind!="orbs" and not watcher_allowed():
+    if dark:kind="orbs"
+    else:cooldown=rng.randf_range(20,35);return
    if not try_start_event(kind):cooldown=rng.randf_range(20,35)
   return
  event["elapsed"]=float(event["elapsed"])+seconds
@@ -58,20 +66,32 @@ func advance(seconds: float, sleeping: bool=false) -> void:
  var envelope:=minf(smoothstep(0,FADE_SECONDS,float(event["elapsed"])),smoothstep(0,FADE_SECONDS,float(event["duration"])-float(event["elapsed"])))
  if _fading:envelope=minf(envelope,_fade_left/FADE_SECONDS)
  var camera:Camera3D=session.player._camera
- for i in visuals.size():
+ for i in range(visuals.size()-1,-1,-1):
   var node:=visuals[i];var curve:=_curves[i]
+  if event["kind"]=="orbs" and session.player.global_position.distance_to(node.global_position)<ORB_APPROACH_DISTANCE:
+   if rng.randf()<0.5:_orb_burst(node.global_position)
+   node.free();visuals.remove_at(i);_curves.remove_at(i);event.paths.remove_at(i)
+   continue
   var next:=curve.sample_baked(curve.get_baked_length()*t,true)
   if check_safety:
    var distance:float=session.player.global_position.distance_to(next)
-   if distance<MIN_DISTANCE or distance>MAX_DISTANCE+25 or not _segment_clear(node.global_position+_height_offset(),next+_height_offset()):_begin_fade()
+   if (event["kind"]!="orbs" and distance<MIN_DISTANCE) or distance>MAX_DISTANCE+25 or not _segment_clear(node.global_position+_height_offset(),next+_height_offset()):_begin_fade()
   if not _fading:node.global_position=next
   if event["kind"]!="orbs":
    var target:=camera.global_position;target.y=node.global_position.y
    if node.global_position.distance_to(target)>0.01:node.look_at(target,Vector3.UP)
   var pulse:=0.9+0.1*sin(float(event["elapsed"])*1.3+i*2.2)
   node.set_opacity(envelope*pulse,clampf((0.45-session.daylight())/0.35,0,1))
- if t>=1 or (_fading and _fade_left<=0):finish_event()
+ if visuals.is_empty() or t>=1 or (_fading and _fade_left<=0):finish_event()
 
+func _orb_burst(pos:Vector3) -> void:
+ # Harmless, short flash: no damage, collider, loot or independent world timer.
+ var burst:=Visual.new();burst.kind="orb";burst.tint=Color(0.75,1.0,0.85);add_child(burst);burst.global_position=pos;burst.set_opacity(1.0)
+ var tween:=create_tween().set_parallel(true)
+ tween.tween_property(burst,"scale",Vector3.ONE*3.5,0.35)
+ tween.tween_method(func(value:float):
+  if is_instance_valid(burst):burst.set_opacity(value),1.0,0.0,0.35)
+ tween.chain().tween_callback(burst.queue_free)
 func _height_offset() -> Vector3:
  return Vector3.ZERO if event.get("kind")=="orbs" else Vector3.UP*1.4
 func _begin_fade() -> void:
@@ -92,6 +112,7 @@ func _clear_visuals() -> void:
 func try_start_event(kind: String, require_hidden: bool=true) -> bool:
  if is_instance_valid(session.sky_events) and session.sky_events.busy():return false
  if not allowed() or not event.is_empty() or kind not in ["eyes","orbs","crossing"]:return false
+ if kind!="orbs" and not watcher_allowed():return false
  if kind in ["eyes","orbs"] and not is_dark():return false
  var center:Vector3=session.player.global_position
  var camp:=false
@@ -104,7 +125,7 @@ func try_start_event(kind: String, require_hidden: bool=true) -> bool:
   if attempt>0 and Time.get_ticks_usec()-started>8000:return false
   var angle:=rng.randf_range(0,TAU)
   var radius:=rng.randf_range(22,38) if camp else rng.randf_range(30,46)
-  if kind=="orbs":radius=rng.randf_range(20,36)
+  if kind=="orbs":radius=rng.randf_range(32,52)
   if kind=="crossing":radius=maxf(radius,40)
   var anchor:=center+Vector3(cos(angle),0,sin(angle))*radius
   var curves:Array[Curve3D]=[]
@@ -145,7 +166,27 @@ func _space_clear(point: Vector3, orb: bool) -> bool:
 func _seen(point: Vector3) -> bool:
  var camera:Camera3D=session.player._camera
  return camera.is_position_in_frustum(point) and _segment_clear(camera.global_position,point)
+func _plan_peek(center:Vector3) -> Curve3D:
+ var trees:Array=[]
+ for tree in get_tree().get_nodes_in_group("choppable_trees"):
+  var distance:float=center.distance_to(tree.global_position)
+  if distance>=MIN_DISTANCE+2 and distance<=65:trees.append(tree)
+ if trees.is_empty():return null
+ var tree:Node3D=trees[rng.randi_range(0,trees.size()-1)]
+ var away:Vector3=(tree.global_position-center).normalized();away.y=0;away=away.normalized()
+ var side:=away.cross(Vector3.UP)*(1.0 if rng.randf()>0.5 else -1.0)
+ var curve:=Curve3D.new();curve.bake_interval=0.15
+ for i in 13:
+  var point:=tree.global_position+away*0.9+side*sin(PI*i/12.0)*1.3
+  var ground:=_ground(point)
+  if ground.is_empty():return null
+  point=ground.position+Vector3.UP*0.05
+  if not _space_clear(point,false):return null
+  if i>0 and not _segment_clear(curve.get_point_position(i-1)+Vector3.UP*1.4,point+Vector3.UP*1.4):return null
+  curve.add_point(point)
+ return curve
 func _plan_watcher(center: Vector3, angle: float, radius: float, kind: String) -> Curve3D:
+ if kind=="eyes" and not get_tree().get_nodes_in_group("choppable_trees").is_empty():return _plan_peek(center)
  var curve:=Curve3D.new();curve.bake_interval=0.35
  var sweep:=rng.randf_range(0.18,0.4) if kind=="eyes" else rng.randf_range(0.4,0.65)
  var direction:=1 if rng.randf()>0.5 else -1
@@ -190,13 +231,15 @@ func _spawn_visuals() -> void:
 func export_state() -> Dictionary:
  var saved:=event.duplicate(true)
  if _fading:saved={}
- return {"version":1,"cooldown":COOLDOWN_MIN if _fading else cooldown,"rng_state":str(rng.state),"last_kind":last_kind,"last_dark":last_dark,"event":saved}
+ return {"version":2,"first_watcher_day":first_watcher_day,"cooldown":COOLDOWN_MIN if _fading else cooldown,"rng_state":str(rng.state),"last_kind":last_kind,"last_dark":last_dark,"event":saved}
 func import_state(state: Dictionary) -> void:
  _clear_visuals();event={}
+ first_watcher_day=clampi(int(state.get("first_watcher_day",first_watcher_day)),2,3)
  cooldown=clampf(float(state.get("cooldown",80)),0,240);last_kind=str(state.get("last_kind",""));last_dark=bool(state.get("last_dark",is_dark()))
  if state.has("rng_state"):rng.state=int(state["rng_state"])
  var saved:Dictionary=state.get("event",{}).duplicate(true)
  if saved.is_empty() or not allowed() or saved.get("kind","") not in ["eyes","orbs","crossing"]:return
+ if saved.get("kind")!="orbs" and not watcher_allowed():return
  if saved.get("kind") in ["eyes","orbs"] and not is_dark():return
  if float(saved.get("duration",0))<=0 or float(saved.get("elapsed",0))>=float(saved["duration"]):return
  var paths:Array=saved.get("paths",[])

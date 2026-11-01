@@ -9,7 +9,7 @@ func run() -> void:
  var map=load("res://scenes/viewer/MapViewer.tscn").instantiate();root.add_child(map);current_scene=map
  var p=map.get_node("Player");p.set_physics_process(false)
  for i in 5:await process_frame
- var s=map.get_node("SurvivalWorld");s.set_process(false);s.clock=23*3600;s.weather_until=s.clock+100000
+ var s=map.get_node("SurvivalWorld");s.set_process(false);s.clock=2*86400+23*3600;s.weather_until=s.clock+100000
  var d=s.atmosphere;d.rng.seed=471233
  check(d!=null and d.session==s,"actual forest session owns one atmospheric director")
  for kind in ["eyes","orbs"]:

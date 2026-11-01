@@ -20,7 +20,7 @@ func floor_or_wall(size: Vector3,pos: Vector3,color: Color,ground: bool=false) -
  var col:=CollisionShape3D.new();var shape:=BoxShape3D.new();shape.size=size;col.shape=shape;body.add_child(col)
  var mesh:=MeshInstance3D.new();var cube:=BoxMesh.new();cube.size=size;mesh.mesh=cube
  var mat:=StandardMaterial3D.new();mat.albedo_color=color;mesh.material_override=mat;body.add_child(mesh);scene.add_child(body);return body
-func night() -> void:s.clock=23*3600;s.weather="clear";s.weather_until=s.clock+100000;s._update_lighting()
+func night() -> void:s.clock=2*86400+23*3600;s.weather="clear";s.weather_until=s.clock+100000;s._update_lighting()
 func start(kind: String) -> bool:
  for i in 8:
   if d.try_start_event(kind,false):return true
@@ -51,6 +51,9 @@ func run() -> void:
  await physics_frame;await settle();night()
  # Remove UI only from graphical captures; actual player camera and physics remain.
  if graphical:p._hud_layer.hide();s.ui.hide()
+ d.first_watcher_day=2;s.clock=23*3600
+ check(not d.watcher_allowed() and not d.try_start_event("eyes",false) and not d.try_start_event("crossing",false),"watcher never appears on first day")
+ night()
  var health:float=s.health;var mass:float=p.backpack_weight
  var ignition_rng:String=str(s.rng.state)
  check(start("eyes"),"night eyes event plans on real ground")
@@ -99,9 +102,13 @@ func run() -> void:
  check(not d.event.is_empty() and d.visuals[0].global_position.distance_to(old_pos)<0.01,"orb trajectory resumes exactly after save/load")
  var time_before:float=d.event.get("elapsed",0);paused=true;d.advance(5);paused=false
  check(is_equal_approx(float(d.event.get("elapsed",0)),time_before),"pause freezes atmospheric motion")
+ var orb_count:int=d.visuals.size()
+ p.global_position=d.visuals[0].global_position+Vector3(0,0,3.5);d.advance(0.001)
+ check(d.visuals.size()<orb_count,"orb bursts or vanishes when approached closer than four metres")
+ p.position=Vector3(0,0.1,0)
  d.advance(3,true)
  check(d.event.is_empty() and d.cooldown>=30,"sleep clears visuals and prevents wake-up event backlog")
- s.clock=12*3600
+ s.clock=2*86400+12*3600
  check(not d.try_start_event("eyes",false) and not d.try_start_event("orbs",false),"no glowing eyes or orbs in daylight")
  check(start("crossing"),"rare distant silhouette remains possible in daytime")
  d.advance(3)

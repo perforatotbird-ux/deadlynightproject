@@ -34,5 +34,11 @@ func _initialize()->void:
  var split_job:={"kind":"split","amount":3,"slot":0,"item_id":"log_birch","weight":4.0,"species":"birch","duration":30.0,"elapsed":0.0,"origin":[0,0,0]}
  check(world.valid_job(split_job),"batch split persists quantity and proportional duration")
  split_job.amount=-1;check(not world.valid_job(split_job),"negative batch size rejected")
+ var director=preload("res://scripts/atmosphere/AtmosphereDirector.gd").new();director.session=world
+ world.clock=86399;director.first_watcher_day=2
+ check(not director.watcher_allowed(),"watcher cannot appear before second day")
+ world.clock=86400;check(director.watcher_allowed(),"second-day watcher deadline uses game clock")
+ director.first_watcher_day=3;check(not director.watcher_allowed(),"third-day random onset is respected")
+ director.free()
  world.free()
  print("SURVIVAL REWORK SUMMARY: %d PASS, %d FAIL" % [passes,failures]);quit(1 if failures else 0)
