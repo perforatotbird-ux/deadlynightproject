@@ -17,6 +17,8 @@ class FakePlayer extends Node:
  func _update_inventory_hud():pass
  func _refresh_inventory_ui():pass
 class FakeSession extends Node:
+ var energy:=80.0
+ var warmth:=60.0
  var clock:=57600.0
  var location:="mine"
  var _old_felled:Dictionary={}

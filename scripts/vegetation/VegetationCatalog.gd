@@ -1,6 +1,6 @@
 extends RefCounted
 # Fictional island species; every number is provisional playtest tuning.
-const VERSION:=1
+const VERSION:=2
 const SEED:=20261028
 const FIRST_GROWTH:=2.0*86400.0
 const REGROWTH:=5.0*86400.0
@@ -32,8 +32,34 @@ static func item_definition(id:String) -> Dictionary:
  var d:=species(item_species(id))
  if d.is_empty():return {}
  var cooked:=id.begins_with("cooked_")
- return {"name":str(d.name)+(" · приготовленный" if cooked else ""),"unit_weight":d.weight,"description":str(d.traits),"plant_species":item_species(id),"cooked":cooked}
+ return {"name":str(d.name)+(" · приготовленный" if cooked else ""),"unit_weight":d.weight,"description":str(d.traits)+"\n"+effect_text(id),"plant_species":item_species(id),"cooked":cooked}
 static func cook_output(id:String) -> String:
  return "cooked_"+id if SPECIES.has(id) and species(id).family=="mushroom" else ""
 static func eligible(tree_id:String) -> bool:return not tree_id.is_empty()
 static func harvest_count(tree_id:String,cycle:int=0) -> int:return 1+posmod((tree_id+":"+str(cycle)).hash(),3)
+
+# Immediate, bounded gameplay trade-offs; no stackable permanent buffs or medical claims.
+const FOOD_EFFECTS:={
+ "krasnitsa":{"stamina":8.0,"water":-2.0},
+ "sizovka":{"energy":3.0,"water":-3.0},
+ "bolotnitsa":{"stamina":-3.0},
+ "forest_fat":{"stamina":-3.0,"water":-2.0},
+ "cooked_forest_fat":{"energy":5.0,"warmth":3.0,"water":-1.0},
+ "cooked_wood_fan":{"energy":7.0,"warmth":4.0,"water":-3.0},
+ "copper_false":{"water":-2.0},"cooked_copper_false":{"water":-2.0},
+ "pale_bell":{"energy":-5.0},"cooked_pale_bell":{"energy":-5.0}
+}
+static func food_effects(id:String)->Dictionary:return FOOD_EFFECTS.get(id,{})
+static func effect_text(id:String)->String:
+ var names:={"stamina":"выносливость","energy":"бодрость","water":"запас воды","warmth":"тепло"}
+ var parts:PackedStringArray=[]
+ var effects:=food_effects(id).duplicate()
+ var d:=species(item_species(id))
+ if float(d.get("water",0))!=0:effects["water"]=float(effects.get("water",0))+float(d.water)
+ for key in effects:
+  if float(effects[key])!=0:parts.append("%+.0f %s" % [float(effects[key]),names[key]])
+ var cooked:=id.begins_with("cooked_")
+ var toxin:=str(d.get("toxin",d.get("raw_toxin","") if not cooked else ""))
+ if toxin!="":parts.append({"disorder":"пищевое расстройство","medium":"среднее отравление","severe":"тяжёлое отравление с задержкой"}.get(toxin,"отравление"))
+ if id=="stump_fan":return "Сырым не употребляется: ингредиент древесного чая."
+ return "Свойства порции: "+" · ".join(parts)+". Не заменяет сон." if not parts.is_empty() else ""

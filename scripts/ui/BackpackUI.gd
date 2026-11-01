@@ -468,7 +468,9 @@ func refresh_inventory() -> void:
  player._inv_details_stats.text="%d шт.   /   %.2f кг за шт.   /   %.2f кг всего" % [count,weight,count*weight]
  if item.get("type")=="firewood" and is_instance_valid(player.survival):player._inv_details_stats.text+="\nГорение: %d мин за поленце" % int(player.survival.Fire.FUEL_SECONDS.get(item.get("species","birch"),1800)/60)
  elif item.get("type")=="brush":player._inv_details_stats.text+="\nГорение: 5 мин за единицу"
- player._inv_details_desc.text=item.get("description","");drop_amount.max_value=maxi(1,count)
+ player._inv_details_desc.text=item.get("description","")
+ if Plants.item_species(str(item.get("type","")))!="":player._inv_details_desc.text=str(Plants.item_definition(str(item.type)).get("description",player._inv_details_desc.text))
+ drop_amount.max_value=maxi(1,count)
  application.text="ПРИМЕНЕНИЕ\n"+{"log":"Расколите во вкладке «Крафт», чтобы получить три поленца.","firewood":"Топливо для костра. Можно закрепить на поясе.","brush":"Топливо и материал для крафта хвороста и набора костра.","camp_kit":"Разместите на подходящей земле в лесу.","stone":"Материал для каменного кольца костра.","flint":"Розжиг костра вместе с пиритом. Не расходуется.","pyrite":"Розжиг костра вместе с кремнем. Не расходуется.","water":"Восстанавливает воду на 35 пунктов.","raw_water":"Кипятите у горящего костра, чтобы получить безопасную воду.","ration":"1125 ккал на порцию.","berries":"300 ккал на порцию.","bandage":"Останавливает кровотечение.","compress":"Снимает травму ноги."}.get(item.get("type",""),item.get("description",""))
  var plant_id:=Plants.item_species(str(item.get("type","")))
  if plant_id!="" and is_instance_valid(player.survival):
