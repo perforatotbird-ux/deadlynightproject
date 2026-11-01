@@ -133,11 +133,23 @@ func _draw()->void:
  var player_pos:Vector2=model.last_position
  if is_instance_valid(session) and session.location=="forest":player_pos=Vector2(session.player.global_position.x,session.player.global_position.z)
  if player_pos.is_finite():
-  var point:=to_screen(player_pos);reserve_icon(point,22);draw_circle(point,6,Color("d8a541"));draw_arc(point,9,0,TAU,24,INK,2,true)
-  if is_instance_valid(session) and session.location=="forest":
-   var ahead:Vector3=-session.player.global_basis.z;draw_line(point,point+Vector2(ahead.x,ahead.z)*20,INK,2,true)
+  var point:=to_screen(player_pos);reserve_icon(point,22)
+  var arrow:=player_arrow(point,player_heading())
+  draw_colored_polygon(arrow,Color("e8b84f"))
+  var outline:=arrow.duplicate();outline.append(arrow[0]);draw_polyline(outline,INK,3,true)
  for label_job in _label_jobs:place_label(font,label_job.point,label_job.text)
  draw_rect(rect,Color("69796b"),false,2)
  draw_string(font,Vector2(20,27),"С  ↑",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color("eee5d3"))
  var scale_width:=rect.size.x*500.0/4000.0;var at:=Vector2(24,size.y-30)
  draw_line(at,at+Vector2(scale_width,0),Color("eee5d3"),3);draw_string(font,at+Vector2(0,-8),"500 м",HORIZONTAL_ALIGNMENT_LEFT,-1,13,Color("eee5d3"))
+
+func player_heading()->Vector2:
+ if not is_instance_valid(session) or session.location!="forest":return Vector2.UP
+ var p:Node3D=session.player
+ var forward:Vector3=-p._camera.global_basis.z if is_instance_valid(p._camera) else -p.global_basis.z
+ var direction:=Vector2(forward.x,forward.z)
+ if direction.length_squared()<0.0001:direction=Vector2(-p.global_basis.z.x,-p.global_basis.z.z)
+ return direction.normalized() if direction.length_squared()>0.0001 else Vector2.UP
+func player_arrow(point:Vector2,direction:Vector2)->PackedVector2Array:
+ var forward:=direction.normalized();var right:=Vector2(-forward.y,forward.x)
+ return PackedVector2Array([point+forward*17,point-forward*11+right*10,point-forward*5,point-forward*11-right*10])

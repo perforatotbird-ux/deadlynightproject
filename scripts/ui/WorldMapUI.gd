@@ -34,7 +34,7 @@ func _ready()->void:
  view=preload("res://scripts/ui/ExplorationMapView.gd").new();view.model=session.map_model;view.session=session;body.add_child(view)
  var sidebar_scroll:=ScrollContainer.new();sidebar_scroll.custom_minimum_size.x=260;sidebar_scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED;body.add_child(sidebar_scroll)
  var sidebar:=VBoxContainer.new();sidebar.custom_minimum_size.x=245;sidebar.add_theme_constant_override("separation",10);sidebar_scroll.add_child(sidebar)
- var legend:=Label.new();legend.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;legend.text="Дороги — охра\nРека и ручей — синий\nГоризонтали — каждые 20 м\nТёмное — ещё не исследовано\nЗолотая точка — вы";sidebar.add_child(legend)
+ var legend:=Label.new();legend.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;legend.text="Дороги — охра\nРека и ручей — синий\nГоризонтали — каждые 20 м\nТёмное — ещё не исследовано\nЗолотая стрелка — вы и ваш взгляд";sidebar.add_child(legend)
  mark_button=button(sidebar,"Новая отметка",func():selected_id=-1;view.selected_id=-1;pending_point=Vector2(INF,INF);view.mark_mode=true;details.text="Выберите исследованную точку на карте.";marker_name.clear();refresh_editor())
  marker_name=LineEdit.new();marker_name.placeholder_text="Подпись отметки";marker_name.max_length=60;sidebar.add_child(marker_name);marker_name.text_submitted.connect(func(_text):save_marker();marker_name.release_focus())
  marker_kind=OptionButton.new()
