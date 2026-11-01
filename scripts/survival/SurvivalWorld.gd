@@ -349,12 +349,16 @@ func handle_input(event: InputEvent) -> bool:
  return false
 func make_kit() -> bool:
  return make_recipe("camp_kit")
-func make_recipe(recipe_id:String) -> bool:
+func make_recipe(recipe_id:String, amount:int=1) -> bool:
+ if amount<1 or amount>1000:return false
  if health<=0:return false
  if not job.is_empty():return false
  var r:Dictionary=preload("res://scripts/survival/CraftCatalog.gd").recipe(recipe_id)
  if r.get("id")!=recipe_id or r.get("action")!="kit":return false
- var ok:=Items.transact(player,r.costs,[Items.item(recipe_id)])
+ var costs:Dictionary=r.costs.duplicate()
+ for id in costs:costs[id]*=amount
+ var output:=Items.item(recipe_id);output.count=amount
+ var ok:=Items.transact(player,costs,[output])
  notify("Создано: "+str(Items.item(recipe_id).name) if ok else "Не хватает материалов или места в рюкзаке")
  ui.refresh();return ok
 func valid_job(data:Dictionary) -> bool:
@@ -365,19 +369,21 @@ func valid_job(data:Dictionary) -> bool:
  if not data.get("origin") is Array or data.origin.size()!=3:return false
  if data.kind=="harvest":return data.get("plant") is Dictionary and data.get("point") is Array and data.get("group") is int and duration<=2
  if data.kind=="vegetation_cook":return data.get("fire") is String and not foraging.cook_recipe(str(data.get("recipe","")),int(data.get("amount",0))).is_empty() and is_equal_approx(duration,float(foraging.cook_recipe(str(data.recipe),int(data.amount)).minutes))
- if data.kind=="split":return data.has("slot") and data.has("item_id") and data.has("weight") and data.has("species")
+ if data.kind=="split":
+  var amount=body.bounded(data.get("amount",1),0,1000)
+  return data.has("slot") and data.has("item_id") and data.has("weight") and data.has("species") and amount>=1 and amount==int(amount) and is_equal_approx(duration,SPLIT_SECONDS*amount)
  if data.kind=="boil":
   var amount=body.bounded(data.get("amount",1),0,1000)
   return data.get("fire") is String and amount>=1 and amount==int(amount) and is_equal_approx(duration,amount*BOIL_WORLD_SECONDS/TIME_SCALE)
  if data.kind=="ignite":return data.get("fire") is String and data.has("success")
  return duration<=12
-func begin_split(slot_index: int) -> bool:
+func begin_split(slot_index: int, amount:int=1) -> bool:
  if not job.is_empty() or slot_index<0 or slot_index>=player.inventory_slots.size():return false
  var s=player.inventory_slots[slot_index]
- if s==null or s.get("type")!="log":return false
+ if s==null or s.get("type")!="log" or amount<1 or amount>int(s.get("count",0)):return false
  if health<=0 or not player._is_inventory_open:return false
  player.select_hotbar_slot(0)
- job={"kind":"split","elapsed":0.0,"duration":SPLIT_SECONDS,"slot":slot_index,"item_id":s["id"],"weight":s["unit_weight"],"species":s["species"],"origin":_arr(player.global_position)}
+ job={"kind":"split","elapsed":0.0,"duration":SPLIT_SECONDS*amount,"amount":amount,"slot":slot_index,"item_id":s["id"],"weight":s["unit_weight"],"species":s["species"],"origin":_arr(player.global_position)}
  player._cancel_chop();ui.refresh();return true
 func add_fuel(id: String, slot_index: int, amount: int = 1) -> bool:
  var f:=find_fire(id)
@@ -451,8 +457,8 @@ func _finish_job() -> void:
    var index:=int(done["slot"])
    var s=player.inventory_slots[index] if index>=0 and index<player.inventory_slots.size() else null
    if s==null or s.get("id")!=done["item_id"] or not is_equal_approx(float(s.get("unit_weight",0)),float(done["weight"])):notify("Бревно перемещено: раскол отменён");return
-   var output:=Items.item("firewood",done["species"],float(done["weight"])/3.0);output["count"]=3
-   notify("Бревно расколото: 3 поленца" if Items.transact(player,{done["item_id"]:1},[output],index) else "Не хватает места: бревно сохранено")
+   var output:=Items.item("firewood",done["species"],float(done["weight"])/3.0);output["count"]=3*int(done.get("amount",1))
+   notify("Расколото брёвен: %d · поленьев: %d" % [int(done.get("amount",1)),int(output.count)] if Items.transact(player,{done["item_id"]:int(done.get("amount",1))},[output],index) else "Не хватает места: бревно сохранено")
   "ignite":
    var f:=find_fire(done["fire"])
    if not f.is_empty() and _fire_in_reach(f) and f["fuel"]>0 and done["success"]:f["state"]="burning";notify("Костёр разгорелся")

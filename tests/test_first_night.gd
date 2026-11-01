@@ -72,6 +72,8 @@ func run() -> void:
  check(is_equal_approx(f["fuel"],1800) and Items.count(p.inventory_slots,"firewood")==2,"fuel species/time and atomic consumption")
  check(not s.begin_ignition(f["id"],"spark"),"ordinary stones are not ignition pair")
  add("flint");add("pyrite")
+ add("brush",4);check(s.make_recipe("tinder",4),"batch craft four tinder portions")
+ for i in 4:check(s.add_tinder(f["id"]),"add crafted tinder")
  check(s.begin_ignition(f["id"],"spark"),"spark fallback with real mineral pair")
  s.job["success"]=false;s.advance(5)
  check(s.matches==12 and f["state"]=="unlit" and f["tinder"]==3,"failed spark spends tinder, not matches")

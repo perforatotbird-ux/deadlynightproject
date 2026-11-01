@@ -31,5 +31,8 @@ func _initialize()->void:
  var boil_job:={"kind":"boil","amount":2,"fire":"test","duration":20.0/60.0,"elapsed":0.0,"origin":[0,0,0]}
  check(world.valid_job(boil_job),"one litre takes twenty game seconds")
  boil_job.amount=0;check(not world.valid_job(boil_job),"zero-volume boiling job rejected")
+ var split_job:={"kind":"split","amount":3,"slot":0,"item_id":"log_birch","weight":4.0,"species":"birch","duration":30.0,"elapsed":0.0,"origin":[0,0,0]}
+ check(world.valid_job(split_job),"batch split persists quantity and proportional duration")
+ split_job.amount=-1;check(not world.valid_job(split_job),"negative batch size rejected")
  world.free()
  print("SURVIVAL REWORK SUMMARY: %d PASS, %d FAIL" % [passes,failures]);quit(1 if failures else 0)

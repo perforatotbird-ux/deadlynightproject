@@ -24,6 +24,7 @@ var fuel_select:OptionButton
 var boil_volume:SpinBox
 var boil_info:Label
 var fuel_amount:SpinBox
+var craft_amount:SpinBox
 var log_select:OptionButton
 var belt_select:OptionButton
 var belt_info:Label
@@ -256,8 +257,11 @@ func _build_craft() -> void:
   var line:=row(right,8);var icon:=picture(line,"",36);icon.custom_minimum_size.x=36;var text:=label(line,"");ingredient_rows.append({"row":line,"icon":icon,"text":text})
  recipe_tool=label(right,"");recipe=label(right,"");recipe_desc=label(right,"")
  log_select=picker(right);log_select.item_selected.connect(func(_index):refresh_actions())
- button(detail_column,"kit","Собрать набор",func():player.survival.make_recipe(selected_recipe))
- button(detail_column,"split","Расколоть · 10 с",func():player.survival.begin_split(log_select.get_selected_id()))
+ var quantity_line:=row(detail_column);label(quantity_line,"Количество")
+ craft_amount=SpinBox.new();craft_amount.min_value=1;craft_amount.max_value=10;craft_amount.step=1;craft_amount.value=1;craft_amount.custom_minimum_size=Vector2(100,44);quantity_line.add_child(craft_amount)
+ craft_amount.value_changed.connect(func(_v):refresh_actions())
+ button(detail_column,"kit","Создать",func():player.survival.make_recipe(selected_recipe,int(craft_amount.value)))
+ button(detail_column,"split","Расколоть · 10 с",func():player.survival.begin_split(log_select.get_selected_id(),int(craft_amount.value)))
  label(detail_column,"Готовый набор: «Рюкзак» → разместить или назначить на пояс.",12).add_theme_color_override("font_color",Journal.MUTED)
 
 func _build_fire() -> void:
@@ -483,23 +487,35 @@ func _refresh_recipe() -> void:
   card.present(data.icon,data.title,"×%d  /  %s" % [data.output,"сборка" if data.seconds==0 else "%d с" % data.seconds],"Можно создать" if reason=="" else reason,selected_recipe==data.id,reason=="")
  recipe_empty.visible=visible_count==0
  var data:=Catalog.recipe(selected_recipe);recipe_image.texture=Art.texture(data.icon);recipe_title.text=data.title;recipe_desc.text=data.description
+ var max_amount:=1000
+ if is_instance_valid(player.survival):
+  if data.action=="kit":
+   for id in data.costs:max_amount=mini(max_amount,int(player.survival.Items.count(player.inventory_slots,id)/int(data.costs[id])))
+  else:
+   var slot:=log_select.get_selected_id()
+   max_amount=int(player.inventory_slots[slot].count) if slot>=0 and slot<player.inventory_slots.size() and player.inventory_slots[slot]!=null else 0
+ else:max_amount=0
+ craft_amount.max_value=maxi(1,max_amount);craft_amount.editable=is_instance_valid(player.survival) and player.survival.job.is_empty() and max_amount>0
+ var quantity:=int(craft_amount.value)
  var ingredients:Array=[]
  if data.action=="kit":
-  for id in data.costs:ingredients.append({"icon":id,"title":{"stone":"Камни","brush":"Ветки"}.get(id,id),"have":player.survival.Items.count(player.inventory_slots,id) if is_instance_valid(player.survival) else 0,"need":data.costs[id]})
+  for id in data.costs:ingredients.append({"icon":id,"title":{"stone":"Камни","brush":"Ветки"}.get(id,id),"have":player.survival.Items.count(player.inventory_slots,id) if is_instance_valid(player.survival) else 0,"need":data.costs[id]*quantity})
  else:
   var amount:=0
   for slot in Catalog.source_slots(player,data):amount+=int(player.inventory_slots[slot].count)
-  ingredients.append({"icon":"log_"+str(data.species),"title":"Бревно нужной породы","have":amount,"need":1})
+  ingredients.append({"icon":"log_"+str(data.species),"title":"Бревно нужной породы","have":amount,"need":quantity})
  for i in ingredient_rows.size():
   var entry:Dictionary=ingredient_rows[i];entry.row.visible=i<ingredients.size()
   if i>=ingredients.size():continue
   var material:Dictionary=ingredients[i];entry.icon.texture=Art.texture(material.icon)
   entry.text.text="%s   %d / %d  ·  %s" % [material.title,material.have,material.need,"есть" if material.have>=material.need else "не хватает"]
   entry.text.add_theme_color_override("font_color",Journal.GREEN if material.have>=material.need else Journal.RED)
- recipe_tool.text="Топор с пояса  ·  10 реальных секунд  ·  выход ×3" if data.action=="split" else "Без инструмента  ·  выход ×1"
- recipe.text=Catalog.reason(player,data)
+ recipe_tool.text="Топор с пояса · %d реальных секунд · выход ×%d" % [10*quantity,3*quantity] if data.action=="split" else "Без инструмента · выход ×%d" % quantity
+ recipe.text=Catalog.reason(player,data,quantity)
  log_select.visible=data.action=="split";buttons["kit"].visible=data.action=="kit";buttons["split"].visible=data.action=="split"
  buttons[data.action].disabled=recipe.text!=""
+ buttons["kit"].text="Создать ×%d" % quantity
+ buttons["split"].text="Расколоть ×%d · %d с" % [quantity,10*quantity]
  buttons[data.action].tooltip_text=recipe.text if recipe.text!="" else ("Собрать один набор" if data.action=="kit" else "Расколоть выбранное бревно за 10 секунд")
 func refresh_actions() -> void:
  if not is_instance_valid(player):return

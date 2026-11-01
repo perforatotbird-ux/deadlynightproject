@@ -26,19 +26,23 @@ static func source_slots(player: Node, r: Dictionary) -> Array[int]:
   var item=player.inventory_slots[i]
   if item!=null and item.get("type")=="log" and item.get("species")==r.get("species"):slots.append(i)
  return slots
-static func reason(player: Node,r: Dictionary) -> String:
+static func reason(player: Node,r: Dictionary,amount:int=1) -> String:
+ if amount<1 or amount>1000:return "Недопустимое количество"
  if not is_instance_valid(player.survival):return "Доступно только в игре"
  if player.survival.health<=0:return "Персонаж погиб"
  if r.action=="kit":
   for id in r.costs:
-   if player.survival.Items.count(player.inventory_slots,id)<r.costs[id]:return "Не хватает материалов"
+   if player.survival.Items.count(player.inventory_slots,id)<r.costs[id]*amount:return "Не хватает материалов"
  elif source_slots(player,r).is_empty():return "Нет подходящего бревна"
  if not player.survival.job.is_empty():return "Завершите текущее действие"
  var items=player.survival.Items
  if r.action=="kit":
-  if not items.transact(player,r.costs,[items.item(str(r.id))],-1,true):return "Нужно место в рюкзаке"
+  var costs:Dictionary=r.costs.duplicate()
+  for id in costs:costs[id]*=amount
+  var output:Dictionary=items.item(str(r.id));output.count=amount
+  if not items.transact(player,costs,[output],-1,true):return "Нужно место в рюкзаке"
  else:
   var slot:int=source_slots(player,r)[0];var source:Dictionary=player.inventory_slots[slot]
-  var output:Dictionary=items.item("firewood",str(source.species),float(source.unit_weight)/3.0);output.count=3
-  if not items.transact(player,{source.id:1},[output],slot,true):return "Нужно место в рюкзаке"
+  var output:Dictionary=items.item("firewood",str(source.species),float(source.unit_weight)/3.0);output.count=3*amount
+  if not items.transact(player,{source.id:amount},[output],slot,true):return "Нужно место в рюкзаке"
  return ""
