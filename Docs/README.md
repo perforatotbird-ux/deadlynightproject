@@ -129,3 +129,5 @@ graphify update .          # инкрементально, без LLM
 ```
 
 `graphify-out/` и `Docs/graphify-out/` в `.gitignore` — это локальный инструмент, а не часть репозитория.
+
+- [Новая рука и круглые часы: Blender/MCP, исходники и навыки](watch_blender_rework.md)

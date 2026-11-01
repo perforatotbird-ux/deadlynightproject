@@ -1,0 +1,47 @@
+{
+  "blender": "4.5.3 LTS",
+  "engine": "Cycles CPU",
+  "samples_diagnostic": 16,
+  "samples_hero": 32,
+  "color_management": "AgX",
+  "images": [
+    {
+      "camera": "HeroCamera",
+      "file": "HeroCamera.png",
+      "seconds": 6.48
+    },
+    {
+      "camera": "Diagnostic_Front",
+      "file": "Diagnostic_Front.png",
+      "seconds": 5.32
+    },
+    {
+      "camera": "Diagnostic_Back",
+      "file": "Diagnostic_Back.png",
+      "seconds": 5.26
+    },
+    {
+      "camera": "Diagnostic_Left",
+      "file": "Diagnostic_Left.png",
+      "seconds": 4.1
+    },
+    {
+      "camera": "Diagnostic_Right",
+      "file": "Diagnostic_Right.png",
+      "seconds": 4.15
+    },
+    {
+      "camera": "Diagnostic_Top",
+      "file": "Diagnostic_Top.png",
+      "seconds": 4.58
+    },
+    {
+      "camera": "HeroCamera closeup",
+      "file": "watch_closeup.png"
+    },
+    {
+      "camera": "palm detail",
+      "file": "palm_detail.png"
+    }
+  ]
+}

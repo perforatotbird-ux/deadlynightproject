@@ -43,3 +43,5 @@
 graphify query "как устроена система растительности"
 graphify explain "ThermalModel"
 ```
+
+Blender-исходник руки и круглых часов, MCP-сборка и установленные навыки: [документация](Docs/watch_blender_rework.md).

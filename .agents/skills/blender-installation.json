@@ -1,0 +1,23 @@
+{
+  "skills_source": "https://github.com/ifBars/blender-agent-studio",
+  "skills_commit": "8f3437a0e70a1a5e360b6ac423fd04888f710645",
+  "license": "MIT",
+  "installed_scopes": [
+    "repository .agents/skills",
+    "workspace ~/.agents/skills"
+  ],
+  "skills": [
+    "blender-modeling-workflow",
+    "blender-character-workflow",
+    "blender-asset-validation",
+    "blender-mcp-integration",
+    "blender-rendering-workflow"
+  ],
+  "mcp_source": "https://github.com/ahujasid/blender-mcp",
+  "mcp_commit": "992233bb258975a05eec8b5691465c50c2831e34",
+  "mcp_package": "mcp-for-blender 2.2.6",
+  "blender": "4.5.3 LTS",
+  "transport": "MCP stdio client -> loopback addon 127.0.0.1:9876",
+  "telemetry": false,
+  "external_model_generation": false
+}

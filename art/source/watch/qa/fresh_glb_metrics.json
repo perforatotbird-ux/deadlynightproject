@@ -1,0 +1,878 @@
+{
+  "actions": [],
+  "blender": {
+    "background": true,
+    "build_hash": "67807e1800cc",
+    "version": "4.5.3 LTS",
+    "version_tuple": [
+      4,
+      5,
+      3
+    ]
+  },
+  "hard_gate_pass": true,
+  "input": "assets/models/viewmodels/watch/left_arm_round_watch.glb",
+  "issues": [],
+  "material_details": [
+    {
+      "image_texture_nodes": 0,
+      "images": [],
+      "name": "Bezel / deep petrol anodized",
+      "node_count": 2,
+      "use_nodes": true
+    },
+    {
+      "image_texture_nodes": 0,
+      "images": [],
+      "name": "Case / basalt composite",
+      "node_count": 2,
+      "use_nodes": true
+    },
+    {
+      "image_texture_nodes": 0,
+      "images": [],
+      "name": "Dial / ice phosphor",
+      "node_count": 2,
+      "use_nodes": true
+    },
+    {
+      "image_texture_nodes": 0,
+      "images": [],
+      "name": "Hardware / brushed titanium",
+      "node_count": 2,
+      "use_nodes": true
+    },
+    {
+      "image_texture_nodes": 0,
+      "images": [],
+      "name": "LCD / blue black",
+      "node_count": 2,
+      "use_nodes": true
+    },
+    {
+      "image_texture_nodes": 0,
+      "images": [],
+      "name": "Recess / soft black",
+      "node_count": 2,
+      "use_nodes": true
+    },
+    {
+      "image_texture_nodes": 2,
+      "images": [
+        "skin_albedo",
+        "skin_normal"
+      ],
+      "name": "Skin / warm neutral",
+      "node_count": 5,
+      "use_nodes": true
+    },
+    {
+      "image_texture_nodes": 0,
+      "images": [],
+      "name": "Strap / graphite elastomer",
+      "node_count": 2,
+      "use_nodes": true
+    }
+  ],
+  "materials": [
+    "Bezel / deep petrol anodized",
+    "Case / basalt composite",
+    "Dial / ice phosphor",
+    "Hardware / brushed titanium",
+    "LCD / blue black",
+    "Recess / soft black",
+    "Skin / warm neutral",
+    "Strap / graphite elastomer"
+  ],
+  "meshes": [
+    {
+      "boundary_edges": 0,
+      "connected_components": 1,
+      "data_name": "PetrolBezelGeometry",
+      "degenerate_faces": 0,
+      "edges": 2016,
+      "flat_polygons": 0,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "Bezel / deep petrol anodized"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [],
+      "name": "Detail_Bezel",
+      "non_manifold_edges": 0,
+      "polygons": 1344,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 1.0,
+      "smooth_polygons": 1344,
+      "source_polygons": 1344,
+      "source_vertices": 672,
+      "triangles": 1344,
+      "uv_layers": 0,
+      "vertex_groups": 0,
+      "vertices": 672,
+      "weighted_vertices": 0,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          -0.0504,
+          -0.033,
+          -0.0254
+        ],
+        [
+          0.0004,
+          -0.0297,
+          0.0254
+        ]
+      ],
+      "zero_length_edges": 0
+    },
+    {
+      "boundary_edges": 888,
+      "connected_components": 20,
+      "data_name": "Strap_moulded_rib",
+      "degenerate_faces": 0,
+      "edges": 7020,
+      "flat_polygons": 0,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "Case / basalt composite"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [],
+      "name": "Detail_Case",
+      "non_manifold_edges": 888,
+      "polygons": 4384,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 1.0,
+      "smooth_polygons": 4384,
+      "source_polygons": 4384,
+      "source_vertices": 2656,
+      "triangles": 4384,
+      "uv_layers": 1,
+      "vertex_groups": 0,
+      "vertices": 2656,
+      "weighted_vertices": 0,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          -0.0535,
+          -0.03,
+          -0.029
+        ],
+        [
+          0.0035,
+          0.00606,
+          0.029
+        ]
+      ],
+      "zero_length_edges": 0
+    },
+    {
+      "boundary_edges": 3470,
+      "connected_components": 114,
+      "data_name": "Cube.017",
+      "degenerate_faces": 0,
+      "edges": 19942,
+      "flat_polygons": 406,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "Dial / ice phosphor"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [],
+      "name": "Detail_Dial",
+      "non_manifold_edges": 3470,
+      "polygons": 12138,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 0.966551,
+      "smooth_polygons": 11732,
+      "source_polygons": 12138,
+      "source_vertices": 7908,
+      "triangles": 12138,
+      "uv_layers": 1,
+      "vertex_groups": 0,
+      "vertices": 7908,
+      "weighted_vertices": 0,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          -0.0479,
+          -0.03319,
+          -0.0229
+        ],
+        [
+          -0.0021,
+          -0.032705,
+          0.0229
+        ]
+      ],
+      "zero_length_edges": 0
+    },
+    {
+      "boundary_edges": 378,
+      "connected_components": 15,
+      "data_name": "Cube",
+      "degenerate_faces": 0,
+      "edges": 7047,
+      "flat_polygons": 0,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "Hardware / brushed titanium"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [],
+      "name": "Detail_Hardware",
+      "non_manifold_edges": 378,
+      "polygons": 4572,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 1.0,
+      "smooth_polygons": 4572,
+      "source_polygons": 4572,
+      "source_vertices": 2484,
+      "triangles": 4572,
+      "uv_layers": 1,
+      "vertex_groups": 0,
+      "vertices": 2484,
+      "weighted_vertices": 0,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          -0.05575,
+          -0.0335,
+          -0.024
+        ],
+        [
+          0.00575,
+          0.0239,
+          0.024
+        ]
+      ],
+      "zero_length_edges": 0
+    },
+    {
+      "boundary_edges": 440,
+      "connected_components": 12,
+      "data_name": "Vent_recess",
+      "degenerate_faces": 0,
+      "edges": 3076,
+      "flat_polygons": 0,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "Recess / soft black"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [],
+      "name": "Detail_Recess",
+      "non_manifold_edges": 440,
+      "polygons": 1904,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 1.0,
+      "smooth_polygons": 1904,
+      "source_polygons": 1904,
+      "source_vertices": 1184,
+      "triangles": 1904,
+      "uv_layers": 1,
+      "vertex_groups": 0,
+      "vertices": 1184,
+      "weighted_vertices": 0,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          -0.041863,
+          -0.033585,
+          -0.02623
+        ],
+        [
+          -0.008137,
+          0.003884,
+          0.02623
+        ]
+      ],
+      "zero_length_edges": 0
+    },
+    {
+      "boundary_edges": 0,
+      "connected_components": 1,
+      "data_name": "LCDGeometry",
+      "degenerate_faces": 0,
+      "edges": 1152,
+      "flat_polygons": 0,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "LCD / blue black"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [],
+      "name": "LCD",
+      "non_manifold_edges": 0,
+      "polygons": 768,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 1.0,
+      "smooth_polygons": 768,
+      "source_polygons": 768,
+      "source_vertices": 384,
+      "triangles": 768,
+      "uv_layers": 0,
+      "vertex_groups": 0,
+      "vertices": 384,
+      "weighted_vertices": 0,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          -0.0445,
+          -0.0325,
+          -0.0195
+        ],
+        [
+          -0.0055,
+          -0.0316,
+          0.0195
+        ]
+      ],
+      "zero_length_edges": 0
+    },
+    {
+      "boundary_edges": 8760,
+      "connected_components": 91,
+      "data_name": "LeftArm_EditableCageGeometry.001",
+      "degenerate_faces": 0,
+      "edges": 27696,
+      "flat_polygons": 0,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "Skin / warm neutral"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [],
+      "name": "LeftArm_Skin",
+      "non_manifold_edges": 8760,
+      "polygons": 15544,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 1.0,
+      "smooth_polygons": 15544,
+      "source_polygons": 15544,
+      "source_vertices": 11765,
+      "triangles": 15544,
+      "uv_layers": 1,
+      "vertex_groups": 0,
+      "vertices": 11765,
+      "weighted_vertices": 0,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          -0.418555,
+          -0.037724,
+          -0.047556
+        ],
+        [
+          0.112019,
+          0.050404,
+          0.05094
+        ]
+      ],
+      "zero_length_edges": 0
+    },
+    {
+      "boundary_edges": 0,
+      "connected_components": 1,
+      "data_name": "RoundCaseGeometry",
+      "degenerate_faces": 0,
+      "edges": 2592,
+      "flat_polygons": 0,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "Case / basalt composite"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [],
+      "name": "RoundCase",
+      "non_manifold_edges": 0,
+      "polygons": 1728,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 1.0,
+      "smooth_polygons": 1728,
+      "source_polygons": 1728,
+      "source_vertices": 864,
+      "triangles": 1728,
+      "uv_layers": 0,
+      "vertex_groups": 0,
+      "vertices": 864,
+      "weighted_vertices": 0,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          -0.0513,
+          -0.0315,
+          -0.0263
+        ],
+        [
+          0.0013,
+          -0.0215,
+          0.0263
+        ]
+      ],
+      "zero_length_edges": 0
+    },
+    {
+      "boundary_edges": 0,
+      "connected_components": 1,
+      "data_name": "WatchStrapGeometry",
+      "degenerate_faces": 0,
+      "edges": 4608,
+      "flat_polygons": 0,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "Strap / graphite elastomer"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [],
+      "name": "WatchStrap",
+      "non_manifold_edges": 0,
+      "polygons": 3072,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 1.0,
+      "smooth_polygons": 3072,
+      "source_polygons": 3072,
+      "source_vertices": 1536,
+      "triangles": 3072,
+      "uv_layers": 0,
+      "vertex_groups": 0,
+      "vertices": 1536,
+      "weighted_vertices": 0,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          -0.0365,
+          -0.023,
+          -0.0258
+        ],
+        [
+          -0.0135,
+          0.023,
+          0.0258
+        ]
+      ],
+      "zero_length_edges": 0
+    }
+  ],
+  "objects": [
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        0.0508,
+        0.0033,
+        0.0508
+      ],
+      "hidden_render": false,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "name": "Detail_Bezel",
+      "parent": "TraverseLeftArm",
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    },
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        0.057,
+        0.03606,
+        0.058
+      ],
+      "hidden_render": false,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "name": "Detail_Case",
+      "parent": "TraverseLeftArm",
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    },
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        0.0458,
+        0.000485,
+        0.0458
+      ],
+      "hidden_render": false,
+      "location": [
+        -0.025,
+        -0.03313,
+        0.022
+      ],
+      "name": "Detail_Dial",
+      "parent": "TraverseLeftArm",
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    },
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        0.0615,
+        0.0574,
+        0.048
+      ],
+      "hidden_render": false,
+      "location": [
+        -0.035,
+        0.0213,
+        -0.002
+      ],
+      "name": "Detail_Hardware",
+      "parent": "TraverseLeftArm",
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    },
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        0.033727,
+        0.037469,
+        0.05246
+      ],
+      "hidden_render": false,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "name": "Detail_Recess",
+      "parent": "TraverseLeftArm",
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    },
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "hidden_render": false,
+      "location": [
+        -0.025,
+        -0.03285,
+        0.0
+      ],
+      "name": "DisplayAnchor",
+      "parent": "TraverseLeftArm",
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "EMPTY"
+    },
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        0.039,
+        0.0009,
+        0.039
+      ],
+      "hidden_render": false,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "name": "LCD",
+      "parent": "TraverseLeftArm",
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    },
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        0.530574,
+        0.088128,
+        0.098496
+      ],
+      "hidden_render": false,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "name": "LeftArm_Skin",
+      "parent": "TraverseLeftArm",
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    },
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        0.0526,
+        0.01,
+        0.0526
+      ],
+      "hidden_render": false,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "name": "RoundCase",
+      "parent": "TraverseLeftArm",
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    },
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "hidden_render": false,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "name": "TraverseLeftArm",
+      "parent": null,
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "EMPTY"
+    },
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        0.023,
+        0.046,
+        0.0516
+      ],
+      "hidden_render": false,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "name": "WatchStrap",
+      "parent": "TraverseLeftArm",
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    }
+  ],
+  "scene": {
+    "bounds": {
+      "dimensions": [
+        0.530574,
+        0.088128,
+        0.098496
+      ],
+      "max": [
+        0.112019,
+        0.050404,
+        0.05094
+      ],
+      "min": [
+        -0.418555,
+        -0.037724,
+        -0.047556
+      ]
+    },
+    "fps": 24.0,
+    "frame_end": 250,
+    "frame_start": 1,
+    "name": "Scene"
+  },
+  "schema_version": 3,
+  "totals": {
+    "actions": 0,
+    "armatures": 0,
+    "bones": 0,
+    "boundary_edges": 13936,
+    "cameras": 0,
+    "constraints": 0,
+    "degenerate_faces": 0,
+    "edges": 75149,
+    "flat_polygons": 406,
+    "geometry_nodes_modifiers": 0,
+    "images": 2,
+    "invalid_vertices": 0,
+    "isolated_vertices": 0,
+    "lights": 0,
+    "materials": 8,
+    "mesh_objects": 9,
+    "missing_material_faces": 0,
+    "node_materials": 8,
+    "non_manifold_edges": 13936,
+    "objects": 11,
+    "polygons": 45454,
+    "refinement_modifiers": 0,
+    "rigid_body_objects": 0,
+    "shape_keys": 0,
+    "simulation_modifiers": 0,
+    "smooth_polygons": 45048,
+    "textured_materials": 1,
+    "triangles": 45454,
+    "uv_mapped_meshes": 5,
+    "vertices": 29453,
+    "weighted_meshes": 0,
+    "wire_edges": 0,
+    "zero_length_edges": 0
+  }
+}

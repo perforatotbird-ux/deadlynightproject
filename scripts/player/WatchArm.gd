@@ -1,8 +1,9 @@
 extends Node3D
-# Reuse the authored left glove/sleeve, with a physical digital wristwatch.
-const HANDS=preload("res://assets/models/viewmodels/axe_grip_hands.gltf")
-const REST:=Vector3(-0.55,-0.85,-0.40)
-const RAISED:=Vector3(-0.015,-0.16,-0.43)
+# Traverse 01: authored anatomical forearm + circular field watch, generated in Blender.
+# The dense editable source is excluded from Godot; this is its runtime GLB.
+const MODEL=preload("res://assets/models/viewmodels/watch/left_arm_round_watch.glb")
+const REST:=Vector3(-0.46,-0.70,-0.28)
+const RAISED:=Vector3(-0.055,-0.065,-0.21)
 var player:Node
 var blend:=0.0
 var remaining:=0.0
@@ -11,25 +12,18 @@ var day_label:Label3D
 var arm:Node3D
 func _ready()->void:
  name="WatchArm";position=REST;visible=false
- arm=Node3D.new();arm.name="LeftWatchHand";add_child(arm)
- var source:=HANDS.instantiate()
- for mesh in source.find_children("*","MeshInstance3D",true,false):
-  if mesh.name not in ["LeftHand","LeftWristCuff","ForearmSleeve"]:continue
-  var copy:=MeshInstance3D.new();copy.name=mesh.name;copy.mesh=mesh.mesh;copy.transform=mesh.transform;copy.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF;arm.add_child(copy)
-  if mesh.name=="ForearmSleeve":copy.position=Vector3(-0.33,-0.021,0.025);copy.rotation.z=PI/2;copy.scale=Vector3(0.85,0.4,0.85)
- source.free()
- var strap:=MeshInstance3D.new();strap.name="WatchStrap";var ring:=CylinderMesh.new();ring.top_radius=0.048;ring.bottom_radius=0.048;ring.height=0.036;strap.mesh=ring;strap.rotation.z=PI/2;strap.position=Vector3(-0.165,-0.021,0.025);strap.material_override=material(Color("202629"));arm.add_child(strap)
- box("WatchCase",Vector3(0.093,0.070,0.024),Vector3(-0.165,-0.021,0.073),Color("353c3d"))
- box("LCD",Vector3(0.080,0.054,0.003),Vector3(-0.165,-0.021,0.087),Color("9bac82"),true)
- digits=Label3D.new();digits.name="DigitalTime";digits.font_size=44;digits.pixel_size=0.00048;digits.position=Vector3(-0.165,-0.013,0.091);digits.modulate=Color("182b22");digits.outline_size=0;digits.no_depth_test=false;arm.add_child(digits)
- day_label=Label3D.new();day_label.name="WatchDay";day_label.font_size=16;day_label.pixel_size=0.00048;day_label.position=Vector3(-0.165,-0.038,0.091);day_label.modulate=Color("182b22");day_label.outline_size=0;arm.add_child(day_label)
+ arm=MODEL.instantiate();arm.name="LeftWatchHand";add_child(arm)
+ for mesh in arm.find_children("*","MeshInstance3D",true,false):
+  mesh.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+ var anchor:Node3D=arm.find_child("DisplayAnchor",true,false)
+ assert(anchor!=null,"Authored watch needs a display anchor")
+ digits=Label3D.new();digits.name="DigitalTime";digits.font_size=44;digits.pixel_size=0.00018
+ digits.position=Vector3(0,0.0014,0.00020);digits.modulate=Color("c2e8e9");digits.outline_size=0;digits.no_depth_test=false
+ anchor.add_child(digits)
+ day_label=Label3D.new();day_label.name="WatchDay";day_label.font_size=16;day_label.pixel_size=0.00018
+ day_label.position=Vector3(0,-0.007,0.00020);day_label.modulate=Color("8eb8bb");day_label.outline_size=0
+ anchor.add_child(day_label)
  refresh_time()
-func material(color:Color,unshaded:bool=false)->StandardMaterial3D:
- var m:=StandardMaterial3D.new();m.albedo_color=color
- if unshaded:m.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED
- return m
-func box(title:String,size:Vector3,pos:Vector3,color:Color,unshaded:bool=false)->void:
- var n:=MeshInstance3D.new();n.name=title;var mesh:=BoxMesh.new();mesh.size=size;n.mesh=mesh;n.position=pos;n.material_override=material(color,unshaded);n.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF;arm.add_child(n)
 func can_check()->bool:
  return is_instance_valid(player) and player._is_active and not player._is_inventory_open and not player._is_map_open and is_instance_valid(player.survival) and player.survival.health>0 and player.survival.job.is_empty() and not player.survival.placing and not (is_instance_valid(player._pause_menu) and player._pause_menu.visible)
 func toggle()->void:
@@ -46,6 +40,7 @@ func _process(delta:float)->void:
  if not can_check():remaining=0
  remaining=maxf(0,remaining-delta)
  blend=move_toward(blend,1.0 if remaining>0 else 0.0,delta/0.32)
- position=REST.lerp(RAISED,smoothstep(0,1,blend));rotation.z=lerpf(-0.45,-0.12,blend);visible=blend>0.001
+ var eased:=smoothstep(0,1,blend)
+ position=REST.lerp(RAISED,eased);rotation=Vector3(-0.65,0.25,-1.0).lerp(Vector3(-0.06,-0.12,-0.10),eased);visible=blend>0.001
  if is_instance_valid(player):player._axe_sway_pivot.visible=not visible
  if visible:refresh_time()

@@ -1,0 +1,26 @@
+{
+  "creation_transport": "Actual MCP stdio ClientSession.call_tool(execute_blender_code) to mcp-for-blender, socket addon 127.0.0.1:9876",
+  "blender": "4.5.3 LTS",
+  "mcp_tools_used": [
+    "execute_blender_code"
+  ],
+  "telemetry_disabled": true,
+  "external_model_generation_used": false,
+  "clean_cli_rebuild_passed": true,
+  "geometry_metrics_match_MCP_build": true,
+  "cross_process_GLB_bytes_identical": false,
+  "note": "Binary checksums differed between live MCP and clean CLI exports; geometry totals, source topology, independent import, materials and runtime tests passed. Byte equality is not claimed.",
+  "metrics": {
+    "blender": "4.5.3 LTS",
+    "runtime_mesh_triangles": 45454,
+    "runtime_vertices": 23072,
+    "runtime_nodes": 11,
+    "high_poly_subdivision": 3,
+    "high_poly_arm_triangles": 248704,
+    "arm_length_m": 0.57,
+    "watch_diameter_m": 0.053,
+    "source": "art/source/watch/left_arm_round_watch.blend",
+    "export": "assets/models/viewmodels/watch/left_arm_round_watch.glb"
+  },
+  "final_glb_sha256": "961bfc69ee729a606731abf000c13be75115c01f73afdd9b9a59af41250acef7"
+}

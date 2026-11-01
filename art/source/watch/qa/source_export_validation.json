@@ -1,0 +1,26 @@
+{
+  "blender": "4.5.3 LTS",
+  "checks_passed": true,
+  "source_arm": {
+    "triangles": 248704,
+    "boundary_edges": 0,
+    "nonmanifold_edges": 0,
+    "components_note": "native connected surface",
+    "invalid_vertices": 0
+  },
+  "source_packed_images": [
+    "skin_albedo.png",
+    "skin_normal.png"
+  ],
+  "fresh_runtime_arm": {
+    "triangles": 15544,
+    "boundary_edges": 0,
+    "nonmanifold_edges": 0,
+    "components_note": "UV-split GLB vertices welded at 0.1 micron only for topology inspection",
+    "invalid_vertices": 0
+  },
+  "runtime_total_triangles": 45454,
+  "runtime_mesh_objects": 9,
+  "preview_time_exported": false,
+  "scope": "static posed hand; rigid T animation tested in Godot, no individual-finger rig claimed"
+}

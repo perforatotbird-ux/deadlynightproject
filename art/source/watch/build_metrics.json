@@ -1,0 +1,12 @@
+{
+  "blender": "4.5.3 LTS",
+  "runtime_mesh_triangles": 45454,
+  "runtime_vertices": 23072,
+  "runtime_nodes": 11,
+  "high_poly_subdivision": 3,
+  "high_poly_arm_triangles": 248704,
+  "arm_length_m": 0.57,
+  "watch_diameter_m": 0.053,
+  "source": "art/source/watch/left_arm_round_watch.blend",
+  "export": "assets/models/viewmodels/watch/left_arm_round_watch.glb"
+}
