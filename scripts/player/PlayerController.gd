@@ -161,6 +161,8 @@ var _is_active: bool = true
 var _is_mouse_captured: bool = true
 var _is_inventory_open: bool = false
 var _fall_speed:float = 0.0
+var _fall_origin_y:=0.0
+const MAX_STEP_HEIGHT:=0.45
 var _is_lmb_held: bool = false
 
 var is_lmb_held: bool:
@@ -1609,9 +1611,32 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_PAUSED:
 		_cancel_chop()
 
+func _try_step_up(motion:Vector3) -> bool:
+	if motion.length_squared()<0.000001 or velocity.y>0.1 or (not is_on_floor() and _coyote_timer<=0):return false
+	var wall:=KinematicCollision3D.new()
+	if not test_move(global_transform,motion,wall) or wall.get_normal().y>0.5:return false
+	var raised:=global_transform
+	var lift:=Vector3.UP*(MAX_STEP_HEIGHT+0.02)
+	if test_move(raised,lift):return false
+	raised.origin+=lift
+	if test_move(raised,motion):return false
+	raised.origin+=motion
+	var landing:=KinematicCollision3D.new()
+	if not test_move(raised,Vector3.DOWN*(MAX_STEP_HEIGHT+0.08),landing):return false
+	if landing.get_normal().dot(Vector3.UP)<cos(floor_max_angle):return false
+	var target:=raised.origin+landing.get_travel()
+	var rise:=target.y-global_position.y
+	if rise<0.025 or rise>MAX_STEP_HEIGHT+0.015:return false
+	global_position=target;velocity.y=0;_fall_speed=0;_fall_origin_y=target.y
+	apply_floor_snap()
+	return true
 func _move_with_impact() -> void:
-	if not is_on_floor():_fall_speed=maxf(_fall_speed,-velocity.y)
-	move_and_slide()
+	if is_on_floor():_fall_origin_y=global_position.y
+	else:
+		_fall_origin_y=maxf(_fall_origin_y,global_position.y)
+		_fall_speed=maxf(_fall_speed,-velocity.y)
+	var motion:=Vector3(velocity.x,0,velocity.z)*get_physics_process_delta_time()
+	if not _try_step_up(motion):move_and_slide()
 	if is_on_floor():
-		if is_instance_valid(survival):survival.land(_fall_speed)
-		_fall_speed=0.0
+		if is_instance_valid(survival):survival.land(_fall_speed,maxf(0,_fall_origin_y-global_position.y))
+		_fall_speed=0.0;_fall_origin_y=global_position.y

@@ -727,8 +727,9 @@ func apply_damage(amount:float,cause:String) -> void:
  if health<=0 or body.invulnerable or not is_finite(amount) or amount<=0:return
  health=maxf(0,health-amount);body.causes.clear();body.last_damage=cause
  if health<=0:_die()
-func land(impact_speed:float) -> void:
- if impact_speed<11 or body.invulnerable or health<=0:return
+func land(impact_speed:float,drop_height:float=-1.0) -> void:
+ if not is_finite(impact_speed) or (drop_height>=0 and drop_height<2.5):return
+ if impact_speed<12 or body.invulnerable or health<=0:return
  apply_damage((impact_speed-10)*4,"Падение")
  if health<=0:return
  body.conditions["sprain"]={"remaining":240.0}
