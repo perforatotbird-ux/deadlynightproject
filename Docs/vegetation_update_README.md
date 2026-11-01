@@ -1,4 +1,8 @@
-# Deadly Night — vegetation update
+# Deadly Night — vegetation update (архивная инструкция)
+
+> **Статус (сверено 1 ноября 2026): исторический документ, дубликат `README-VEGETATION.md` в корне.**
+> Растительность влита в `main` коммитом `1d91bf6`. Распаковка архива не требуется.
+> Актуальное описание механики — `Docs/vegetation_implementation.md`, план — `Docs/vegetation_plan.md`.
 
 Это архив изменённых и новых исходников, НЕ отдельная игра и НЕ Windows-сборка.
 База: perforatotbird-ux/deadlynightproject, main, e00ab655879a482be8138d5df604ea2f9009116c.
@@ -8,7 +12,7 @@
 3. Откройте project.godot в Godot 4.7.2 и дождитесь импорта ресурсов.
 4. Запускайте обычную сцену игры; сбор растений — E, знания — вкладка «Растения», готовка — у горящего костра.
 
-Полный отчёт, параметры, ограничения и команды тестов: Docs/vegetation_implementation.md.
-Список файлов: Docs/vegetation_changes.txt. Кадры и логи: Docs/qa/vegetation/.
-Новые изменения локальные, не отправлены в GitHub.
+Полный отчёт, параметры, ограничения и команды тестов: `Docs/vegetation_implementation.md`.
+Список файлов: `Docs/vegetation_changes.txt`. Кадры и логи: `Docs/qa/vegetation/`.
+
 Ручной трёхдневный survival-проход и целевая Windows/GPU-проверка остаются задачами приёмки.

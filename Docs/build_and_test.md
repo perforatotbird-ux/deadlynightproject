@@ -1,132 +1,171 @@
 # Руководство по сборке, запуску и тестированию (Build & Test)
-## Deadly Night — Level Design MVP
 
-**Версия документа:** 1.0  
-**Дата аудита окружения:** 28 октября 2026 г.  
-**Ветка разработки:** `mvp-level-design`
+## Deadly Night — рабочая версия 0.4.7
+
+**Версия документа:** 2.0  
+**Дата сверки с кодом:** 1 ноября 2026 г.  
+**Ветка:** `main`  
+**Проверено:** версии инструментов, структура каталогов, точки входа сцен, команды запуска тестов.
 
 ---
 
-## 1. Обнаруженное окружение и версии
+## 1. Окружение и версии
 
-| Компонент | Обнаруженная версия / статус | Путь / расположение | Примечания |
+| Компонент | Версия / статус | Путь | Примечания |
 |---|---|---|---|
-| **ОС** | Windows x64 | — | PowerShell 7 / Windows Terminal |
-| **Godot Engine** | `4.7.2.stable.official.ed1daf0bf` | `K:\Deadly Night\Godot\godot.exe` | Целевая версия для проекта |
-| **Godot Export Templates** | `4.7.2.stable` (включая Web) | `C:\Users\inval\AppData\Roaming\Godot\export_templates\4.7.2.stable\` | В наличии `web_nothreads_release.zip`, `web_release.zip`, `web_debug.zip` |
-| **Blender** | `5.2.1 LTS` (Release, CMake) | `C:\Program Files\Blender Foundation\Blender 5.2\blender.exe` | Поддерживает background mode (`--background --python`) |
-| **Blender MCP Socket** | Активен (TCP Port `9876`) | `127.0.0.1:9876` | Запущен аддон `blender_mcp.py`, откликается на JSON-RPC команды (`ping`, `execute_code`) |
-| **Python** | `3.10.11` | В системном `PATH` | Используется для утилит и локального web-сервера |
-| **Node.js** | `v22.19.0` | В системном `PATH` | Дополнительный инструментарий |
-| **Git** | `2.51.0.windows.1` | В системном `PATH` | Репозиторий инициализирован, ветка `mvp-level-design` |
-| **Браузеры** | Google Chrome, MS Edge, Mozilla Firefox | `C:\Program Files\Google\Chrome\Application\chrome.exe`<br>`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`<br>`C:\Program Files\Mozilla Firefox\firefox.exe` | Для тестирования HTML5-сборки |
+| **ОС** | Windows x64 | — | Сборка и тесты выполняются из Git Bash / PowerShell 7 |
+| **Godot Engine** | `4.7.2.stable.official.ed1daf0bf` | `Godot/godot.exe` | Локальный автономный бинарник, версия сверена командой `godot.exe --version` |
+| **Godot Export Templates** | `4.7.2.stable` (35 файлов, включая `web_*.zip`) | `%APPDATA%\Godot\export_templates\4.7.2.stable\` | Шаблоны установлены, но **пресет экспорта в репозитории отсутствует** (см. §5) |
+| **Blender** | `5.2` | `C:\Program Files\Blender Foundation\Blender 5.2\blender.exe` | Генераторы рельефа и ассетов в `scripts/blender/` |
+| **Python** | `3.13.14` в `PATH`; `3.10.11` отдельной установкой | — | Утилиты `scripts/art/`, `scripts/audio/`, `scripts/serve_web.py`; Graphify использует собственный интерпретатор из `graphify-out/.graphify_python` |
+| **Node.js** | `v22.22.2` | в `PATH` | Вспомогательный инструментарий |
+| **Git** | `2.55.0.windows.3` + Git LFS | в `PATH` | Модели, текстуры, аудио и PNG QA хранятся в LFS |
+
+> Версии Python, Node и Git изменились относительно первой редакции этого документа (3.10.11 / 22.19.0 / 2.51.0). На работу проекта они не влияют: игровой код — только GDScript.
 
 ---
 
-## 2. Структура проекта
+## 2. Структура проекта (фактическая)
 
 ```text
 K:\Deadly Night\
-├── .git/                     # Git-репозиторий
-├── .gitignore                # Игнорирование бинарников, кешей Godot и экспортов
-├── Docs/                     # Документация проекта
-│   ├── forest_level_design_mvp.md  # Главное техническое задание и промты
-│   └── build_and_test.md           # Этот документ (инструкция по сборке/запуску)
-├── Godot/                    # Исполняемые файлы движка
-│   └── godot.exe             # Godot Engine v4.7.2.stable
-├── assets/                   # Исходные и готовые ассеты
-│   ├── source_blender/       # Исходные файлы .blend
-│   ├── models/               # Экспортированные модели .glb
-│   ├── materials/            # Материалы и шейдеры
-│   └── sounds/               # Звуковые эффекты
-├── data/                     # Единый источник правды (JSON)
-│   ├── level_layout.json     # Конфигурация мира, тайлов, высот, POI, дорог
-│   └── vegetation_placements.json # Расстановка растительности
-├── exports/                  # Сборки проекта
-│   └── web/                  # HTML5 / WebGL сборка (index.html, wasm, pck)
-├── scenes/                   # Сцены Godot
-│   ├── bootstrap/            # Сцена инициализации/загрузки
-│   ├── map/                  # Карта и тайлы
-│   │   └── tiles/            # Сцены отдельных тайлов 500x500м
-│   ├── player/               # Персонаж, FPS-контроллер
-│   ├── props/                # Интерактивные объекты (деревья, пни, лут)
-│   ├── mine/                 # Экстерьер и интерьер шахты
-│   └── viewer/               # MapViewer (свободная Fly-камера для инспекции)
-└── scripts/                  # Исходный код логики и генерации
-    ├── blender/              # Детерминированные генераторы рельефа/растительности
-    ├── world/                # Стриминг тайлов и инстансинг MultiMesh
-    ├── player/               # Логика персонажа и экипировки
-    ├── props/                # Логика срубаемых деревьев
-    ├── viewer/               # Скрипт свободной камеры
-    └── serve_web.py          # Локальный HTTP-сервер с COOP/COEP заголовками
+├── project.godot              # main scene = scenes/menu/MainMenu.tscn, Forward+, 1280×720
+├── run.bat                    # импорт ассетов + запуск игровой сцены (см. §3.2)
+├── default_bus_layout.tres    # аудиошины Master/Music/SFX/Ambience
+├── Docs/                      # вся документация, индекс — Docs/README.md
+│   ├── Deadly_Night_GDD_v3/   # GDD v3: 00–07 + GDD_FULL + sources/
+│   ├── promts/gameplay/       # сохранённые промты (meny, sky_weather, vegetation, woodland_life)
+│   └── qa/                    # логи, benchmark.json и нативные кадры по задачам
+├── Godot/godot.exe            # движок (в .gitignore)
+├── assets/
+│   ├── models/                # terrain (256 чанков), trees, vegetation, props, mine, viewmodels, external
+│   ├── sounds/                # аудиокит
+│   ├── source_blender/        # .blend исходники (LFS)
+│   ├── ui/                    # иконки, полевое журналирование, шрифты
+│   ├── sky/  fonts/
+├── data/                      # источник правды: heightmap, splatmap, layout, scatter, аудиоманифест
+├── exports/web/               # пусто; в .gitignore
+├── scenes/
+│   ├── menu/                  # MainMenu, NewGame, LoadGame, Settings, Credits, PauseMenu, MenuBackdrop3D
+│   ├── map/WorldMap.tscn      # корень мира
+│   ├── viewer/MapViewer.tscn  # ИГРОВАЯ сцена: WorldMap + Player + FreeFlyCamera
+│   ├── player/Player.tscn
+│   ├── props/TreeInteractive.tscn
+│   └── mine/MineInterior.tscn
+├── scripts/
+│   ├── atmosphere/ art/ audio/ blender/ core/ dev/ menu/ mine/
+│   ├── player/ props/ survival/ ui/ vegetation/ viewer/ weather/ world/
+│   └── serve_web.py
+├── shaders/                   # 4 шейдера (небо, дождь, поверхность)
+├── tests/                     # 67 GDScript-наборов + 1 Python-сумматор
+└── third_party/               # лицензии внешних моделей
+```
+
+Каталогов `scenes/bootstrap/`, `scenes/map/tiles/` и `assets/materials/` в проекте нет — они упоминались в первой редакции документа как планируемые.
+
+---
+
+## 3. Запуск
+
+### 3.1. Обычный запуск (рекомендуется)
+
+```bash
+./run.bat
+```
+
+`run.bat` проверяет наличие движка и LFS-иконок, выполняет **инкрементальный** импорт (`--editor --import`), останавливается при `ERROR:` в логе импорта и затем запускает `scenes/viewer/MapViewer.tscn`.
+
+> `run.bat` стартует игровую сцену напрямую, минуя меню. Штатная точка входа проекта — `scenes/menu/MainMenu.tscn` (`run/main_scene` в `project.godot`).
+
+### 3.2. Редактор и отдельные сцены
+
+```bash
+./Godot/godot.exe -e --path .                              # редактор
+./Godot/godot.exe --path .                                 # штатная точка входа — MainMenu
+./Godot/godot.exe --path . scenes/viewer/MapViewer.tscn     # игровой мир
+./Godot/godot.exe --path . scenes/mine/MineInterior.tscn    # шахта (без сохранения контекста)
+```
+
+### 3.3. Импорт без запуска
+
+```bash
+./Godot/godot.exe --headless --path . --editor --import
 ```
 
 ---
 
-## 3. Команды запуска и сборки
+## 4. Тесты
 
-### 3.1. Генерация в Blender
+Все наборы запускаются из корня проекта. Отдельного фреймворка нет: каждый `.gd` в `tests/` — самостоятельный `SceneTree`-скрипт, который печатает `PASS`/`FAIL` и итоговую строку `... SUMMARY: N PASS, M FAIL`.
 
-* **Через интерактивный сокет Blender MCP (порт 9876):**  
-  Скрипты могут отправлять JSON-команды напрямую в активное окно Blender через TCP socket `127.0.0.1:9876`:
-  ```json
-  {"type": "execute_code", "params": {"code": "import bpy; ..."}}
-  ```
-* **Через фоновый режим (CLI / headless):**
-  ```powershell
-  & "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" --background --python scripts\blender\generate_terrain.py
-  ```
+```bash
+# Аудит загрузки всех production-скриптов (быстрая проверка целостности)
+./Godot/godot.exe --headless --path . --script tests/audit_scripts.gd
 
-### 3.2. Локальный запуск Godot (Desktop)
+# Модульные наборы
+./Godot/godot.exe --headless --path . --script tests/test_calories.gd
+./Godot/godot.exe --headless --path . --script tests/test_vegetation.gd
 
-* **Запуск редактора проекта:**
-  ```powershell
-  .\Godot\godot.exe -e --path .
-  ```
-* **Запуск проекта (standalone/debug):**
-  ```powershell
-  .\Godot\godot.exe --path .
-  ```
-* **Запуск конкретной сцены (например, MapViewer):**
-  ```powershell
-  .\Godot\godot.exe --path . scenes/viewer/MapViewer.tscn
-  ```
-
-### 3.3. Экспорт в HTML5 (Web)
-
-* **Сборка через CLI (headless):**
-  ```powershell
-  .\Godot\godot.exe --headless --path . --export-release "Web" exports/web/index.html
-  ```
-  *Примечание: Пресет экспорта `Web` настраивается в `export_presets.cfg` с флагом `threads=false` (однопоточный режим).*
-
-### 3.4. Запуск локального HTTP-сервера для Web-сборки
-
-Запуск через `file://` в современных браузерах блокируется политиками безопасности (CORS, загрузка `.wasm` и `.pck`).  
-Для запуска используется подготовленный скрипт [scripts/serve_web.py](file:///K:/Deadly%20Night/scripts/serve_web.py):
-
-```powershell
-python scripts/serve_web.py 8000
+# Интеграция с реальными сценами и дисковыми слотами
+./Godot/godot.exe --headless --path . --script tests/test_vegetation_world.gd
+./Godot/godot.exe --headless --path . --script tests/test_vegetation_world.gd -- --load
 ```
-Сервер автоматически отдаёт заголовки:
-* `Cross-Origin-Opener-Policy: same-origin`
-* `Cross-Origin-Embedder-Policy: require-corp`
-* `Cache-Control: no-cache`
 
-Открыть в браузере:
-```powershell
-Start-Process "http://127.0.0.1:8000/"
-```
+Правила:
+
+1. **Изолированный профиль пользователя.** Тесты пишут реальные слоты. На Linux задавайте `XDG_DATA_HOME`, на Windows — отдельный `APPDATA`, чтобы не затронуть сохранения игрока.
+2. **Пары write → load.** Наборы с суффиксом `--load` запускаются отдельным процессом после основного.
+3. **Нативные проверки требуют дисплея:**
+   ```bash
+   DN_QA_OUTPUT=/absolute/output ./Godot/godot.exe --path . --rendering-method gl_compatibility \
+       --audio-driver Dummy --script tests/preview_vegetation.gd
+   ```
+4. **Headless ≠ GPU.** Прогоны без окна проверяют логику и сохранения; кадры Compatibility снимаются на программном Mesa llvmpipe. Целевой FPS на видеокарте игрока этими тестами не подтверждается.
+
+Актуальные итоги последних прогонов (1 ноября 2026): аудит — **62 скрипта, 0 ошибок**; калории — **39 PASS**; растительность — **55 PASS**. Остальные результаты зафиксированы в соответствующих QA-отчётах `Docs/*_qa.md`.
 
 ---
 
-## 4. Ограничения и архитектурные решения
+## 5. Экспорт
 
-1. **Godot MCP vs Локальный бинарник:**  
-   Плагин `godot-mcp` по умолчанию ищет движок по фиксированному пути `C:\Program Files\Godot\Godot.exe`. В нашем проекте используется локальный автономный бинарник `K:\Deadly Night\Godot\godot.exe` версии 4.7.2. Поэтому запуск тестов, валидация и экспорт выполняются напрямую через CLI/PowerShell.
-2. **Рендерер Godot Compatibility:**  
-   Для веб-сборки Godot 4.7.2 строго используется рендерер **Compatibility** (WebGL 2.0). Рендереры Forward+ и Mobile не поддерживаются в браузере.
-3. **GDScript Only:**  
-   Весь игровой код пишется исключительно на **GDScript**. Использование C#/.NET исключено, так как экспорт C# в Web требует сложных специализированных runtime-пакетов и нестабилен в однопоточном режиме.
-4. **Сетка мира:**  
-   Размер мира 4 × 4 км (16 км²), 64 тайла по 500 × 500 м. Растительность рендерится через `MultiMeshInstance3D` с группировкой по тайлам для обеспечения стабильной частоты кадров в браузере.
+**Пресета экспорта в репозитории нет.** Файл `export_presets.cfg` отсутствует, каталог `exports/web/` пуст, а проект настроен на рендерер `forward_plus`.
+
+Это осознанное текущее состояние, а не забытый шаг: вся приёмка идёт через запуск из исходников и headless-тесты. Первая редакция этого документа описывала HTML5-конвейер с рендерером Compatibility — на момент сверки он не используется.
+
+Если экспорт понадобится:
+
+1. Создать пресет в редакторе (`Project → Export`) и сохранить `export_presets.cfg` в репозиторий.
+2. Для Web выбрать рендерер **Compatibility** (WebGL 2.0): Forward+ и Mobile в браузере не поддерживаются.
+3. Собрать и раздать сборку:
+   ```bash
+   ./Godot/godot.exe --headless --path . --export-release "Web" exports/web/index.html
+   python scripts/serve_web.py 8000
+   ```
+   `scripts/serve_web.py` отдаёт `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp` и `Cache-Control: no-cache` — без них `.wasm`/`.pck` не загрузятся. Открывать `file://` бессмысленно.
+
+---
+
+## 6. Пайплайн Blender
+
+Генераторы детерминированы и запускаются headless:
+
+```bash
+"C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" --background \
+    --python scripts/blender/generate_heightmap.py
+```
+
+Порядок этапов: `generate_heightmap.py` → `carve_roads_and_water.py` → `generate_materials_and_splatmap.py` → `generate_vegetation_scatter.py` → `generate_tree_and_prop_assets.py`. Результаты попадают в `data/` (heightmap, splatmap, layout, scatter) и `assets/models/`.
+
+Интерактивный путь через Blender MCP (`127.0.0.1:9876`) требует запущенного Blender с аддоном `blender_mcp.py`; без него сокет недоступен, и это нормальный режим работы.
+
+---
+
+## 7. Архитектурные решения
+
+1. **Только GDScript.** C#/Mono не используется: экспорт в Web для .NET нестабилен, а весь код проекта уже на GDScript.
+2. **Forward+ как основной рендерер.** `project.godot` задаёт `forward_plus`, MSAA 2×. Compatibility применяется только в QA-прогонах через `--rendering-method gl_compatibility`.
+3. **Синглтоны без autoload.** В `project.godot` нет секции `[autoload]`: `SaveManager`, `SettingsManager`, `SurvivalItems`, `SurvivalWorld` и другие доступны через `class_name` и `get_instance()`. Это упрощает запуск отдельных сцен и тестов, но требует явной инициализации в точке входа.
+4. **Мир 4 × 4 км, 256 чанков по 250 м.** Террейн — единый `assets/models/terrain/terrain_256_chunks.glb`, коллизии строятся по чанкам. Схема 8 × 8 по 500 м осталась в истории как первая версия.
+5. **`MapViewer` — игровая сцена.** Имя сохранилось с этапа просмотра карты, но именно здесь живут `WorldMap`, `Player` и `FreeFlyCamera`; `SurvivalWorld` добавляется в рантайме. Смена сцен только лес ↔ шахта, меню — отдельная точка входа.
+6. **Локальный бинарник вместо Godot MCP.** Плагин `godot-mcp` ищет движок по фиксированному пути `C:\Program Files\Godot\Godot.exe`; проект использует `Godot/godot.exe`, поэтому все команды идут через CLI.
+7. **Git LFS.** `.glb`, `.blend`, `.wav`, `.ogg`, `.png`, `.r16` — LFS-объекты. Без `git lfs pull` проект не соберётся: `run.bat` явно проверяет маркеры LFS у иконок журнала.
