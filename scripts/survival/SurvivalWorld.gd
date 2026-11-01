@@ -582,6 +582,7 @@ func _stream_resources() -> void:
    loaded_cells[key]=true
    var random:=RandomNumberGenerator.new();random.seed=hash("DeadlyNight:"+key)
    var types=["brush","brush","brush","brush","stone","stone","stone","stone","flint","pyrite","berries"]
+   if posmod(hash("berry-density:"+key),2)==0:types[10]="brush"
    for i in types.size():
     var id:=key+":"+str(i)
     var pos:=Vector3(x*24+random.randf_range(2,22),player.global_position.y,z*24+random.randf_range(2,22))

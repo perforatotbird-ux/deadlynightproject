@@ -123,7 +123,9 @@ func _legacy_blocked(cell:Vector2i) -> bool:
  return false
 func prepare_cell(cell:Vector2i) -> Array:
  var key:=Patch.key(cell)
- if patches.has(key):return patches[key]
+ if patches.has(key):
+  patches[key]=patches[key].filter(func(record):return Patch.retained(record))
+  return patches[key]
  _rules();var records:Array=[]
  if not _legacy_blocked(cell):
   for candidate in Patch.candidates(cell,seed_value,placement_version):
