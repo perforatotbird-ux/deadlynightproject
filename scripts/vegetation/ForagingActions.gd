@@ -31,7 +31,7 @@ func begin_cook(id:String,amount:int=1) -> bool:
  session.notify("Готовка: %.0f игровых минут. Ингредиенты зарезервированы до завершения."%float(recipe.minutes));return true
 func cooking_valid(job:Dictionary) -> bool:
  var fire:Dictionary=session.find_fire(str(job.get("fire","")))
- return not fire.is_empty() and fire.get("state")=="burning" and session._fire_in_reach(fire)
+ return session.location=="forest" and not fire.is_empty() and fire.get("state")=="burning"
 func finish_cook(job:Dictionary) -> bool:
  var recipe:=cook_recipe(str(job.get("recipe","")),int(job.get("amount",0)))
  if recipe.is_empty() or not cooking_valid(job):return false

@@ -18,8 +18,9 @@ func run()->void:
  check(ui.cook_amount.value==2,"out-of-range selection clamps to actual stock")
  check(not s.foraging.begin_cook("forest_fat",3) and s.job.is_empty(),"direct over-limit request cannot start")
  check(s.foraging.begin_cook("forest_fat",2),"available two-portion batch starts")
- s.close_backpack();p.position.x+=0.9;s.advance(6)
- check(Items.count(p.inventory_slots,"forest_fat")==0 and Items.count(p.inventory_slots,"cooked_forest_fat")==2,"closed UI and small movement preserve cooking and exact ingredients")
+ s.close_backpack();p.position.x+=20;s.advance(6)
+ check(Items.count(p.inventory_slots,"forest_fat")==0 and Items.count(p.inventory_slots,"cooked_forest_fat")==2,"closed UI and walking away preserve cooking and exact ingredients")
+ p.position.x-=20
  var fungus:=Items.item("stump_fan");fungus.count=3;Items.transact(p,{},[fungus,Items.item("water")]);s.vegetation.inspected["stump_fan"]=true
  check(s.foraging.max_cook_amount("wood_tea")==1,"multi-ingredient recipe uses limiting stock")
  check(not s.foraging.begin_cook("wood_tea",2),"tea cannot exceed safe water stock")

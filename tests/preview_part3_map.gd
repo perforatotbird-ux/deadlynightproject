@@ -24,6 +24,12 @@ func run()->void:
  await RenderingServer.frame_post_draw
  validate_labels(s.map_ui.view)
  root.get_texture().get_image().save_png(dir+"/zoom.png")
+ s.map_model.explored.clear();s.map_model.discovered.clear();s.map_model.last_position=Vector2(INF,INF);s.map_model.explore(Vector2(-900,1100));s.map_model.revision+=1
+ p.rotation.y=-PI/4;s.map_ui.refresh_status();s.map_ui.view.queue_redraw()
+ for i in 4:await process_frame
+ await RenderingServer.frame_post_draw
+ validate_labels(s.map_ui.view)
+ root.get_texture().get_image().save_png(dir+"/fog.png")
  arena.free();await process_frame;quit()
 
 func validate_labels(view:Control)->void:

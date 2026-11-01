@@ -248,11 +248,11 @@ func advance(real_seconds: float) -> void:
    if job.get("kind")=="harvest" and not vegetation.harvest_valid(job):
     cancel_job();notify("Сбор прерван: цель недоступна или открыт журнал");continue
    if job.get("kind")=="vegetation_cook" and not foraging.cooking_valid(job):
-    cancel_job();notify("Готовка прервана: огонь погас или недоступен; ингредиенты сохранены");continue
+    cancel_job();notify("Готовка прервана: огонь погас; ингредиенты сохранены");continue
    if job.get("kind")=="boil":
     var boiling_fire:=find_fire(str(job.get("fire","")))
-    if boiling_fire.is_empty() or boiling_fire.get("state")!="burning" or not _fire_in_reach(boiling_fire):
-     cancel_job();notify("Кипячение прервано: огонь погас или недоступен; вода сохранена");continue
+    if location!="forest" or boiling_fire.is_empty() or boiling_fire.get("state")!="burning":
+     cancel_job();notify("Кипячение прервано: огонь погас; вода сохранена");continue
    if job.get("kind")=="rest":
     if not has_sleep_access() or not safe_sleep_place() or warmth<20 or body.water<=0 or body.food<=0 or body.conditions.has("bleeding") or body.poison_limits_effort():
      cancel_job();notify("Отдых прерван: холод, открытая дверь, голод, жажда, кровотечение или отравление");continue
@@ -506,7 +506,7 @@ func _finish_job() -> void:
    else:notify("Розжиг не удался. Добавьте растопку и попробуйте ещё раз.")
   "boil":
    var f:=find_fire(str(done.get("fire","")))
-   if f.is_empty() or f.get("state")!="burning" or not _fire_in_reach(f):notify("Кипячение прервано: нужен горящий костёр рядом.")
+   if location!="forest" or f.is_empty() or f.get("state")!="burning":notify("Кипячение прервано: огонь погас.")
    else:
     var output:=Items.item("water");output.count=int(done.get("amount",1))
     notify("Готово: %.1f л питьевой воды" % (output.count*0.5) if Items.transact(player,{"raw_water":output.count},[output]) else "Вода сохранена: нет сырой воды или места в рюкзаке")
