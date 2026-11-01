@@ -17,6 +17,11 @@ def material(family):
  pix=np.ones((n,n,4),dtype=np.float32);pix[:,:,:3]=g[:,:,None]
  im=bpy.data.images.new(family+'_grain',width=n,height=n);im.pixels.foreach_set(pix.ravel());im.filepath_raw=str(OUT/(family+'_grain.png'));im.file_format='PNG';im.save();im.pack()
  m=bpy.data.materials.new(family+'_PBR');m.use_nodes=True;nd=m.node_tree.nodes;lk=m.node_tree.links;p=nd.get('Principled BSDF');p.inputs['Roughness'].default_value=.36 if family=='pyrite' else .82;p.inputs['Metallic'].default_value=.82 if family=='pyrite' else 0
+ # Export-friendly tangent normal grain, no Blender-only procedural nodes.
+ dy,dx=np.gradient(g);norm=np.stack((-dx*2,-dy*2,np.ones_like(g)),axis=2);norm/=np.linalg.norm(norm,axis=2,keepdims=True)
+ normalpix=np.ones((n,n,4),dtype=np.float32);normalpix[:,:,:3]=norm*.5+.5
+ normal=bpy.data.images.new(family+'_normal',width=n,height=n);normal.colorspace_settings.name='Non-Color';normal.pixels.foreach_set(normalpix.ravel());normal.filepath_raw=str(OUT/(family+'_normal.png'));normal.file_format='PNG';normal.save();normal.pack()
+ nt=nd.new('ShaderNodeTexImage');nt.image=normal;nm=nd.new('ShaderNodeNormalMap');nm.inputs['Strength'].default_value=.35 if family!='branch' else .7;lk.new(nt.outputs['Color'],nm.inputs['Color']);lk.new(nm.outputs['Normal'],p.inputs['Normal'])
  t=nd.new('ShaderNodeTexImage');t.image=im;c=nd.new('ShaderNodeVertexColor');c.layer_name='Color';mix=nd.new('ShaderNodeMixRGB');mix.blend_type='MULTIPLY';mix.inputs[0].default_value=1;lk.new(t.outputs['Color'],mix.inputs[1]);lk.new(c.outputs['Color'],mix.inputs[2]);lk.new(mix.outputs[0],p.inputs['Base Color']);return m
 FAMILY={'stone':'stone','minerals':'pyrite','branches':'branch','fungi':'fungi'}[STAGE];MAT=material(FAMILY)
 V=[];F=[];C=[];UV=[]
@@ -129,9 +134,19 @@ elif STAGE=='minerals':
 elif STAGE=='branches':
  for i in range(5):
   reset();length=.42+i*.15
-  pts=[(-length*.5+length*j/17,.025*math.sin(j*.22+i),.032+.015*math.sin(j*.3)) for j in range(18)];r=[(.026+i*.002)*(1-.65*j/17) for j in range(18)]
+  pts=[(-length*.5+length*j/17,(.08 if i==2 else .025)*math.sin(j*.22+i),.032+.015*math.sin(j*.3)) for j in range(18)];r=[(.026+i*.002)*(1-.65*j/17) for j in range(18)]
   bark=lambda j,k:(.20+.05*math.sin(k*2.5+j*.3),.115+.025*math.sin(k*2.5),.055)
   tube(pts,r,bark,16)
+  # End grain growth rings and a bark-covered short knot.
+  end=Vector(pts[0]);rr=r[0]
+  for ring in [.35,.64,.86]:
+   path=[end+Vector((-.0007,math.cos(a*math.tau/24)*rr*ring,math.sin(a*math.tau/24)*rr*ring)) for a in range(25)]
+   tube(path,[.0006]*25,(.24,.135,.065),3)
+  if i>0:
+   p=Vector(pts[5]);tube([p,p+Vector((-.012,-.013,.018)),p+Vector((-.014,-.015,.038))],[.012,.010,.006],bark,12)
+  # A narrow pale bark scar follows the upper surface rather than floating.
+  path=[Vector(pts[j])+Vector((0,0,r[j]*.99)) for j in range(4,10)]
+  tube(path,[.0016]*len(path),(.41,.28,.13),4)
   if i!=0:
    p=Vector(pts[9]);fork=[p+Vector((j*.012,j*.013,math.sin(j*.1)*.03)) for j in range(13)];tube(fork,[.017*(1-.8*j/12) for j in range(13)],bark,12)
   if i>2:

@@ -1,0 +1,37 @@
+{
+  "branch_00": {
+    "triangles": 1074,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "branch_01": {
+    "triangles": 1458,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "branch_02": {
+    "triangles": 1458,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "branch_03": {
+    "triangles": 1530,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "branch_04": {
+    "triangles": 1530,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  }
+}

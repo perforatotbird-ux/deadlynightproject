@@ -10,3 +10,8 @@ Fresh GLB import/UV/color/material and zero-area checks pass; Godot model test p
 Native screenshot inspected after correcting per-island outward winding; this correction
 also updates the stone exports. Runtime materials/textures shared by family to avoid
 keeping duplicate embedded texture copies for each variant.
+
+Branches stage: five shapes/sizes, curved sweeps, fork junctions, short knots, bark scar,
+end-grain rings, exported tangent normal texture. 1074–1530 triangles, one surface.
+Seven GLB views and native Godot screenshot inspected. Model checks pass;
+meshes/generate_lods=true verified in import configurations.
