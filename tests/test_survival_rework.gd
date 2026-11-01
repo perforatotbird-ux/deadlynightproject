@@ -10,4 +10,12 @@ func _initialize()->void:
  check(Items.item("brush").name=="Ветки","legacy brush identity remains compatible but is named branches")
  check(Items.item("tinder").name=="Хворост","tinder is a separate item")
  check(Craft.recipe("tinder").costs=={"brush":1},"one branch crafts tinder")
+ var f:Dictionary=preload("res://scripts/survival/FireModel.gd").create("test",Vector3.ZERO)
+ check(f.tinder==0,"new fire does not contain free tinder")
+ var world=preload("res://scripts/survival/SurvivalWorld.gd").new()
+ world.fires=[f];world.selected_fire="test";f.fuel=300
+ check(world.ignition_chance("match")==0,"no tinder means zero ignition chance")
+ f.tinder=1
+ check(world.ignition_chance("match")>0,"added tinder enables an ignition chance")
+ world.free()
  print("SURVIVAL REWORK SUMMARY: %d PASS, %d FAIL" % [passes,failures]);quit(1 if failures else 0)

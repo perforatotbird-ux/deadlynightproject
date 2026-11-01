@@ -383,9 +383,12 @@ func add_fuel(id: String, slot_index: int, amount: int = 1) -> bool:
 func add_tinder(id: String) -> bool:
  var f:=find_fire(id)
  if f.is_empty() or not _fire_in_reach(f) or not job.is_empty():return false
- if not Items.transact(player,{"brush":1}):notify("Нужен хворост для растопки");return false
+ if not Items.transact(player,{"tinder":1}):notify("Нужен хворост для растопки");return false
  f["tinder"]+=1;ui.refresh();return true
-func ignition_chance(method: String) -> float:return Fire.chance(method,wetness,rain_intensity()>0,rain_intensity(),float(wind().strength))
+func ignition_chance(method: String, fire_id:String="") -> float:
+ var f:=find_fire(fire_id if fire_id!="" else selected_fire)
+ if f.is_empty() or int(f.get("tinder",0))<=0 or float(f.get("fuel",0))<=0:return 0.0
+ return Fire.chance(method,wetness,rain_intensity()>0,rain_intensity(),float(wind().strength))
 func begin_ignition(id: String, method: String) -> bool:
  var f:=find_fire(id)
  if method not in ["match","spark"] or not job.is_empty() or f.is_empty() or not _fire_in_reach(f):return false
@@ -397,11 +400,12 @@ func begin_ignition(id: String, method: String) -> bool:
  else:
   if Items.count(player.inventory_slots,"flint")<1 or Items.count(player.inventory_slots,"pyrite")<1:
    notify("Нужны кремень и пирит. Обычные камни не подходят.");return false
+ var chance:=ignition_chance(method,id)
  f["tinder"]-=1
  for node in fire_nodes:
   if is_instance_valid(node) and node.data["id"]==id:node.ignition_fx(method)
  # Persist a pre-rolled outcome: loading an in-progress attempt cannot reroll it.
- var success:=rng.randf()<ignition_chance(method)
+ var success:=rng.randf()<chance
  job={"kind":"ignite","elapsed":0.0,"duration":2.0 if method=="match" else 5.0,"fire":id,"success":success,"origin":_arr(player.global_position)}
  notify("Розжиг: спичка и растопка потрачены" if method=="match" else "Высекаете искру: растопка потрачена");ui.refresh();return true
 func _fire_in_reach(f: Dictionary) -> bool:

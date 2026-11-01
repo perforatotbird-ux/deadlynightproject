@@ -540,7 +540,7 @@ func refresh_actions() -> void:
   buttons["recipe_link"].visible=type=="log";buttons["recipe_link"].disabled=true
   buttons["fuel_link"].visible=type in ["firewood","brush"];buttons["fuel_link"].disabled=true
   _refresh_recipe();refresh_inventory();return
- var brush:int=s.Items.count(player.inventory_slots,"brush");var stones:int=s.Items.count(player.inventory_slots,"stone")
+ var brush:int=s.Items.count(player.inventory_slots,"tinder");var stones:int=s.Items.count(player.inventory_slots,"stone")
 
  buttons["kit"].disabled=busy or stones<6 or brush<4
  var f:Dictionary=s.find_fire(s.selected_fire)
