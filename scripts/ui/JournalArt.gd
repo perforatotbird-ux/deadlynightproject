@@ -6,6 +6,7 @@ const PAINTED_IDS:=["water","raw_water","ration","berries","bandage","compress",
 static var cache:Dictionary={}
 static func texture(id: String) -> Texture2D:
  if id=="":return null
+ id={"tinder":"brush","spruce_needles":"brush","forest_bed":"bedroll"}.get(id,id)
  if cache.has(id) and cache[id]!=null:return cache[id]
  var loaded:Texture2D=null
  # Finished painted PNGs are preferred everywhere, including field-guide food.

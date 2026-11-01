@@ -9,6 +9,7 @@ const FIRE_RECIPES:=[
  {"id":"wood_tea","title":"Древесный чай · гриб + 0,5 л воды · 5 мин"}
 ]
 const RECIPES:=[
+ {"id":"forest_bed","title":"Лесная кровать","icon":"bedroll","action":"kit","costs":{"brush":20,"spruce_needles":10},"seconds":0,"output":1,"description":"Временная лежанка на один ночлег: 20 веток и 10 единиц еловой хвои. После сна непригодна; дождь и холод остаются опасны."},
  {"id":"tinder","title":"Хворост","icon":"brush","action":"kit","costs":{"brush":1},"seconds":0,"output":1,"description":"Разберите одну ветку на сухой хворост для розжига."},
  {"id":"camp_kit","title":"Набор костра","icon":"camp_kit","action":"kit","costs":{"stone":6,"brush":4},"seconds":0,"output":1,"description":"Каменное кольцо и сухие ветки. После сборки разместите набор на ровной открытой земле."},
  {"id":"split_birch","title":"Поленья · берёза","icon":"firewood_birch","action":"split","species":"birch","seconds":10,"output":3,"description":"Светлые берёзовые поленья для костра. Одно бревно раскалывается на три части."},

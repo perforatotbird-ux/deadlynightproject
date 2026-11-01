@@ -34,6 +34,10 @@ var dev_tainted:=false
 var _last_need_warning:=""
 var _supply_setup:=false
 var matches := 12
+var forest_beds:Array=[]
+var bed_nodes:Array=[]
+var needle_trees:Dictionary={}
+var placement_kind:="camp_kit"
 var fires: Array = []
 var picked: Dictionary = {}
 var resources: Dictionary = {}
@@ -79,6 +83,25 @@ var foraging=preload("res://scripts/vegetation/ForagingActions.gd").new()
 
 func has_sleep_access() -> bool:
  return is_instance_valid(sleep_point) and sleep_point.has_method("is_sleep_point") and sleep_point.can_interact(player)
+func on_forest_bed() -> bool:
+ return has_sleep_access() and sleep_point.get_script()==preload("res://scripts/survival/ForestBed.gd")
+func safe_sleep_place() -> bool:
+ return safe_shelter() or (location=="forest" and on_forest_bed())
+func spend_bed(id:String) -> void:
+ for bed in forest_beds:
+  if str(bed.get("id",""))==id:bed["spent"]=true
+ for node in bed_nodes:
+  if is_instance_valid(node) and str(node.data.get("id",""))==id:node.refresh()
+func record_tree_felling(id:String,species:String,pos:Vector3) -> void:
+ vegetation.record_felling(id)
+ if species!="spruce" or needle_trees.has(id):return
+ needle_trees[id]=true
+ var needles:=Items.item("spruce_needles");needles.count=10
+ drop_resource(needles,pos+Vector3(0.9,0.12,0))
+func _spawn_bed(data:Dictionary) -> void:
+ if location!="forest":return
+ var node=preload("res://scripts/survival/ForestBed.gd").new();node.session=self;node.data=data
+ get_parent().add_child(node);node.global_position=_v3(data.pos);bed_nodes.append(node)
 func open_sleep(point:Node3D) -> bool:
  if not is_instance_valid(point) or not point.has_method("is_sleep_point") or not point.can_interact(player):return false
  if health<=0 or placing or not job.is_empty() or (is_instance_valid(dev_menu) and dev_menu.visible) or get_tree().paused:return false
@@ -221,7 +244,7 @@ func advance(real_seconds: float) -> void:
     if boiling_fire.is_empty() or boiling_fire.get("state")!="burning" or not _fire_in_reach(boiling_fire):
      cancel_job();notify("Кипячение прервано: огонь погас или недоступен; вода сохранена");continue
    if job.get("kind")=="rest":
-    if not has_sleep_access() or not safe_shelter() or warmth<20 or body.water<=0 or body.food<=0 or body.conditions.has("bleeding") or body.poison_limits_effort():
+    if not has_sleep_access() or not safe_sleep_place() or warmth<20 or body.water<=0 or body.food<=0 or body.conditions.has("bleeding") or body.poison_limits_effort():
      cancel_job();notify("Отдых прерван: холод, открытая дверь, голод, жажда, кровотечение или отравление");continue
    elif player.global_position.distance_to(_v3(job.get("origin",[])))>0.7:
     cancel_job();notify("Действие прервано движением");continue
@@ -284,7 +307,8 @@ func thermal_status(seconds:float=0.0) -> Dictionary:
  var state:Dictionary=weather_model.sample(clock,weather=="rain",weather_until,daylight(),SeasonModel.style_cuts(clock))
  var precipitation:=clampf(float(state.rain),0,1)
  var air:=SeasonModel.air_temperature(clock,daylight(),precipitation)
- return Thermal.step(wetness,seconds,air,heat_at_player(),float(wind().strength),precipitation,covered(),safe_shelter(),location=="mine")
+ var bed_rest:bool=job.get("kind")=="rest" and on_forest_bed()
+ return Thermal.step(wetness,seconds,air+(8.0 if bed_rest else 0.0),heat_at_player(),float(wind().strength)*(0.3 if bed_rest else 1.0),precipitation,covered(),safe_shelter(),location=="mine")
 func thermal_description() -> String:
  var t:=thermal_status()
  var warmth_rate:float=t.warmth_rate;var wet_rate:float=t.wet_rate
@@ -434,8 +458,10 @@ func rest_block_reason() -> String:
  if health<=0:return "Нельзя спать: персонаж погиб."
  if not job.is_empty():return "Сначала завершите или отмените текущее действие."
  if not has_sleep_access():return "Подойдите к действительной точке сна и нажмите E."
- if not covered() or location!="forest":return "Нужна койка в лесной стоянке."
- if not safe_shelter():return "Закройте дверь стоянки."
+ if location!="forest":return "Нужна точка сна в лесу."
+ if not on_forest_bed():
+  if not covered():return "Нужна койка в лесной стоянке."
+  if not safe_shelter():return "Закройте дверь стоянки."
  if warmth<20:return "Слишком холодно для сна. Сначала согрейтесь."
  if body.water<=0 or body.food<=0:return "Перед сном нужно поесть и попить."
  if body.conditions.has("bleeding"):return "Сначала остановите кровотечение."
@@ -445,8 +471,11 @@ func begin_rest(hours: int = 1) -> bool:
  var reason:=rest_block_reason()
  if reason!="":notify(reason);return false
  if hours<1 or hours>12:notify("Выберите от 1 до 12 часов сна");return false
- job={"kind":"rest","elapsed":0.0,"duration":float(hours),"hours":hours,"origin":_arr(player.global_position)};ui.refresh();return true
+ job={"kind":"rest","elapsed":0.0,"duration":float(hours),"hours":hours,"origin":_arr(player.global_position)}
+ if on_forest_bed():job["bed_id"]=str(sleep_point.data.id)
+ ui.refresh();return true
 func cancel_job() -> void:
+ if job.get("kind")=="rest" and job.has("bed_id") and float(job.get("elapsed",0))>0:spend_bed(str(job.bed_id))
  job={}
 func _finish_job() -> void:
  var done:=job.duplicate(true);job={}
@@ -469,14 +498,20 @@ func _finish_job() -> void:
    else:
     var output:=Items.item("water");output.count=int(done.get("amount",1))
     notify("Готово: %.1f л питьевой воды" % (output.count*0.5) if Items.transact(player,{"raw_water":output.count},[output]) else "Вода сохранена: нет сырой воды или места в рюкзаке")
-  "rest":notify("Сон завершён: %d ч" % int(done.get("hours",1)))
+  "rest":
+   if done.has("bed_id"):spend_bed(str(done.bed_id))
+   notify("Сон завершён: %d ч" % int(done.get("hours",1)))
  ui.refresh()
 
-func begin_placement() -> void:
+func begin_placement(item_id:String="camp_kit") -> void:
  if placing or not job.is_empty() or health<=0:return
- if location!="forest" or Items.count(player.inventory_slots,"camp_kit")==0:notify("Сначала соберите набор костра");return
+ if item_id not in ["camp_kit","forest_bed"]:return
+ if location!="forest" or Items.count(player.inventory_slots,item_id)==0:notify("Сначала создайте предмет");return
+ placement_kind=item_id
  close_backpack();placing=true
  preview=MeshInstance3D.new();var c:=CylinderMesh.new();c.top_radius=0.65;c.bottom_radius=0.65;c.height=0.06;preview.mesh=c
+ if placement_kind=="forest_bed":
+  var box:=BoxMesh.new();box.size=Vector3(1.0,0.08,2.0);preview.mesh=box
  var m:=StandardMaterial3D.new();m.transparency=BaseMaterial3D.TRANSPARENCY_ALPHA;m.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED;preview.material_override=m;get_parent().add_child(preview)
  notify("ЛКМ — поставить · ПКМ / Esc — отмена. Нужна ровная открытая земля.")
 func validate_placement(pos: Vector3, normal: Vector3, surface: Object = null) -> Dictionary:
@@ -485,14 +520,20 @@ func validate_placement(pos: Vector3, normal: Vector3, surface: Object = null) -
   var n:Node=surface as Node
   if n and (n.is_in_group("water") or "water" in str(n.name).to_lower()):return {"ok":false,"reason":"Нельзя размещать в воде"}
  var space=player.get_world_3d().direct_space_state
- for offset in [Vector3.ZERO,Vector3(0.65,0,0),Vector3(-0.65,0,0),Vector3(0,0,0.65),Vector3(0,0,-0.65)]:
+ var offsets:=[Vector3.ZERO,Vector3(0.65,0,0),Vector3(-0.65,0,0),Vector3(0,0,0.65),Vector3(0,0,-0.65)]
+ if placement_kind=="forest_bed":offsets=[Vector3.ZERO,Vector3(0.6,0,1.05),Vector3(-0.6,0,1.05),Vector3(0.6,0,-1.05),Vector3(-0.6,0,-1.05)]
+ for offset in offsets:
   var p:Vector3=pos+offset
   var hit=space.intersect_ray(PhysicsRayQueryParameters3D.create(p+Vector3.UP*0.5,p-Vector3.UP*0.5,1))
   if not hit.is_empty() and not hit.collider.is_in_group("camp_ground"):return {"ok":false,"reason":"Костёр можно ставить только на земле, не на сооружениях"}
   if hit.is_empty() or absf(hit.position.y-pos.y)>0.12:return {"ok":false,"reason":"Площадка неровная или край обрыва"}
  var ceiling=space.intersect_ray(PhysicsRayQueryParameters3D.create(pos+Vector3.UP*0.15,pos+Vector3.UP*4,1))
  if not ceiling.is_empty():return {"ok":false,"reason":"Костёр нельзя ставить под крышей или мостом"}
- var shape:=CylinderShape3D.new();shape.radius=0.78;shape.height=0.5
+ var shape:Shape3D
+ if placement_kind=="forest_bed":
+  var box:=BoxShape3D.new();box.size=Vector3(1.2,0.5,2.2);shape=box
+ else:
+  var cylinder:=CylinderShape3D.new();cylinder.radius=0.78;cylinder.height=0.5;shape=cylinder
  var q:=PhysicsShapeQueryParameters3D.new();q.shape=shape;q.transform=Transform3D(Basis.IDENTITY,pos+Vector3.UP*0.39);q.collision_mask=1|2|4|8
  if not space.intersect_shape(q,1).is_empty():return {"ok":false,"reason":"Слишком близко к препятствию или предмету"}
  return {"ok":true,"pos":_arr(pos),"reason":"ЛКМ — разместить костёр"}
@@ -508,7 +549,10 @@ func confirm_placement() -> bool:
  var pos:=_v3(placement["pos"])
  var check:=validate_placement(pos,Vector3.UP)
  if not check["ok"]:notify(check["reason"]);return false
- if not Items.transact(player,{"camp_kit":1}):cancel_placement();return false
+ if not Items.transact(player,{placement_kind:1}):cancel_placement();return false
+ if placement_kind=="forest_bed":
+  var bed:={"id":"bed_%d_%d" % [int(clock*100),rng.randi()],"pos":_arr(pos),"spent":false}
+  forest_beds.append(bed);_spawn_bed(bed);cancel_placement();notify("Лесная кровать установлена. [E] — один ночлег.");return true
  var f:=Fire.create("fire_%d_%d" % [int(clock*100),rng.randi()],pos);fires.append(f);_spawn_fire(f);cancel_placement();notify("Костёр установлен. [E] — добавить топливо и разжечь.");return true
 func cancel_placement() -> void:
  placing=false;placement={}
@@ -565,7 +609,7 @@ func drop_resource(item: Dictionary, pos: Vector3) -> void:
  _spawn_pickup(item,id,pos)
 
 func export_state() -> Dictionary:
- var state:={"version":4,"vegetation":vegetation.export_state(),"body":body.export_state(),"rain_reserve":rain_reserve,"dev_tainted":dev_tainted,"sky_weather":weather_model.export_state(),"sky_events":sky_events.export_state() if is_instance_valid(sky_events) else {},"atmosphere":atmosphere.export_state(),"clock":clock,"weather":weather,"weather_until":weather_until,"wetness":wetness,"warmth":warmth,"energy":energy,"health":health,"matches":matches,"active_tool":player.active_hotbar_slot,"belt_items":player.belt_items.duplicate(),"lantern_on":player._is_lantern_on,"fires":fires.duplicate(true),"picked":picked.duplicate(),"dropped":dropped.duplicate(true),"job":job.duplicate(true),"rng_state":str(rng.state),"location":location,"door_closed":shelter.door_closed if is_instance_valid(shelter) else _saved_door_closed,"exterior_felled":_old_felled if location=="mine" else {},"exterior_damaged":_old_damaged if location=="mine" else {},"exterior_logs":_old_logs if location=="mine" else [],"mine_logs":_mine_logs}
+ var state:={"version":4,"forest_beds":forest_beds.duplicate(true),"needle_trees":needle_trees.duplicate(),"vegetation":vegetation.export_state(),"body":body.export_state(),"rain_reserve":rain_reserve,"dev_tainted":dev_tainted,"sky_weather":weather_model.export_state(),"sky_events":sky_events.export_state() if is_instance_valid(sky_events) else {},"atmosphere":atmosphere.export_state(),"clock":clock,"weather":weather,"weather_until":weather_until,"wetness":wetness,"warmth":warmth,"energy":energy,"health":health,"matches":matches,"active_tool":player.active_hotbar_slot,"belt_items":player.belt_items.duplicate(),"lantern_on":player._is_lantern_on,"fires":fires.duplicate(true),"picked":picked.duplicate(),"dropped":dropped.duplicate(true),"job":job.duplicate(true),"rng_state":str(rng.state),"location":location,"door_closed":shelter.door_closed if is_instance_valid(shelter) else _saved_door_closed,"exterior_felled":_old_felled if location=="mine" else {},"exterior_damaged":_old_damaged if location=="mine" else {},"exterior_logs":_old_logs if location=="mine" else [],"mine_logs":_mine_logs}
  return state
 func import_state(state: Dictionary) -> void:
  close_backpack();cancel_placement()
@@ -576,6 +620,11 @@ func import_state(state: Dictionary) -> void:
  player.belt_items=state.get("belt_items",["","",""]).duplicate();player.belt_items.resize(3)
  player._refresh_belt_labels()
  player._is_lantern_on=bool(state.get("lantern_on",false));player.select_hotbar_slot(int(state.get("active_tool",player.active_hotbar_slot)))
+ for node in bed_nodes:
+  if is_instance_valid(node):node.free()
+ bed_nodes.clear();sleep_point=null
+ forest_beds=state.get("forest_beds",[]).duplicate(true);needle_trees=state.get("needle_trees",{}).duplicate()
+ for bed in forest_beds:_spawn_bed(bed)
  fires=state.get("fires",[]).duplicate(true);picked=state.get("picked",{}).duplicate();dropped=state.get("dropped",[]).duplicate(true)
  _old_damaged=state.get("exterior_damaged",{});_old_felled=state.get("exterior_felled",{});_old_logs=state.get("exterior_logs",[]);_mine_logs=state.get("mine_logs",[])
  vegetation.import_state(state.get("vegetation",{}),picked)
@@ -599,7 +648,11 @@ func import_state(state: Dictionary) -> void:
  if not saved_job.is_empty() and valid_job(saved_job) and saved_job.get("kind")!="harvest":
   job=saved_job
   if job.get("kind")=="rest":
-   if is_instance_valid(shelter) and shelter.bed.can_interact(player):sleep_point=shelter.bed
+   if job.has("bed_id"):
+    for node in bed_nodes:
+     if str(node.data.get("id",""))==str(job.bed_id) and node.can_interact(player):sleep_point=node
+    if not is_instance_valid(sleep_point):job={}
+   elif is_instance_valid(shelter) and shelter.bed.can_interact(player):sleep_point=shelter.bed
    else:job={}
    player._backpack_ui.sleep_hours.value=clampi(int(saved_job.get("hours",saved_job.get("duration",1))),1,12)
   if not job.is_empty():open_backpack(job.get("fire",""),"rest" if job.get("kind")=="rest" else "camp")

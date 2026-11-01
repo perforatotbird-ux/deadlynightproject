@@ -3,6 +3,8 @@ extends RefCounted
 const Vegetation = preload("res://scripts/vegetation/VegetationCatalog.gd")
 const WATER_RESTORE:=35.0
 const DEFINITIONS = {
+ "spruce_needles":{"name":"Еловая хвоя","unit_weight":0.03,"description":"Материал для лесной кровати. Сбор после рубки ели."},
+ "forest_bed":{"name":"Лесная кровать","unit_weight":2.7,"description":"20 веток и 10 единиц еловой хвои. Разместите на земле: один ночлег, затем непригодна. Не заменяет крышу и костёр."},
  "field_notes": {"name":"Памятка грибника","unit_weight":0.02,"description":"Вымышленные островные виды: признаки, приготовление и предупреждения об отравлении."},
  "water": {"name":"Питьевая вода · 0,5 л", "unit_weight":0.5, "description":"Безопасная вода. Восстанавливает 35% запаса воды."},
  "raw_water": {"name":"Сырая вода · 0,5 л", "unit_weight":0.5, "description":"Нужно кипятить у горящего костра. Пить сырой нельзя."},
@@ -80,6 +82,7 @@ static func refresh(player: Node) -> void:
  player.backpack_items.clear()
  for s in player.inventory_slots:
   if s!=null:
+   if s.get("type")=="brush":s["name"]="Ветки";s["description"]=DEFINITIONS.brush.description
    if not s.get("color") is Color:s["color"]=Color(0.87,0.79,0.61)
    player.backpack_weight+=float(s.get("unit_weight",0))*int(s["count"])
    if s.get("type")=="log":

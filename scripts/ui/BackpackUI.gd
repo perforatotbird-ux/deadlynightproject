@@ -223,7 +223,7 @@ func p_inspector() -> void:
  button(player._inv_inspector_box,"equip_tool","Выбрать инструмент",func():player.select_hotbar_slot(selected_tool);refresh_actions())
  button(player._inv_inspector_box,"use_supply","Использовать",func():player.survival.request_use_supply(player._selected_slot_index);refresh_actions())
  button(player._inv_inspector_box,"cook_link","Приготовить у костра…",func():focus_fire())
- button(player._inv_inspector_box,"place","Разместить костёр",func():player.survival.begin_placement())
+ button(player._inv_inspector_box,"place","Разместить",func():player.survival.begin_placement(str(player.inventory_slots[player._selected_slot_index].type)))
  button(player._inv_inspector_box,"recipe_link","Открыть рецепт раскола",func():select_recipe("split_"+str(player.inventory_slots[player._selected_slot_index].get("species","birch")));tabs.current_tab=1)
  button(player._inv_inspector_box,"fuel_link","Добавить в костёр…",func():focus_fire();fuel_select.select(fuel_select.get_item_index(player._selected_slot_index));refresh_actions())
  belt_group=column(player._inv_inspector_box,6)
@@ -304,13 +304,13 @@ func _build_sleep() -> void:
  var sleep:=sleep_page;var body:=row(sleep,24);body.size_flags_vertical=Control.SIZE_EXPAND_FILL
  var overview:=column(scroll(body));overview.size_flags_stretch_ratio=0.65
  picture(overview,"bedroll",180);heading(overview,"До рассвета",24)
- label(overview,"Отдыхайте в защищённой стоянке. Огонь, холод и погода продолжают действовать во время сна.").add_theme_color_override("font_color",Journal.MUTED)
+ label(overview,"Спите на койке или временной лесной кровати. Огонь, холод и погода продолжают действовать во время сна.").add_theme_color_override("font_color",Journal.MUTED)
  var controls:=column(scroll(body),16);heading(controls,"Продолжительность сна",24);sleep_value=label(controls,"",22)
  sleep_hours=HSlider.new();sleep_hours.min_value=1;sleep_hours.max_value=12;sleep_hours.step=1;sleep_hours.value=1;sleep_hours.custom_minimum_size.y=44;sleep_hours.tick_count=12;controls.add_child(sleep_hours);sleep_hours.value_changed.connect(func(_value):refresh_actions())
  var limits:=row(controls);label(limits,"1 час",12);var end:=label(limits,"12 часов",12);end.horizontal_alignment=HORIZONTAL_ALIGNMENT_RIGHT
  var condition:=sheet(controls);sleep_info=label(condition,"")
  rest=button(controls,"rest","Спать",func():player.survival.begin_rest(int(sleep_hours.value)))
- label(controls,"Сон прервётся при опасном холоде или открытой двери. Один игровой час занимает одну реальную секунду.",13).add_theme_color_override("font_color",Journal.MUTED)
+ label(controls,"Сон прервётся при опасном состоянии. В стоянке закройте дверь; лесная кровать рассчитана на один ночлег. Один игровой час занимает одну реальную секунду.",13).add_theme_color_override("font_color",Journal.MUTED)
 
 func _queue_resize() -> void:
  if _resize_pending:return
@@ -412,11 +412,11 @@ func refresh_inventory() -> void:
    card.hide();continue
   var kind:String=item.get("type","");var title:String=item.get("name","Предмет")
   var accepted:=category.selected!=6 and (search.text.is_empty() or title.to_lower().contains(search.text.to_lower()))
-  if category.selected==1:accepted=accepted and kind in ["stone","flint","pyrite","brush","log"]
+  if category.selected==1:accepted=accepted and kind in ["stone","flint","pyrite","brush","log","spruce_needles","tinder"]
   elif category.selected==2:accepted=accepted and kind in ["firewood","brush"]
   elif category.selected==4:accepted=accepted and (kind in ["water","raw_water","ration","berries"] or Plants.is_food(kind))
   elif category.selected==5:accepted=accepted and kind in ["bandage","compress","antitoxin"]
-  elif category.selected==3:accepted=accepted and kind=="camp_kit"
+  elif category.selected==3:accepted=accepted and kind in ["camp_kit","forest_bed"]
   card.visible=accepted
   if accepted:visible_count+=1
   var stamp:="×%d" % int(item.get("count",1))
@@ -499,7 +499,7 @@ func _refresh_recipe() -> void:
  var quantity:=int(craft_amount.value)
  var ingredients:Array=[]
  if data.action=="kit":
-  for id in data.costs:ingredients.append({"icon":id,"title":{"stone":"Камни","brush":"Ветки"}.get(id,id),"have":player.survival.Items.count(player.inventory_slots,id) if is_instance_valid(player.survival) else 0,"need":data.costs[id]*quantity})
+  for id in data.costs:ingredients.append({"icon":id,"title":{"stone":"Камни","brush":"Ветки","spruce_needles":"Еловая хвоя"}.get(id,id),"have":player.survival.Items.count(player.inventory_slots,id) if is_instance_valid(player.survival) else 0,"need":data.costs[id]*quantity})
  else:
   var amount:=0
   for slot in Catalog.source_slots(player,data):amount+=int(player.inventory_slots[slot].count)
@@ -542,7 +542,7 @@ func refresh_actions() -> void:
  if valid:_refresh_condition(s);_refresh_guide(s)
  # Assign final states once. No false→true visibility/disabled pulses across refreshes.
  buttons["drop_one"].disabled=busy;buttons["drop_all"].disabled=busy
- buttons["place"].visible=valid and type=="camp_kit";buttons["place"].disabled=busy or not valid or (valid and s.location!="forest")
+ buttons["place"].visible=valid and type in ["camp_kit","forest_bed"];buttons["place"].disabled=busy or not valid or (valid and s.location!="forest")
  buttons["belt"].disabled=busy or type not in ["camp_kit","firewood","brush"]
  buttons["unbelt"].disabled=busy or player.belt_items[belt_select.get_selected_id()]==""
  var names:Array=[]
@@ -567,7 +567,6 @@ func refresh_actions() -> void:
   _refresh_recipe();refresh_inventory();return
  var brush:int=s.Items.count(player.inventory_slots,"tinder");var stones:int=s.Items.count(player.inventory_slots,"stone")
 
- buttons["kit"].disabled=busy or stones<6 or brush<4
  var f:Dictionary=s.find_fire(s.selected_fire)
  if f.is_empty() or not s._fire_in_reach(f):f=s.nearby_fire();s.selected_fire=f.get("id","")
  var raw_portions:int=s.Items.count(player.inventory_slots,"raw_water")

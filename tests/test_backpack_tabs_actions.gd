@@ -47,7 +47,7 @@ func run() -> void:
  p=load("res://scenes/player/Player.tscn").instantiate();arena.add_child(p);p.position=Vector3(0,0.1,0);p.set_active(true);p.set_physics_process(false)
  s=Session.new();arena.add_child(s);s.set_process(false);s.shelter.position=Vector3(8,0.08,0)
  await physics_frame;await settle()
- add("stone",6);add("brush",8);add("flint");add("pyrite");p._add_to_backpack({"species":"birch","weight":4.0})
+ add("stone",6);add("brush",8);add("tinder",4);add("flint");add("pyrite");p._add_to_backpack({"species":"birch","weight":4.0})
  await key(KEY_TAB);var ui=p._backpack_ui
  check(ui.tabs.get_tab_count()==4,"four general tabs including field guide; fire and sleep remain contextual panels")
  await tab(1);check(ui.tabs.current_tab==1,"real mouse switches to recipes")

@@ -360,7 +360,7 @@ func _on_fracture_ready(lower: ArrayMesh, upper: ArrayMesh, cut_y: float) -> voi
 		"cut_y": cut_y, "cuts": _voxel_trunk.export_cuts(),
 		"basis": [b.x.x,b.x.y,b.x.z,b.y.x,b.y.y,b.y.z,b.z.x,b.z.y,b.z.z]}
 	for session in get_tree().get_nodes_in_group("survival_session"):
-		if is_instance_valid(session.get("vegetation")):session.vegetation.record_felling(get_effective_id())
+		if session.has_method("record_tree_felling"):session.record_tree_felling(get_effective_id(),species,global_position)
 	felled_tree_ids[get_effective_id()] = info
 	if tree_id != "": felled_tree_ids[tree_id] = info
 	felled_tree_ids["pos_%d_%d_%d" % [roundi(pos.x),roundi(pos.y),roundi(pos.z)]] = info
