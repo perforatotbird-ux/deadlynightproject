@@ -257,7 +257,10 @@ func record_felling(id:String) -> void:
  if stumps.has(id):return
  stumps[id]={"eligible":Catalog.eligible(id),"start":session.clock,"humid_start":humid_clock,"delay":Catalog.FIRST_GROWTH,"taken":[],"cycle":0,"crop":Catalog.harvest_count(id)}
 func ready(s:Dictionary) -> bool:
- return bool(s.get("eligible",false)) and session.clock-float(s.start)>=float(s.delay) and humid_clock-float(s.humid_start)>=float(s.delay)*Catalog.HUMIDITY_FRACTION
+ if not bool(s.get("eligible",false)):return false
+ var first:=int(s.get("cycle",0))==0
+ var delay:=Catalog.FIRST_GROWTH if first else float(s.delay)
+ return session.clock-float(s.start)>=delay and (first or humid_clock-float(s.humid_start)>=delay*Catalog.HUMIDITY_FRACTION)
 func attach_stump(node:StaticBody3D,id:String) -> void:
  if not is_instance_valid(node):return
  if id=="":id="pos_%d_%d_%d"%[roundi(node.global_position.x),roundi(node.global_position.y),roundi(node.global_position.z)]
@@ -310,6 +313,9 @@ func import_state(state:Dictionary,legacy_picked:Dictionary={}) -> void:
  active.clear();cells.clear();stump_nodes.clear()
  seed_value=int(state.get("seed",Catalog.SEED));placement_version=int(state.get("version",Catalog.VERSION))
  humid_clock=maxf(0,float(state.get("humid_clock",0)));harvested=state.get("harvested",{}).duplicate();patches=state.get("patches",{}).duplicate(true);stumps=state.get("stumps",{}).duplicate(true)
+ for id in stumps:
+  stumps[id]["eligible"]=true
+  if int(stumps[id].get("cycle",0))==0:stumps[id]["delay"]=Catalog.FIRST_GROWTH
  inspected=state.get("inspected",{}).duplicate();known=state.get("known",{}).duplicate();legacy_excluded=state.get("legacy_excluded",{}).duplicate()
  for id in Catalog.INITIAL_KNOWLEDGE:known[id]=true
  if state.is_empty():

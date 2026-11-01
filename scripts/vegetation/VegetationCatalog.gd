@@ -2,7 +2,7 @@ extends RefCounted
 # Fictional island species; every number is provisional playtest tuning.
 const VERSION:=1
 const SEED:=20261028
-const FIRST_GROWTH:=3.0*86400.0
+const FIRST_GROWTH:=2.0*86400.0
 const REGROWTH:=5.0*86400.0
 const HUMIDITY_FRACTION:=0.25 # Required wet-equivalent share of cycle.
 const CLEAR_HUMIDITY:=0.15 # Rain = 1; integrated in forest AND mine, independent of Nodes.
@@ -35,5 +35,5 @@ static func item_definition(id:String) -> Dictionary:
  return {"name":str(d.name)+(" · приготовленный" if cooked else ""),"unit_weight":d.weight,"description":str(d.traits),"plant_species":item_species(id),"cooked":cooked}
 static func cook_output(id:String) -> String:
  return "cooked_"+id if SPECIES.has(id) and species(id).family=="mushroom" else ""
-static func eligible(tree_id:String) -> bool:return posmod(("stump-v1:"+tree_id).hash(),100)<ELIGIBILITY_PERCENT
+static func eligible(tree_id:String) -> bool:return not tree_id.is_empty()
 static func harvest_count(tree_id:String,cycle:int=0) -> int:return 1+posmod((tree_id+":"+str(cycle)).hash(),3)

@@ -24,5 +24,7 @@ func _initialize()->void:
  check(branch_fire.state=="burning" and branch_fire.fuel==1.0,"one branch burns through 299 game seconds")
  fire_model.advance(branch_fire,1.0,false)
  check(branch_fire.state=="embers" and branch_fire.fuel==0.0,"one branch expires at exactly five game minutes")
+ check(preload("res://scripts/vegetation/VegetationCatalog.gd").FIRST_GROWTH==172800.0,"first stump crop waits exactly two game days")
+ check(preload("res://scripts/vegetation/VegetationCatalog.gd").eligible("any_player_tree"),"every player-felled stump is eligible")
  world.free()
  print("SURVIVAL REWORK SUMMARY: %d PASS, %d FAIL" % [passes,failures]);quit(1 if failures else 0)

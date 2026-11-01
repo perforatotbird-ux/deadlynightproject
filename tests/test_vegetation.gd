@@ -57,12 +57,12 @@ func run():
  v.record_felling(tree_id);var stump:Dictionary=v.stumps[tree_id]
  check(not v.ready(stump),"fresh player-felled stump has no fungi")
  s.clock+=Catalog.FIRST_GROWTH-1;v.advance(Catalog.FIRST_GROWTH-1,true)
- check(not v.ready(stump),"rain cannot bypass three-day minimum")
- s.clock+=1;v.advance(1,true);check(v.ready(stump),"three days with sufficient accumulated moisture produces bounded crop")
+ check(not v.ready(stump),"rain cannot bypass two-day minimum")
+ s.clock+=1;v.advance(1,true);check(v.ready(stump),"two game days produces bounded crop")
  var saved:Dictionary=JSON.parse_string(JSON.stringify(v.export_state()));var v2:=Director.new();v2.session=s;s.add_child(v2);v2.import_state(saved)
  check(v2.ready(v2.stumps[tree_id]) and int(v2.stumps[tree_id].crop)<=3,"growth survives JSON round trip, crop capped at three")
  var dry:=Director.new();dry.session=s;s.add_child(dry);dry.record_felling(tree_id);s.clock+=Catalog.FIRST_GROWTH;dry.advance(Catalog.FIRST_GROWTH,false)
- check(not dry.ready(dry.stumps[tree_id]),"three dry days are insufficient; present weather cannot retroactively grant moisture")
+ check(dry.ready(dry.stumps[tree_id]),"first crop grows after two days even without rain")
  s._old_felled={"old_stump":true};dry.import_state({})
  check(float(dry.stumps.old_stump.start)==s.clock and not dry.ready(dry.stumps.old_stump),"old unknown stump age starts at migration time")
  var body:=Body.new();body.water=100;body.food=100
