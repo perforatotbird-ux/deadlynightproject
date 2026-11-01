@@ -64,7 +64,9 @@ def rock(scale,seed,flint=False):
   for i in range(n):
    a=i*math.tau/n;noise=1+.12*math.sin(a*3+ph[0]+lat*2)+.065*math.sin(a*7+lat*5+ph[1]);r=math.sin(lat)*noise
    z=math.cos(lat);z=max(-.78,z)
-   if flint:z=z*.65+.10*math.cos(r*25+a*.8)
+   if flint:
+    z=min(z*.65,.29-.30*r)+.055*math.cos(r*25+a*.8)
+    r*=1+.16*math.cos(a+seed)
    p=(r*math.cos(a)*scale[0],r*math.sin(a)*scale[1],(z+.80)*scale[2]);co=(.15,.18,.20) if flint else ((.30+.055*(seed%4)+.035*math.sin(a*3),.32+.035*(seed%3)+.025*math.sin(lat*4),.30+.028*(seed%2)))
    if flint and (j>12 or (i<7 and j>5)):co=(.64,.59,.47)
    row.append(vert(p,co,(i/n,j/17)))
@@ -85,13 +87,27 @@ def cube(p,s,rot):
 def save(name):
  mesh=bpy.data.meshes.new(name);mesh.from_pydata(V,[],F);mesh.update();
  import bmesh
- bm=bmesh.new();bm.from_mesh(mesh);bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces));bm.to_mesh(mesh);bm.free()
+ bm=bmesh.new();bm.from_mesh(mesh);bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces))
+ pending=set(bm.faces)
+ while pending:
+  start=pending.pop();island={start};todo=[start]
+  while todo:
+   f=todo.pop()
+   for e in f.edges:
+    for q in e.link_faces:
+     if q in pending:pending.remove(q);island.add(q);todo.append(q)
+  volume=0.0
+  for f in island:
+   a=f.verts[0].co
+   for j in range(1,len(f.verts)-1):volume+=a.dot(f.verts[j].co.cross(f.verts[j+1].co))/6
+  if volume<0:bmesh.ops.reverse_faces(bm,faces=list(island))
+ bm.to_mesh(mesh);bm.free()
  o=bpy.data.objects.new(name,mesh);bpy.context.collection.objects.link(o);mesh.materials.append(MAT)
  col=mesh.color_attributes.new(name='Color',type='FLOAT_COLOR',domain='POINT')
  for i,c in enumerate(C):col.data[i].color=c
  uv=mesh.uv_layers.new(name='UVMap')
  for p in mesh.polygons:
-  p.use_smooth=True
+  p.use_smooth=not name.startswith("pyrite")
   for li in p.loop_indices:uv.data[li].uv=UV[mesh.loops[li].vertex_index]
  bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o
  # Explicit normals, triangulated topology, one mesh and surface; Godot generates LOD on import.

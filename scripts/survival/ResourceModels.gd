@@ -2,6 +2,7 @@ extends RefCounted
 ## Shared authored mid-poly meshes. Deterministic variants; no per-frame loading.
 const COUNTS={"stone":4,"pyrite":3,"flint":3,"brush":5,"forest_fat":2,"wood_fan":2,"copper_false":2,"pale_bell":2,"stump_fan":2}
 static var cache:Dictionary={}
+static var materials:Dictionary={}
 static func mesh(kind:String,seed_key:String="") -> ArrayMesh:
  if not COUNTS.has(kind):return null
  var variant:=posmod(seed_key.hash(),int(COUNTS[kind])) if not seed_key.is_empty() else 0
@@ -21,6 +22,9 @@ static func mesh(kind:String,seed_key:String="") -> ArrayMesh:
    if material!=null:
     material.vertex_color_use_as_albedo=true
     material.cull_mode=BaseMaterial3D.CULL_BACK
+    var family:="fungi" if kind in ["forest_fat","wood_fan","copper_false","pale_bell","stump_fan"] else kind
+    if not materials.has(family):materials[family]=material
+    found.surface_set_material(surface,materials[family])
   cache[key]=found
  return found
 static func _find(node:Node) -> ArrayMesh:

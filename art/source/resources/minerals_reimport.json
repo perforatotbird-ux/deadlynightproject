@@ -1,0 +1,44 @@
+{
+  "pyrite_00": {
+    "triangles": 1888,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "pyrite_01": {
+    "triangles": 2104,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "pyrite_02": {
+    "triangles": 2320,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "flint_00": {
+    "triangles": 1024,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "flint_01": {
+    "triangles": 1024,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "flint_02": {
+    "triangles": 1024,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  }
+}
