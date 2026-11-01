@@ -26,5 +26,7 @@ func _initialize()->void:
  check(branch_fire.state=="embers" and branch_fire.fuel==0.0,"one branch expires at exactly five game minutes")
  check(preload("res://scripts/vegetation/VegetationCatalog.gd").FIRST_GROWTH==172800.0,"first stump crop waits exactly two game days")
  check(preload("res://scripts/vegetation/VegetationCatalog.gd").eligible("any_player_tree"),"every player-felled stump is eligible")
+ var body_model=preload("res://scripts/survival/BodyModel.gd").new()
+ check(body_model.burn_rate(true,false)*8+body_model.burn_rate(false,false,true)*8+body_model.burn_rate(false,false)*8==2080.0,"balanced mixed day consumes 2080 kcal before load/cold")
  world.free()
  print("SURVIVAL REWORK SUMMARY: %d PASS, %d FAIL" % [passes,failures]);quit(1 if failures else 0)

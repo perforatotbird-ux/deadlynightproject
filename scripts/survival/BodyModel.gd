@@ -5,13 +5,13 @@ const LABELS:={"cold":"Переохлаждение","dehydration":"Обезво
 const DEFAULT_TUNING:={"food_awake":0.05,"food_rest":0.035,"food_sprint":0.075,"water_awake":0.085,"water_rest":0.06,"water_sprint":0.14,"cold_damage":0.6,"thirst_damage":0.12,"hunger_damage":0.025,"exhaustion_damage":0.025,"bleed_damage":0.1,"sleep_heal":0.08}
 var tuning:Dictionary=DEFAULT_TUNING.duplicate()
 const MAX_CALORIES:=2500.0
-const CALORIE_RATES:={"sleep":75.0,"idle":100.0,"walk":180.0,"sprint":350.0,"work":250.0}
+const CALORIE_RATES:={"sleep":60.0,"idle":80.0,"walk":120.0,"sprint":220.0,"work":160.0}
 var calories:=2125.0
 # Compatibility projection for alerts, dev controls and pre-calorie saves.
 var food:float:
  get:return calories/MAX_CALORIES*100.0
  set(value):calories=bounded(value,0,100)*MAX_CALORIES/100.0
-var calorie_rate:=100.0
+var calorie_rate:=80.0
 var calories_burned:=0.0
 func burn_rate(resting:bool,sprinting:bool,moving:bool=false,working:bool=false,load_ratio:float=0.0,warmth:float=100.0) -> float:
  var activity:="sleep" if resting else ("sprint" if sprinting else ("work" if working else ("walk" if moving else "idle")))
