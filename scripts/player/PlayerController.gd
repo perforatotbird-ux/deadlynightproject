@@ -743,7 +743,7 @@ func _refresh_belt_labels() -> void:
 		var item: Dictionary = inventory_slots[slot] if slot >= 0 else {}
 		var type: String = item.get("type", "")
 		if _hotbar_slot_labels.size() > i + 5:
-			_hotbar_slot_labels[i+5].text = {"camp_kit":"КОСТЁР", "firewood":"ПОЛЕНЦЕ", "brush":"ХВОРОСТ"}.get(type,"ПУСТО")
+			_hotbar_slot_labels[i+5].text = {"camp_kit":"КОСТЁР", "firewood":"ПОЛЕНЦЕ", "brush":"ВЕТКИ"}.get(type,"ПУСТО")
 			var count := 0
 			for x in inventory_slots:
 				if x != null and x.get("id", "") == belt_items[i]: count += int(x.get("count", 0))

@@ -254,7 +254,7 @@ func _build_craft() -> void:
   var line:=row(right,8);var icon:=picture(line,"",36);icon.custom_minimum_size.x=36;var text:=label(line,"");ingredient_rows.append({"row":line,"icon":icon,"text":text})
  recipe_tool=label(right,"");recipe=label(right,"");recipe_desc=label(right,"")
  log_select=picker(right);log_select.item_selected.connect(func(_index):refresh_actions())
- button(detail_column,"kit","Собрать набор",func():player.survival.make_kit())
+ button(detail_column,"kit","Собрать набор",func():player.survival.make_recipe(selected_recipe))
  button(detail_column,"split","Расколоть · 10 с",func():player.survival.begin_split(log_select.get_selected_id()))
  label(detail_column,"Готовый набор: «Рюкзак» → разместить или назначить на пояс.",12).add_theme_color_override("font_color",Journal.MUTED)
 
@@ -450,13 +450,13 @@ func refresh_inventory() -> void:
   return
  if item.is_empty():return
  inspector_image.texture=Art.texture(Art.item_key(item));player._inv_details_title.text=item.get("name","")
- player._inv_details_category.text={"log":"ДРЕВЕСИНА / БРЕВНО","firewood":"ТОПЛИВО","brush":"РАСТОПКА / ТОПЛИВО","camp_kit":"РАЗМЕЩАЕМЫЙ НАБОР","water":"ПИТЬЕВАЯ ВОДА","raw_water":"ВОДА / НУЖНО КИПЯТИТЬ","ration":"ПИТАНИЕ","berries":"ПИТАНИЕ / СБОР","bandage":"МЕДИЦИНА","compress":"МЕДИЦИНА","antitoxin":"МЕДИЦИНА / ОТРАВЛЕНИЕ","wood_tea":"НАПИТОК / ВЫНОСЛИВОСТЬ"}.get(item.get("type",""),"ПРИРОДНЫЙ МАТЕРИАЛ")
+ player._inv_details_category.text={"log":"ДРЕВЕСИНА / БРЕВНО","firewood":"ТОПЛИВО","brush":"ВЕТКИ / ТОПЛИВО","tinder":"РАСТОПКА","camp_kit":"РАЗМЕЩАЕМЫЙ НАБОР","water":"ПИТЬЕВАЯ ВОДА","raw_water":"ВОДА / НУЖНО КИПЯТИТЬ","ration":"ПИТАНИЕ","berries":"ПИТАНИЕ / СБОР","bandage":"МЕДИЦИНА","compress":"МЕДИЦИНА","antitoxin":"МЕДИЦИНА / ОТРАВЛЕНИЕ","wood_tea":"НАПИТОК / ВЫНОСЛИВОСТЬ"}.get(item.get("type",""),"ПРИРОДНЫЙ МАТЕРИАЛ")
  var count:=int(item.get("count",1));var weight:=float(item.get("unit_weight",0))
  player._inv_details_stats.text="%d шт.   /   %.2f кг за шт.   /   %.2f кг всего" % [count,weight,count*weight]
  if item.get("type")=="firewood" and is_instance_valid(player.survival):player._inv_details_stats.text+="\nГорение: %d мин за поленце" % int(player.survival.Fire.FUEL_SECONDS.get(item.get("species","birch"),1800)/60)
  elif item.get("type")=="brush":player._inv_details_stats.text+="\nГорение: 5 мин за единицу"
  player._inv_details_desc.text=item.get("description","");drop_amount.max_value=maxi(1,count)
- application.text="ПРИМЕНЕНИЕ\n"+{"log":"Расколите во вкладке «Крафт», чтобы получить три поленца.","firewood":"Топливо для костра. Можно закрепить на поясе.","brush":"Растопка, топливо и материал для набора костра.","camp_kit":"Разместите на подходящей земле в лесу.","stone":"Материал для каменного кольца костра.","flint":"Розжиг костра вместе с пиритом. Не расходуется.","pyrite":"Розжиг костра вместе с кремнем. Не расходуется.","water":"Восстанавливает воду на 35 пунктов.","raw_water":"Кипятите у горящего костра, чтобы получить безопасную воду.","ration":"1125 ккал на порцию.","berries":"300 ккал на порцию.","bandage":"Останавливает кровотечение.","compress":"Снимает травму ноги."}.get(item.get("type",""),item.get("description",""))
+ application.text="ПРИМЕНЕНИЕ\n"+{"log":"Расколите во вкладке «Крафт», чтобы получить три поленца.","firewood":"Топливо для костра. Можно закрепить на поясе.","brush":"Топливо и материал для крафта хвороста и набора костра.","camp_kit":"Разместите на подходящей земле в лесу.","stone":"Материал для каменного кольца костра.","flint":"Розжиг костра вместе с пиритом. Не расходуется.","pyrite":"Розжиг костра вместе с кремнем. Не расходуется.","water":"Восстанавливает воду на 35 пунктов.","raw_water":"Кипятите у горящего костра, чтобы получить безопасную воду.","ration":"1125 ккал на порцию.","berries":"300 ккал на порцию.","bandage":"Останавливает кровотечение.","compress":"Снимает травму ноги."}.get(item.get("type",""),item.get("description",""))
  var plant_id:=Plants.item_species(str(item.get("type","")))
  if plant_id!="" and is_instance_valid(player.survival):
   player._inv_details_category.text="ПОЛЕВОЙ СБОР / "+("ПРИГОТОВЛЕН" if str(item.type).begins_with("cooked_") else "СЫРОЙ")
@@ -476,7 +476,7 @@ func _refresh_recipe() -> void:
  var data:=Catalog.recipe(selected_recipe);recipe_image.texture=Art.texture(data.icon);recipe_title.text=data.title;recipe_desc.text=data.description
  var ingredients:Array=[]
  if data.action=="kit":
-  for id in data.costs:ingredients.append({"icon":id,"title":{"stone":"Камни","brush":"Хворост"}.get(id,id),"have":player.survival.Items.count(player.inventory_slots,id) if is_instance_valid(player.survival) else 0,"need":data.costs[id]})
+  for id in data.costs:ingredients.append({"icon":id,"title":{"stone":"Камни","brush":"Ветки"}.get(id,id),"have":player.survival.Items.count(player.inventory_slots,id) if is_instance_valid(player.survival) else 0,"need":data.costs[id]})
  else:
   var amount:=0
   for slot in Catalog.source_slots(player,data):amount+=int(player.inventory_slots[slot].count)
@@ -524,7 +524,7 @@ func refresh_actions() -> void:
  for i in 3:
   var slot:int=player.belt_item_slot(i)
   var kind:String=player.inventory_slots[slot].get("type","") if slot>=0 else ""
-  names.append({"camp_kit":"Костёр","firewood":"Поленце","brush":"Хворост"}.get(kind,"—"))
+  names.append({"camp_kit":"Костёр","firewood":"Поленце","brush":"Ветки"}.get(kind,"—"))
  belt_info.text="6: %s · 7: %s · 8: %s" % names
  var signature:=str(player.inventory_slots)
  if signature!=_inventory_signature and not log_select.get_popup().visible and not fuel_select.get_popup().visible:

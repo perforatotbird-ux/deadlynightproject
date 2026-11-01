@@ -343,10 +343,14 @@ func handle_input(event: InputEvent) -> bool:
   return event is InputEventMouseButton
  return false
 func make_kit() -> bool:
+ return make_recipe("camp_kit")
+func make_recipe(recipe_id:String) -> bool:
  if health<=0:return false
  if not job.is_empty():return false
- var ok:=Items.transact(player,CAMP_COST,[Items.item("camp_kit")])
- notify("Набор костра собран. Теперь разместите его." if ok else "Нужно 6 камней, 4 хвороста и место в рюкзаке")
+ var r:Dictionary=preload("res://scripts/survival/CraftCatalog.gd").recipe(recipe_id)
+ if r.get("id")!=recipe_id or r.get("action")!="kit":return false
+ var ok:=Items.transact(player,r.costs,[Items.item(recipe_id)])
+ notify("Создано: "+str(Items.item(recipe_id).name) if ok else "Не хватает материалов или места в рюкзаке")
  ui.refresh();return ok
 func valid_job(data:Dictionary) -> bool:
  if data.get("kind","") not in ["rest","split","ignite","boil","harvest","vegetation_cook"]:return false

@@ -10,11 +10,12 @@ const DEFINITIONS = {
  "berries": {"name":"Перезимовавшая клюква", "unit_weight":0.15, "description":"Ограниченный тестовый весенний сбор перезимовавших ягод. 300 ккал на порцию."},
  "bandage": {"name":"Бинт", "unit_weight":0.05, "description":"Останавливает кровотечение, но не возвращает здоровье."},
  "compress": {"name":"Компресс для ноги", "unit_weight":0.1, "description":"Снимает травму ноги. Без лечения она проходит со временем."},
- "brush": {"name":"Хворост", "unit_weight":0.12, "burn_time":"5 мин", "description":"Сухие веточки для костра и розжига."},
+ "tinder": {"name":"Хворост", "unit_weight":0.12, "description":"Растопка из веток. Необходима для розжига костра."},
+ "brush": {"name":"Ветки", "unit_weight":0.12, "burn_time":"5 мин", "description":"Ветки для крафта и топлива. Из одной ветки можно сделать хворост."},
  "stone": {"name":"Камень", "unit_weight":0.35, "description":"Для каменного кольца костра. Обычный камень не даёт огневой искры."},
  "flint": {"name":"Кремень", "unit_weight":0.2, "description":"Искровой камень: ударять о пирит над сухим хворостом."},
  "pyrite": {"name":"Пирит", "unit_weight":0.2, "description":"В паре с кремнем позволяет высекать искры без спичек."},
- "camp_kit": {"name":"Набор костра", "unit_weight":2.58, "description":"6 камней и 4 хвороста. Выберите набор в рюкзаке и нажмите «Разместить» на ровной открытой земле."}
+ "camp_kit": {"name":"Набор костра", "unit_weight":2.58, "description":"6 камней и 4 ветки. Выберите набор в рюкзаке и нажмите «Разместить» на ровной открытой земле."}
 }
 # kcal per inventory portion; unrelated to short-term stamina or fatigue.
 static func calories_for(id:String) -> float:

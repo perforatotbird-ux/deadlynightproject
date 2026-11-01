@@ -9,6 +9,7 @@ const FIRE_RECIPES:=[
  {"id":"wood_tea","title":"Древесный чай · гриб + 0,5 л воды · 5 мин"}
 ]
 const RECIPES:=[
+ {"id":"tinder","title":"Хворост","icon":"brush","action":"kit","costs":{"brush":1},"seconds":0,"output":1,"description":"Разберите одну ветку на сухой хворост для розжига."},
  {"id":"camp_kit","title":"Набор костра","icon":"camp_kit","action":"kit","costs":{"stone":6,"brush":4},"seconds":0,"output":1,"description":"Каменное кольцо и сухие ветки. После сборки разместите набор на ровной открытой земле."},
  {"id":"split_birch","title":"Поленья · берёза","icon":"firewood_birch","action":"split","species":"birch","seconds":10,"output":3,"description":"Светлые берёзовые поленья для костра. Одно бревно раскалывается на три части."},
  {"id":"split_spruce","title":"Поленья · ель","icon":"firewood_spruce","action":"split","species":"spruce","seconds":10,"output":3,"description":"Смолистая ель. Три поленца из одного елового бревна."},
@@ -35,7 +36,7 @@ static func reason(player: Node,r: Dictionary) -> String:
  if not player.survival.job.is_empty():return "Завершите текущее действие"
  var items=player.survival.Items
  if r.action=="kit":
-  if not items.transact(player,r.costs,[items.item("camp_kit")],-1,true):return "Нужно место в рюкзаке"
+  if not items.transact(player,r.costs,[items.item(str(r.id))],-1,true):return "Нужно место в рюкзаке"
  else:
   var slot:int=source_slots(player,r)[0];var source:Dictionary=player.inventory_slots[slot]
   var output:Dictionary=items.item("firewood",str(source.species),float(source.unit_weight)/3.0);output.count=3
