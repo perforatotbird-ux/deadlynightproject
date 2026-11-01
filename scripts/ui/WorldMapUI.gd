@@ -24,17 +24,17 @@ func _ready()->void:
  root_control.add_child(margin)
  var main:=VBoxContainer.new();main.add_theme_constant_override("separation",10);margin.add_child(main)
  var head:=HBoxContainer.new();main.add_child(head)
- var title:=Label.new();title.text="ПОЛЕВАЯ КАРТА  /  ВЕСЕННИЙ ЛЕС";title.add_theme_font_override("font",Style.title_font());title.add_theme_font_size_override("font_size",26);title.size_flags_horizontal=Control.SIZE_EXPAND_FILL;head.add_child(title)
+ var title:=Label.new();title.text="ПОЛЕВАЯ КАРТА  /  ВЕСЕННИЙ ЛЕС";title.add_theme_font_override("font",Style.title_font());title.add_theme_font_size_override("font_size",26);title.size_flags_horizontal=Control.SIZE_EXPAND_FILL;title.text_overrun_behavior=TextServer.OVERRUN_TRIM_ELLIPSIS;title.custom_minimum_size.x=180;head.add_child(title)
  button(head,"−",func():view.zoom_at(0.8,view.size*0.5))
  button(head,"+",func():view.zoom_at(1.25,view.size*0.5))
  button(head,"К игроку",func():view.center_player())
  button(head,"Закрыть · M",close_map)
- status=Label.new();main.add_child(status)
+ status=Label.new();status.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;main.add_child(status)
  var body:=HBoxContainer.new();body.add_theme_constant_override("separation",18);body.size_flags_vertical=Control.SIZE_EXPAND_FILL;main.add_child(body)
  view=preload("res://scripts/ui/ExplorationMapView.gd").new();view.model=session.map_model;view.session=session;body.add_child(view)
  var sidebar_scroll:=ScrollContainer.new();sidebar_scroll.custom_minimum_size.x=260;sidebar_scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED;body.add_child(sidebar_scroll)
  var sidebar:=VBoxContainer.new();sidebar.custom_minimum_size.x=245;sidebar.add_theme_constant_override("separation",10);sidebar_scroll.add_child(sidebar)
- var legend:=Label.new();legend.text="Дороги — охра\nРека и ручей — синий\nГоризонтали — каждые 20 м\nТёмное — ещё не исследовано\nЗолотая точка — вы";sidebar.add_child(legend)
+ var legend:=Label.new();legend.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;legend.text="Дороги — охра\nРека и ручей — синий\nГоризонтали — каждые 20 м\nТёмное — ещё не исследовано\nЗолотая точка — вы";sidebar.add_child(legend)
  mark_button=button(sidebar,"Новая отметка",func():selected_id=-1;view.selected_id=-1;pending_point=Vector2(INF,INF);view.mark_mode=true;details.text="Выберите исследованную точку на карте.";marker_name.clear();refresh_editor())
  marker_name=LineEdit.new();marker_name.placeholder_text="Подпись отметки";marker_name.max_length=60;sidebar.add_child(marker_name);marker_name.text_submitted.connect(func(_text):save_marker();marker_name.release_focus())
  marker_kind=OptionButton.new()
@@ -49,20 +49,22 @@ func _ready()->void:
   var id:String=locations.get_item_metadata(index)
   for poi in session.map_model.landmarks:
    if poi.id==id:view.pan=Vector2.ZERO;view.pan+=view.size*0.5-view.to_screen(Vector2(poi.xz[0],poi.xz[1]));view.clamp_pan();view.queue_redraw())
- var help:=Label.new();help.text="Колесо — масштаб · ЛКМ/СКМ + движение — перемещение\nВыберите отметку для редактирования · ПКМ по отметке — удалить\nМир не на паузе. Исследование и отметки сохраняются вместе с игрой.";main.add_child(help)
+ var help:=Label.new();help.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;help.text="Колесо — масштаб · ЛКМ/СКМ + движение — перемещение\nВыберите отметку для редактирования · ПКМ по отметке — удалить\nМир не на паузе. Исследование и отметки сохраняются вместе с игрой.";main.add_child(help)
  view.point_selected.connect(select_point);view.marker_selected.connect(select_marker);view.view_changed.connect(refresh_status)
  refresh_editor()
 func button(parent:Node,text:String,action:Callable)->Button:
  var b:=Button.new();b.text=text;b.custom_minimum_size.y=40;b.pressed.connect(action);parent.add_child(b);return b
 func open_map()->bool:
- if not is_instance_valid(session.player) or not session.player._is_active or session.health<=0 or not session.job.is_empty() or session.placing:return false
+ if not is_instance_valid(session.player) or not session.player._is_active or session.health<=0 or (not session.job.is_empty() and not session.is_background_job()) or session.placing:return false
  if session.player._is_inventory_open:session.close_backpack()
- _old_mouse_mode=Input.mouse_mode;visible=true;session.player._is_map_open=true;session.player._cancel_chop();session.player.watch_arm.lower();Input.mouse_mode=Input.MOUSE_MODE_VISIBLE
+ _old_mouse_mode=Input.mouse_mode;visible=true;session.player._is_map_open=true;session.player._cancel_chop();
+ if is_instance_valid(session.player.watch_arm):session.player.watch_arm.lower()
+ session.player._hud_layer.hide();session.ui.refresh();Input.mouse_mode=Input.MOUSE_MODE_VISIBLE
  if session.location=="forest":session.map_model.explore(Vector2(session.player.global_position.x,session.player.global_position.z))
  session.map_model.atlas_texture();_revision=-1;refresh_status();view.queue_redraw();return true
 func close_map()->void:
  if not visible:return
- visible=false;view.dragging=false;view.mark_mode=false;selected_id=-1;view.selected_id=-1;pending_point=Vector2(INF,INF);refresh_editor();session.player._is_map_open=false;Input.mouse_mode=_old_mouse_mode
+ visible=false;view.dragging=false;view.mark_mode=false;selected_id=-1;view.selected_id=-1;pending_point=Vector2(INF,INF);refresh_editor();session.player._is_map_open=false;session.player._hud_layer.visible=session.player._hud_enabled and session.player._is_active;session.ui.refresh();Input.mouse_mode=_old_mouse_mode
 func select_point(point:Vector2)->void:
  if not session.map_model.is_revealed(point):details.text="Сначала исследуйте эту часть леса.";return
  pending_point=point;selected_id=-1;view.selected_id=-1;details.text="Точка %.0f, %.0f м" % [point.x,-point.y];refresh_editor()

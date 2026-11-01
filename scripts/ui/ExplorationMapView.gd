@@ -11,6 +11,10 @@ var dragging:=false
 var drag_distance:=0.0
 var selected_id:=-1
 var _label_rects:Array[Rect2]=[]
+var _placed_label_rects:Array[Rect2]=[]
+var _label_jobs:Array=[]
+const LABEL_SIZE:=14
+const LABEL_WIDTH:=220.0
 const INK:=Color("263b34")
 const MARK_COLORS:={"camp":Color("ae6438"),"food":Color("4f733b"),"water":Color("32779c"),"danger":Color("aa3f3d"),"supplies":Color("755b87"),"route":Color("795b37")}
 const MARK_CODES:={"camp":"Л","food":"Е","water":"В","danger":"!","supplies":"З","route":"П"}
@@ -60,24 +64,37 @@ func draw_route(points:Array,color:Color,width:float)->void:
  var path:=PackedVector2Array()
  for p in points:path.append(to_screen(Vector2(float(p[0]),-float(p[1]))))
  draw_polyline(path,color,width,true)
-func map_label(font:Font,point:Vector2,text:String)->void:
- var width:=minf(210,font.get_string_size(text,HORIZONTAL_ALIGNMENT_LEFT,-1,13).x)
- var bounds:=map_rect().intersection(Rect2(Vector2.ZERO,size)).grow(-5)
- for offset in [Vector2(8,4),Vector2(8,-16),Vector2(-width-8,4),Vector2(8,24),Vector2(-width-8,-16),Vector2(8,-36),Vector2(-width-8,24)]:
-  var origin:Vector2=point+offset
-  var rect:=Rect2(origin+Vector2(-2,-13),Vector2(width+6,17))
-  if not bounds.encloses(rect):continue
-  var overlaps:=false
-  for used in _label_rects:
-   if used.intersects(rect):overlaps=true;break
-  if overlaps:continue
-  _label_rects.append(rect)
-  draw_rect(rect,Color(0.9,0.88,0.76,0.82))
-  draw_string(font,origin,text,HORIZONTAL_ALIGNMENT_LEFT,width,13,INK)
-  return
- # Dense landmarks retain their icons; names stay available in the discovered list.
+func map_label(_font:Font,point:Vector2,text:String)->void:
+ _label_jobs.append({"point":point,"text":text})
+func reserve_icon(point:Vector2,radius:float)->void:
+ _label_rects.append(Rect2(point-Vector2.ONE*radius,Vector2.ONE*radius*2))
+func fit_label(font:Font,text:String)->String:
+ var result:=text
+ if font.get_string_size(result,HORIZONTAL_ALIGNMENT_LEFT,-1,LABEL_SIZE).x<=LABEL_WIDTH:return result
+ while not result.is_empty() and font.get_string_size(result+"…",HORIZONTAL_ALIGNMENT_LEFT,-1,LABEL_SIZE).x>LABEL_WIDTH:result=result.left(-1)
+ return result+"…"
+func place_label(font:Font,point:Vector2,text:String)->void:
+ var display:=fit_label(font,text)
+ var width:=font.get_string_size(display,HORIZONTAL_ALIGNMENT_LEFT,-1,LABEL_SIZE).x
+ var height:=font.get_height(LABEL_SIZE)
+ var bounds:=map_rect().intersection(Rect2(Vector2.ZERO,size)).grow(-6)
+ for distance in [18.0,38.0,58.0,78.0]:
+  for offset in [Vector2(distance,0),Vector2(-width-distance,0),Vector2(12,-distance),Vector2(12,distance),Vector2(-width-12,-distance),Vector2(-width-12,distance)]:
+   var baseline:Vector2=point+offset
+   var rect:=Rect2(baseline-Vector2(4,font.get_ascent(LABEL_SIZE)+2),Vector2(width+8,height+4))
+   if not bounds.encloses(rect):continue
+   var overlaps:=false
+   for used in _label_rects:
+    if used.grow(3).intersects(rect):overlaps=true;break
+   if overlaps:continue
+   _label_rects.append(rect);_placed_label_rects.append(rect)
+   draw_rect(rect,Color(0.94,0.92,0.81,0.95))
+   draw_string(font,baseline,display,HORIZONTAL_ALIGNMENT_LEFT,-1,LABEL_SIZE,INK)
+   return
+ # Dense landmarks keep their symbols; full names remain in the sidebar/editor.
 func _draw()->void:
- _label_rects.clear()
+ _label_rects.clear();_placed_label_rects.clear();_label_jobs.clear()
+ _label_rects.append(Rect2(10,6,70,32));_label_rects.append(Rect2(14,size.y-62,300,52))
  draw_rect(Rect2(Vector2.ZERO,size),Color("111d19"))
  if model==null:return
  var rect:=map_rect();draw_texture_rect(model.atlas_texture(),rect,false)
@@ -97,25 +114,29 @@ func _draw()->void:
  for poi in model.landmarks:
   if not model.discovered.has(str(poi.id)):continue
   var point:=to_screen(Vector2(poi.xz[0],poi.xz[1]));draw_rect(Rect2(point-Vector2.ONE*3,Vector2.ONE*6),INK)
-  map_label(font,point,str(poi.name))
+  reserve_icon(point,5);map_label(font,point,str(poi.name))
  if is_instance_valid(session):
   for fire in session.fires:
    var at:=Vector2(fire.pos[0],fire.pos[2])
-   if model.is_revealed(at):draw_circle(to_screen(at),4,Color("be6033"));draw_string(font,to_screen(at)+Vector2(6,-4),"Костёр",HORIZONTAL_ALIGNMENT_LEFT,-1,11,INK)
+   if model.is_revealed(at):
+    draw_circle(to_screen(at),4,Color("be6033"));reserve_icon(to_screen(at),6);map_label(font,to_screen(at),"Костёр")
   for bed in session.forest_beds:
    var at:=Vector2(bed.pos[0],bed.pos[2])
-   if model.is_revealed(at):draw_string(font,to_screen(at),"×" if bed.get("spent",false) else "Л",HORIZONTAL_ALIGNMENT_LEFT,-1,16,INK)
+   if model.is_revealed(at):
+    reserve_icon(to_screen(at),10);draw_string(font,to_screen(at),"×" if bed.get("spent",false) else "Л",HORIZONTAL_ALIGNMENT_LEFT,-1,16,INK)
  for marker in model.markers:
   var point:=to_screen(Vector2(marker.xz[0],marker.xz[1]));var color:Color=MARK_COLORS[marker.kind]
+  reserve_icon(point,16 if int(marker.id)==selected_id else 12)
   if int(marker.id)==selected_id:draw_arc(point,14,0,TAU,24,Color("f4e4b1"),2,true)
   draw_circle(point,10,color);draw_string(font,point+Vector2(-4,5),MARK_CODES[marker.kind],HORIZONTAL_ALIGNMENT_LEFT,-1,14,Color.WHITE)
   if zoom>=1.5 or int(marker.id)==selected_id:map_label(font,point,str(marker.text))
  var player_pos:Vector2=model.last_position
  if is_instance_valid(session) and session.location=="forest":player_pos=Vector2(session.player.global_position.x,session.player.global_position.z)
  if player_pos.is_finite():
-  var point:=to_screen(player_pos);draw_circle(point,6,Color("d8a541"));draw_arc(point,9,0,TAU,24,INK,2,true)
+  var point:=to_screen(player_pos);reserve_icon(point,22);draw_circle(point,6,Color("d8a541"));draw_arc(point,9,0,TAU,24,INK,2,true)
   if is_instance_valid(session) and session.location=="forest":
    var ahead:Vector3=-session.player.global_basis.z;draw_line(point,point+Vector2(ahead.x,ahead.z)*20,INK,2,true)
+ for label_job in _label_jobs:place_label(font,label_job.point,label_job.text)
  draw_rect(rect,Color("69796b"),false,2)
  draw_string(font,Vector2(20,27),"С  ↑",HORIZONTAL_ALIGNMENT_LEFT,-1,18,Color("eee5d3"))
  var scale_width:=rect.size.x*500.0/4000.0;var at:=Vector2(24,size.y-30)

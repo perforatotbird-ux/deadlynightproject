@@ -60,11 +60,11 @@ func refresh() -> void:
   var names:={"split":"Раскол брёвен","vegetation_cook":"Готовка","boil":"Кипячение"}
   context_label.text="%s · осталось %.1f с · рюкзак: посмотреть / отменить" % [names.get(s.job.kind,"Создание"),maxf(0,float(s.job.duration)-float(s.job.elapsed))]
  context_label.add_theme_color_override("font_color",Color("f0a78e") if s.health<=0 else Color("eee5d3"))
- context_label.visible=not context_label.text.is_empty() and s.player._hud_enabled and not s.player._is_inventory_open
+ context_label.visible=not context_label.text.is_empty() and s.player._hud_enabled and not s.player._is_inventory_open and not s.player._is_map_open
  _refresh_vitals(s)
  if is_instance_valid(s.player._backpack_ui):s.player._backpack_ui.refresh_actions()
 func _refresh_vitals(s:Node)->void:
- vitals.visible=s.player._hud_enabled and not s.player._is_inventory_open and s.player._is_active
+ vitals.visible=s.player._hud_enabled and not s.player._is_inventory_open and not s.player._is_map_open and s.player._is_active
  health_bar.value=clampf(s.health,0,100)
  health_value.text="ЗДОРОВЬЕ  %.0f / 100" % s.health
  calorie_value.text="КАЛОРИИ  %.0f / %.0f · −%.0f ккал/ч" % [s.body.calories,s.body.MAX_CALORIES,s.body.calorie_rate]
