@@ -296,6 +296,8 @@ func _build_controls_tab() -> void:
 		{"action": "crouch", "name": "Присед"},
 		{"action": "interact", "name": "Действие / Подобрать"},
 		{"action": "inventory", "name": "Открыть рюкзак"},
+		{"action": "check_watch", "name": "Посмотреть часы"},
+		{"action": "world_map", "name": "Карта местности"},
 		{"action": "hotbar_1", "name": "Топор"},
 		{"action": "hotbar_2", "name": "Фонарь"},
 		{"action": "hotbar_3", "name": "Компас"},

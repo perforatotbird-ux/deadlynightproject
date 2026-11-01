@@ -247,6 +247,7 @@ func _init_inventory_data() -> void:
 func set_active(active: bool) -> void:
 	_is_active = active
 	if not active:
+		if is_instance_valid(survival) and is_instance_valid(survival.map_ui):survival.map_ui.close_map()
 		_cancel_chop()
 		if is_instance_valid(survival):
 			survival.cancel_job()
@@ -853,6 +854,7 @@ func _use_knife() -> void:
 	_play_ui_sound("res://assets/sounds/level_01/axe/axe_swing_01.wav")
 	_show_tool_banner("ОХОТНИЧИЙ НОЖ: Готов к снятию бересты и крафту")
 
+var _is_map_open:=false
 var watch_arm:Node3D
 var _backpack_ui: Node
 func _setup_inventory_ui() -> void:
@@ -871,6 +873,13 @@ func _input(event: InputEvent) -> void:
 		
 	if is_instance_valid(survival) and survival.health<=0:
 		if not ((event is InputEventKey and event.keycode==KEY_ESCAPE) or (event is InputEventJoypadButton and event.button_index==JOY_BUTTON_START)):return
+	if _is_map_open:
+		if event is InputEventKey and event.pressed and not event.echo:
+			if event.keycode==KEY_ESCAPE or (_event_matches_action(event,"world_map") and not get_viewport().gui_get_focus_owner() is LineEdit):survival.map_ui.close_map();get_viewport().set_input_as_handled()
+		return
+	if event is InputEventKey and event.pressed and not event.echo and _event_matches_action(event,"world_map"):
+		if is_instance_valid(survival) and is_instance_valid(survival.map_ui):survival.map_ui.open_map()
+		get_viewport().set_input_as_handled();return
 	# Survival owns modal/placement input before tools and movement.
 	if is_instance_valid(survival) and survival.handle_input(event):
 		get_viewport().set_input_as_handled()
@@ -1062,8 +1071,8 @@ func _physics_process(delta: float) -> void:
 	if _is_action_down("jump"):
 		_jump_buffer_timer = 0.20
 		
-	# If inventory is open, player stands still
-	if _is_inventory_open:
+	# Reading the map is modal, but does not pause weather or needs.
+	if _is_inventory_open or _is_map_open:
 		if is_instance_valid(survival):survival.body.update_stamina(delta,false)
 		_is_lmb_held = false
 		velocity.x = move_toward(velocity.x, 0.0, 15.0 * delta)

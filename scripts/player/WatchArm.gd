@@ -31,7 +31,7 @@ func material(color:Color,unshaded:bool=false)->StandardMaterial3D:
 func box(title:String,size:Vector3,pos:Vector3,color:Color,unshaded:bool=false)->void:
  var n:=MeshInstance3D.new();n.name=title;var mesh:=BoxMesh.new();mesh.size=size;n.mesh=mesh;n.position=pos;n.material_override=material(color,unshaded);n.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF;arm.add_child(n)
 func can_check()->bool:
- return is_instance_valid(player) and player._is_active and not player._is_inventory_open and is_instance_valid(player.survival) and player.survival.health>0 and player.survival.job.is_empty() and not player.survival.placing and not (is_instance_valid(player._pause_menu) and player._pause_menu.visible)
+ return is_instance_valid(player) and player._is_active and not player._is_inventory_open and not player._is_map_open and is_instance_valid(player.survival) and player.survival.health>0 and player.survival.job.is_empty() and not player.survival.placing and not (is_instance_valid(player._pause_menu) and player._pause_menu.visible)
 func toggle()->void:
  if not can_check():return
  player._cancel_chop();remaining=0.0 if remaining>0 else 3.5

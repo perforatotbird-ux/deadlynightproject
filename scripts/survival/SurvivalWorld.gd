@@ -79,6 +79,9 @@ var _last_season:=-1
 var sleep_point:Node3D
 var _physics_ready:=false
 var vegetation:Node3D
+var map_model=preload("res://scripts/world/ExplorationMap.gd").new()
+var map_ui:CanvasLayer
+var _map_tick:=0.0
 var foraging=preload("res://scripts/vegetation/ForagingActions.gd").new()
 
 func has_sleep_access() -> bool:
@@ -162,6 +165,7 @@ func _ready() -> void:
    _old_damaged=payload.get("damaged",_old_damaged)
    _old_logs=payload.get("logs",_old_logs)
    _restore_exterior_logs(_mine_logs)
+ map_ui=preload("res://scripts/ui/WorldMapUI.gd").new();map_ui.session=self;add_child(map_ui)
  dev_menu=preload("res://scripts/dev/DevMenu.gd").new();dev_menu.session=self;add_child(dev_menu)
  if location=="forest":call_deferred("_setup_supplies")
  _update_lighting()
@@ -172,6 +176,9 @@ func notify(text: String) -> void:
 
 func _process(delta: float) -> void:
  if not is_instance_valid(player):return
+ _map_tick-=delta
+ if _map_tick<=0 and location=="forest" and player._is_active and health>0:
+  _map_tick=0.5;map_model.explore(Vector2(player.global_position.x,player.global_position.z))
  var sleeping:bool=job.get("kind")=="rest"
  advance(delta*dev_time_rate)
  weather_visual=_apply_wind(weather_model.sample(clock,weather=="rain",weather_until,daylight(),SeasonModel.style_cuts(clock)))
@@ -610,9 +617,11 @@ func drop_resource(item: Dictionary, pos: Vector3) -> void:
  _spawn_pickup(item,id,pos)
 
 func export_state() -> Dictionary:
- var state:={"version":4,"forest_beds":forest_beds.duplicate(true),"needle_trees":needle_trees.duplicate(),"vegetation":vegetation.export_state(),"body":body.export_state(),"rain_reserve":rain_reserve,"dev_tainted":dev_tainted,"sky_weather":weather_model.export_state(),"sky_events":sky_events.export_state() if is_instance_valid(sky_events) else {},"atmosphere":atmosphere.export_state(),"clock":clock,"weather":weather,"weather_until":weather_until,"wetness":wetness,"warmth":warmth,"energy":energy,"health":health,"matches":matches,"active_tool":player.active_hotbar_slot,"belt_items":player.belt_items.duplicate(),"lantern_on":player._is_lantern_on,"fires":fires.duplicate(true),"picked":picked.duplicate(),"dropped":dropped.duplicate(true),"job":job.duplicate(true),"rng_state":str(rng.state),"location":location,"door_closed":shelter.door_closed if is_instance_valid(shelter) else _saved_door_closed,"exterior_felled":_old_felled if location=="mine" else {},"exterior_damaged":_old_damaged if location=="mine" else {},"exterior_logs":_old_logs if location=="mine" else [],"mine_logs":_mine_logs}
+ var state:={"version":4,"exploration_map":map_model.export_state(),"forest_beds":forest_beds.duplicate(true),"needle_trees":needle_trees.duplicate(),"vegetation":vegetation.export_state(),"body":body.export_state(),"rain_reserve":rain_reserve,"dev_tainted":dev_tainted,"sky_weather":weather_model.export_state(),"sky_events":sky_events.export_state() if is_instance_valid(sky_events) else {},"atmosphere":atmosphere.export_state(),"clock":clock,"weather":weather,"weather_until":weather_until,"wetness":wetness,"warmth":warmth,"energy":energy,"health":health,"matches":matches,"active_tool":player.active_hotbar_slot,"belt_items":player.belt_items.duplicate(),"lantern_on":player._is_lantern_on,"fires":fires.duplicate(true),"picked":picked.duplicate(),"dropped":dropped.duplicate(true),"job":job.duplicate(true),"rng_state":str(rng.state),"location":location,"door_closed":shelter.door_closed if is_instance_valid(shelter) else _saved_door_closed,"exterior_felled":_old_felled if location=="mine" else {},"exterior_damaged":_old_damaged if location=="mine" else {},"exterior_logs":_old_logs if location=="mine" else [],"mine_logs":_mine_logs}
  return state
 func import_state(state: Dictionary) -> void:
+ if is_instance_valid(map_ui):map_ui.close_map()
+ map_model.import_state(state.get("exploration_map",{}))
  close_backpack();cancel_placement()
  body.import_state(state.get("body",{}));rain_reserve=body.bounded(state.get("rain_reserve",2),0,6)
  dev_time_rate=1.0;dev_freeze_world=false;dev_events_enabled=true;dev_tainted=bool(state.get("dev_tainted",false))
@@ -664,6 +673,7 @@ func import_state(state: Dictionary) -> void:
  _update_lighting();ui.refresh()
 func prepare_travel() -> void:
  if _transitioning:return
+ if is_instance_valid(map_ui):map_ui.close_map()
  _transitioning=true;close_backpack();cancel_placement();atmosphere.suspend()
  if is_instance_valid(sky_events):sky_events.suspend()
  var trees=load("res://scripts/props/TreeChoppable.gd")
