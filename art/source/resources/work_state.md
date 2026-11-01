@@ -1,0 +1,6 @@
+# Delivery state
+Stone stage: four variants, 1024 triangles each, shared cached runtime geometry,
+one surface, 512px original grain, UV + vertex colors. Export reimport: no zero-area
+triangles, all material/UV/color attributes present. Seven GLB evidence views inspected.
+Godot 4.7.2: import pass, asset checks pass, script audit 73/73 pass, native renderer
+screenshot inspected. Loader explicitly enables vertex albedo (Godot importer leaves it off).

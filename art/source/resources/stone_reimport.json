@@ -1,0 +1,30 @@
+{
+  "stone_00": {
+    "triangles": 1024,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "stone_01": {
+    "triangles": 1024,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "stone_02": {
+    "triangles": 1024,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "stone_03": {
+    "triangles": 1024,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  }
+}
