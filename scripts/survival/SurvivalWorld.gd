@@ -11,6 +11,7 @@ const WeatherSchedule = preload("res://scripts/weather/WeatherSchedule.gd")
 const SeasonModel = preload("res://scripts/weather/SeasonModel.gd")
 const WindModel = preload("res://scripts/weather/WindModel.gd")
 const TIME_SCALE := 60.0
+const BOIL_WORLD_SECONDS:=10.0 # Per 0.5 litre portion.
 const SPLIT_SECONDS := 10.0
 const CAMP_COST := {"stone":6,"brush":4}
 static var travel: Dictionary = {}
@@ -215,6 +216,10 @@ func advance(real_seconds: float) -> void:
     cancel_job();notify("Сбор прерван: цель недоступна или открыт журнал");continue
    if job.get("kind")=="vegetation_cook" and not foraging.cooking_valid(job):
     cancel_job();notify("Готовка прервана: огонь погас или недоступен; ингредиенты сохранены");continue
+   if job.get("kind")=="boil":
+    var boiling_fire:=find_fire(str(job.get("fire","")))
+    if boiling_fire.is_empty() or boiling_fire.get("state")!="burning" or not _fire_in_reach(boiling_fire):
+     cancel_job();notify("Кипячение прервано: огонь погас или недоступен; вода сохранена");continue
    if job.get("kind")=="rest":
     if not has_sleep_access() or not safe_shelter() or warmth<20 or body.water<=0 or body.food<=0 or body.conditions.has("bleeding") or body.poison_limits_effort():
      cancel_job();notify("Отдых прерван: холод, открытая дверь, голод, жажда, кровотечение или отравление");continue
@@ -361,7 +366,10 @@ func valid_job(data:Dictionary) -> bool:
  if data.kind=="harvest":return data.get("plant") is Dictionary and data.get("point") is Array and data.get("group") is int and duration<=2
  if data.kind=="vegetation_cook":return data.get("fire") is String and not foraging.cook_recipe(str(data.get("recipe","")),int(data.get("amount",0))).is_empty() and is_equal_approx(duration,float(foraging.cook_recipe(str(data.recipe),int(data.amount)).minutes))
  if data.kind=="split":return data.has("slot") and data.has("item_id") and data.has("weight") and data.has("species")
- if data.kind in ["ignite","boil"]:return data.get("fire") is String and (data.kind!="ignite" or data.has("success"))
+ if data.kind=="boil":
+  var amount=body.bounded(data.get("amount",1),0,1000)
+  return data.get("fire") is String and amount>=1 and amount==int(amount) and is_equal_approx(duration,amount*BOIL_WORLD_SECONDS/TIME_SCALE)
+ if data.kind=="ignite":return data.get("fire") is String and data.has("success")
  return duration<=12
 func begin_split(slot_index: int) -> bool:
  if not job.is_empty() or slot_index<0 or slot_index>=player.inventory_slots.size():return false
@@ -452,7 +460,9 @@ func _finish_job() -> void:
   "boil":
    var f:=find_fire(str(done.get("fire","")))
    if f.is_empty() or f.get("state")!="burning" or not _fire_in_reach(f):notify("Кипячение прервано: нужен горящий костёр рядом.")
-   else:notify("Готово: 0,5 л питьевой воды" if Items.transact(player,{"raw_water":1},[Items.item("water")]) else "Вода сохранена: нет сырой воды или места в рюкзаке")
+   else:
+    var output:=Items.item("water");output.count=int(done.get("amount",1))
+    notify("Готово: %.1f л питьевой воды" % (output.count*0.5) if Items.transact(player,{"raw_water":output.count},[output]) else "Вода сохранена: нет сырой воды или места в рюкзаке")
   "rest":notify("Сон завершён: %d ч" % int(done.get("hours",1)))
  ui.refresh()
 
@@ -576,6 +586,10 @@ func import_state(state: Dictionary) -> void:
  for d in dropped:
   if d.get("location","forest")==location and not picked.has(d["id"]):_spawn_pickup(d["item"],d["id"],_v3(d["pos"]))
  var saved_job:Dictionary=state.get("job",{}).duplicate(true)
+ if saved_job.get("kind")=="boil" and not saved_job.has("amount"):
+  saved_job["amount"]=1
+  var ratio:=clampf(float(saved_job.get("elapsed",0))/maxf(0.001,float(saved_job.get("duration",5))),0,1)
+  saved_job["duration"]=BOIL_WORLD_SECONDS/TIME_SCALE;saved_job["elapsed"]=ratio*saved_job.duration
  if not saved_job.is_empty() and valid_job(saved_job) and saved_job.get("kind")!="harvest":
   job=saved_job
   if job.get("kind")=="rest":
@@ -681,12 +695,14 @@ func use_supply(slot:int,confirmed_unknown:bool=false) -> bool:
   "bandage":body.conditions.erase("bleeding")
   "compress":body.conditions.erase("sprain")
  notify("Использовано: "+str(item.name));ui.refresh();return true
-func begin_boil() -> bool:
- if health<=0 or not job.is_empty() or Items.count(player.inventory_slots,"raw_water")<1:return false
+func begin_boil(amount:int=1) -> bool:
+ if amount<1 or amount>1000 or health<=0 or not job.is_empty() or Items.count(player.inventory_slots,"raw_water")<amount:return false
  var f:=nearby_fire()
  if f.is_empty() or f.get("state")!="burning":notify("Для кипячения нужен горящий костёр рядом");return false
- job={"kind":"boil","elapsed":0.0,"duration":5.0,"fire":f.id,"origin":_arr(player.global_position)}
- notify("Кипячение: 5 игровых минут. Сырая вода расходуется только при завершении.");return true
+ var output:=Items.item("water");output.count=amount
+ if not Items.transact(player,{"raw_water":amount},[output],-1,true):notify("Нет места для питьевой воды");return false
+ job={"kind":"boil","elapsed":0.0,"duration":amount*BOIL_WORLD_SECONDS/TIME_SCALE,"amount":amount,"fire":f.id,"origin":_arr(player.global_position)}
+ notify("Кипячение %.1f л: %.0f игровых секунд. Вода расходуется только при завершении." % [amount*0.5,amount*BOIL_WORLD_SECONDS]);return true
 func _setup_supplies() -> void:
  if _supply_setup or not is_instance_valid(shelter):return
  _supply_setup=true

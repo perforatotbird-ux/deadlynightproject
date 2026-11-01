@@ -21,6 +21,8 @@ var sleep_info:Label
 var sleep_hours:HSlider
 var sleep_value:Label
 var fuel_select:OptionButton
+var boil_volume:SpinBox
+var boil_info:Label
 var fuel_amount:SpinBox
 var log_select:OptionButton
 var belt_select:OptionButton
@@ -275,6 +277,13 @@ func _build_fire() -> void:
  var matchbutton:=button(ignition,"match","Спичка",func():player.survival.begin_ignition(player.survival.selected_fire,"match"));matchbutton.icon=Art.texture("matches");matchbutton.expand_icon=true;matchbutton.add_theme_constant_override("icon_max_width",32)
  var sparkbutton:=button(ignition,"spark","Кремень + пирит",func():player.survival.begin_ignition(player.survival.selected_fire,"spark"));sparkbutton.icon=Art.texture("flint");sparkbutton.expand_icon=true;sparkbutton.add_theme_constant_override("icon_max_width",32)
  ignition_reason=label(ignition,"",12)
+ var water_sheet:=sheet(controls);heading(water_sheet,"04  /  Кипячение воды",18)
+ var water_line:=row(water_sheet)
+ label(water_line,"Объём, л")
+ boil_volume=SpinBox.new();boil_volume.min_value=0.5;boil_volume.max_value=0.5;boil_volume.step=0.5;boil_volume.value=0.5;boil_volume.custom_minimum_size=Vector2(100,44);water_line.add_child(boil_volume)
+ boil_volume.value_changed.connect(func(_v):refresh_actions())
+ button(water_line,"boil","Кипятить",func():player.survival.begin_boil(roundi(boil_volume.value*2));refresh_actions())
+ boil_info=label(water_sheet,"",13)
  var cooking:=sheet(controls);heading(cooking,"04  /  Грибы и древесный чай",18)
  cook_select=picker(cooking)
  for r in Catalog.FIRE_RECIPES:cook_select.add_item(r.title)
@@ -545,6 +554,11 @@ func refresh_actions() -> void:
  buttons["kit"].disabled=busy or stones<6 or brush<4
  var f:Dictionary=s.find_fire(s.selected_fire)
  if f.is_empty() or not s._fire_in_reach(f):f=s.nearby_fire();s.selected_fire=f.get("id","")
+ var raw_portions:int=s.Items.count(player.inventory_slots,"raw_water")
+ boil_volume.max_value=maxf(0.5,raw_portions*0.5);boil_volume.editable=not busy and raw_portions>0
+ var boil_ready:bool=not f.is_empty() and f.get("state")=="burning" and raw_portions>=roundi(boil_volume.value*2)
+ buttons["boil"].disabled=busy or not boil_ready
+ boil_info.text="%.1f л · %.0f игровых секунд · сырая вода: %.1f л" % [boil_volume.value,boil_volume.value*2*s.BOIL_WORLD_SECONDS,raw_portions*0.5]
  var cooking_recipe:Dictionary=s.foraging.cook_recipe(str(Catalog.FIRE_RECIPES[cook_select.selected].id),int(cook_amount.value))
  var cooking_ready:bool=not f.is_empty() and f.get("state")=="burning" and not cooking_recipe.is_empty()
  buttons["cook"].disabled=busy or not cooking_ready or not s.Items.transact(player,cooking_recipe.costs,cooking_recipe.outputs,-1,true)

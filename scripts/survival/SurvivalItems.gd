@@ -41,6 +41,7 @@ static func transact(player: Node, costs: Dictionary, outputs: Array = [], sourc
  # Cooking reserves input types; all normal drop/use transactions pass this gate.
  if is_instance_valid(player.get("survival")) and not preview:
   var pending:Dictionary=player.survival.job
+  if pending.get("kind")=="boil" and costs.has("raw_water"):return false
   if pending.get("kind")=="vegetation_cook":
    var reserved:Dictionary=player.survival.foraging.cook_recipe(str(pending.recipe),int(pending.amount)).get("costs",{})
    for id in costs:

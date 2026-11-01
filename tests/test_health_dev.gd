@@ -88,7 +88,7 @@ func run() -> void:
  slot=add("raw_water");check(not s.use_supply(slot) and s.Items.count(p.inventory_slots,"raw_water")==1,"raw water cannot be drunk without boiling")
  p.position=Vector3(12,0.2,12);var fire:Dictionary={"id":"qa_fire","pos":[12,0.05,10],"state":"burning","fuel":10000.0,"tinder":2};s.fires.append(fire);s.weather="clear";s.weather_until=s.clock+100000
  check(s.begin_boil(),"boiling starts near accessible burning fire")
- s.advance(5);check(s.Items.count(p.inventory_slots,"raw_water")==0 and s.Items.count(p.inventory_slots,"water")==1,"five-minute boiling produces one safe portion")
+ s.advance(10.0/60.0);check(s.Items.count(p.inventory_slots,"raw_water")==0 and s.Items.count(p.inventory_slots,"water")==1,"ten-game-second boiling produces one safe portion")
  add("raw_water");check(s.begin_boil(),"second boiling can start")
  s.cancel_job();check(s.Items.count(p.inventory_slots,"raw_water")==1,"cancelled boiling never consumes input")
  var collector:Node

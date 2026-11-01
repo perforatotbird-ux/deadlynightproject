@@ -28,5 +28,8 @@ func _initialize()->void:
  check(preload("res://scripts/vegetation/VegetationCatalog.gd").eligible("any_player_tree"),"every player-felled stump is eligible")
  var body_model=preload("res://scripts/survival/BodyModel.gd").new()
  check(body_model.burn_rate(true,false)*8+body_model.burn_rate(false,false,true)*8+body_model.burn_rate(false,false)*8==2080.0,"balanced mixed day consumes 2080 kcal before load/cold")
+ var boil_job:={"kind":"boil","amount":2,"fire":"test","duration":20.0/60.0,"elapsed":0.0,"origin":[0,0,0]}
+ check(world.valid_job(boil_job),"one litre takes twenty game seconds")
+ boil_job.amount=0;check(not world.valid_job(boil_job),"zero-volume boiling job rejected")
  world.free()
  print("SURVIVAL REWORK SUMMARY: %d PASS, %d FAIL" % [passes,failures]);quit(1 if failures else 0)
