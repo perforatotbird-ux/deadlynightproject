@@ -17,5 +17,12 @@ func _initialize()->void:
  check(world.ignition_chance("match")==0,"no tinder means zero ignition chance")
  f.tinder=1
  check(world.ignition_chance("match")>0,"added tinder enables an ignition chance")
+ var fire_model=preload("res://scripts/survival/FireModel.gd")
+ var branch_fire:Dictionary=fire_model.create("branch",Vector3.ZERO)
+ fire_model.add_fuel(branch_fire,fire_model.BRANCH_FUEL_SECONDS);branch_fire.state="burning"
+ fire_model.advance(branch_fire,299.0,false)
+ check(branch_fire.state=="burning" and branch_fire.fuel==1.0,"one branch burns through 299 game seconds")
+ fire_model.advance(branch_fire,1.0,false)
+ check(branch_fire.state=="embers" and branch_fire.fuel==0.0,"one branch expires at exactly five game minutes")
  world.free()
  print("SURVIVAL REWORK SUMMARY: %d PASS, %d FAIL" % [passes,failures]);quit(1 if failures else 0)

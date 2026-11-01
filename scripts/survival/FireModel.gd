@@ -1,5 +1,6 @@
 extends RefCounted
 # Fuel/embers measured in WORLD seconds, actions in real unpaused seconds.
+const BRANCH_FUEL_SECONDS:=300.0 # Five game minutes in calm, dry weather.
 const MATCH_CHANCE := 0.85
 const SPARK_CHANCE := 0.25
 const FUEL_SECONDS = {"birch":1800.0,"spruce":2160.0,"beech":3000.0,"oak":3600.0}

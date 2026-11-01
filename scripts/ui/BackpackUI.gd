@@ -592,7 +592,7 @@ func refresh_actions() -> void:
   belt_buttons[i].tooltip_text="%d: %s" % [i+6,entry.get("name","Пустая ячейка")]
  if fuel_slot>=0 and available>0:
   var fuel:Dictionary=player.inventory_slots[fuel_slot];fuel_image.texture=Art.texture(Art.item_key(fuel))
-  var seconds:float=300 if fuel.get("type")=="brush" else float(s.Fire.FUEL_SECONDS.get(fuel.get("species","birch"),1800))
+  var seconds:float=s.Fire.BRANCH_FUEL_SECONDS if fuel.get("type")=="brush" else float(s.Fire.FUEL_SECONDS.get(fuel.get("species","birch"),1800))
   fuel_preview.text="Добавить %d шт. → +%d мин горения" % [int(fuel_amount.value),int(seconds*fuel_amount.value/60)]
  else:fuel_image.texture=null;fuel_preview.text="Нет топлива. Расколите бревно во вкладке «Крафт»."
  var ignition_block:=""

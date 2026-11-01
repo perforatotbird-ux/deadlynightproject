@@ -377,7 +377,7 @@ func add_fuel(id: String, slot_index: int, amount: int = 1) -> bool:
  if slot_index<0 or slot_index>=player.inventory_slots.size():return false
  var s=player.inventory_slots[slot_index]
  if s==null or s.get("type") not in ["firewood","brush"] or amount<1 or amount>int(s.get("count",0)):return false
- var seconds:=300.0 if s["type"]=="brush" else float(Fire.FUEL_SECONDS.get(s.get("species","birch"),1800.0))
+ var seconds:=Fire.BRANCH_FUEL_SECONDS if s["type"]=="brush" else float(Fire.FUEL_SECONDS.get(s.get("species","birch"),1800.0))
  if not Items.transact(player,{s["id"]:amount},[],slot_index):return false
  Fire.add_fuel(f,seconds*amount);notify("Топливо добавлено");ui.refresh();return true
 func add_tinder(id: String) -> bool:
