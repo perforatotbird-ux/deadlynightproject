@@ -1,5 +1,5 @@
 extends RefCounted
-# Original low-poly game meshes. Same cached geometry drives near instances and far MultiMesh.
+# Authored fungal meshes and procedural berries, shared by near and far MultiMesh.
 const Catalog=preload("res://scripts/vegetation/VegetationCatalog.gd")
 static var cache:Dictionary={}
 static var material:StandardMaterial3D
@@ -20,7 +20,10 @@ static func _stem(st:SurfaceTool,a:Vector3,b:Vector3,r:float,color:Color) -> voi
  var c:=CylinderMesh.new();c.top_radius=r*0.65;c.bottom_radius=r;c.height=a.distance_to(b);c.radial_segments=7
  var up:=(b-a).normalized();var right:=up.cross(Vector3.FORWARD).normalized();var front:=right.cross(up).normalized()
  _add(st,c,Transform3D(Basis(right,up,front),(a+b)*0.5),color)
-static func mesh(id:String,mask:int=0) -> ArrayMesh:
+static func mesh(id:String,mask:int=0,seed_key:String="") -> ArrayMesh:
+ if Catalog.species(id).family!="berry" and mask==0:
+  var authored:=preload("res://scripts/survival/ResourceModels.gd").mesh(id,seed_key)
+  if authored!=null:return authored
  var key:=id+":"+str(mask)
  if cache.has(key):return cache[key]
  if material==null:

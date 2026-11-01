@@ -183,8 +183,9 @@ func _refresh_far(key:String) -> void:
   if active.has(r.id):continue
   var m:=mask(r)
   if Catalog.species(r.species).family!="berry" and m!=0:continue
-  var k:=str(r.species)+":"+str(m)
-  if not groups.has(k):groups[k]={"mesh":Visuals.mesh(r.species,m),"transforms":[]}
+  var variant:=0 if Catalog.species(r.species).family=="berry" else posmod(str(r.id).hash(),2)
+  var k:=str(r.species)+":"+str(m)+":"+str(variant)
+  if not groups.has(k):groups[k]={"mesh":Visuals.mesh(r.species,m,str(r.id)),"transforms":[]}
   groups[k].transforms.append(Transform3D(Basis(Vector3.UP,float(r.yaw)),session._v3(r.pos)))
  var signature:=str(groups.keys())+str(active.keys())+str(harvested.size())
  if root.get_meta("signature","")==signature:return

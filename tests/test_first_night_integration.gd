@@ -78,7 +78,11 @@ func run() -> void:
  for i in p.inventory_slots.size():
   if p.inventory_slots[i]!=null and p.inventory_slots[i].get("type")=="firewood":s.add_fuel(f["id"],i);break
  s.open_backpack(f["id"]);await capture("02_ready_to_ignite")
- s.begin_ignition(f["id"],"match");s.job["success"]=true;s.advance(2);s.close_backpack()
+ # Current rules require crafted tinder; branches are fuel, not ignition tinder.
+ check(s.make_recipe("tinder",1) and s.add_tinder(f["id"]),"craft and load required tinder through real inventory")
+ check(s.begin_ignition(f["id"],"match"),"real forest ignition accepts prepared fuel and tinder")
+ if s.job.get("kind")=="ignite":s.job["success"]=true
+ s.advance(2);s.close_backpack()
  check(f["state"]=="burning","real forest camp successfully burns")
  s.clock=20.5*3600;s.weather="clear";s.weather_until=s.clock+100000;s._update_lighting()
  p.rotation=Vector3.ZERO;p._camera_pitch=-0.32;p._camera_pivot.rotation.x=-0.32

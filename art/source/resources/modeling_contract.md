@@ -4,7 +4,7 @@ Four delivery stages: stone; minerals; branches; five fictional mushroom species
 Stone: four different silhouettes. Pyrite: brass cubic intergrowth with striations and matrix.
 Flint: dark conchoidal fractures and pale cortex. Branches: tapered curved bark, forks,
 knots and exposed end grain. Mushrooms: species morphology rather than recolors.
-Budgets: approximately 800–4000 triangles per mesh, one surface/material, shared
+Budgets: approximately 800–4500 triangles per mesh, one surface/material, shared
 512px family texture; cached meshes; Godot automatic mesh LOD; vegetation MultiMesh retained.
 Real GPU FPS is not claimed. Materials are texture + exported vertex colors, not Blender-only noise.
 Deliver deterministic generator, native sources, GLBs, manifest, renders, fresh-import QA,
@@ -20,3 +20,5 @@ in VegetationCatalog are authoritative for appearance, not real-world foraging g
 
 ## Validation stages
 Silhouette/proportions → anatomical/detail mesh → UV/material → export/reimport → runtime.
+
+Additional opened references: Pyrite crystal photograph http://gemologyproject.com/wiki/images/c/cd/Pyrite_xls.jpg via Gemology/16.57:Pyrite (visual reference only, not redistributed); mushroom PDF p3: pale oyster shelves, rolled margins and decurrent radial gills.

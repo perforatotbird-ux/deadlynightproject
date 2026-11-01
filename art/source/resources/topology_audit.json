@@ -1,0 +1,252 @@
+{
+  "branch_00": {
+    "triangles": 1074,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 5,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "branch_01": {
+    "triangles": 1458,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 7,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "branch_02": {
+    "triangles": 1458,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 7,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "branch_03": {
+    "triangles": 1530,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 8,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "branch_04": {
+    "triangles": 1530,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 8,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "copper_false_00": {
+    "triangles": 2036,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 33,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "copper_false_01": {
+    "triangles": 2036,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 33,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "flint_00": {
+    "triangles": 1024,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 1,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "flint_01": {
+    "triangles": 1024,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 1,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "flint_02": {
+    "triangles": 1024,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 1,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "forest_fat_00": {
+    "triangles": 1240,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 2,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "forest_fat_01": {
+    "triangles": 1240,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 2,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "pale_bell_00": {
+    "triangles": 2060,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 33,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "pale_bell_01": {
+    "triangles": 2060,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 33,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "pyrite_00": {
+    "triangles": 1888,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 9,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "pyrite_01": {
+    "triangles": 2104,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 11,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "pyrite_02": {
+    "triangles": 2320,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 13,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "stone_00": {
+    "triangles": 1024,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 1,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "stone_01": {
+    "triangles": 1024,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 1,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "stone_02": {
+    "triangles": 1024,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 1,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "stone_03": {
+    "triangles": 1024,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 1,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "stump_fan_00": {
+    "triangles": 4428,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 3,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "stump_fan_01": {
+    "triangles": 4428,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 3,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "wood_fan_00": {
+    "triangles": 3816,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 50,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  },
+  "wood_fan_01": {
+    "triangles": 3816,
+    "nonmanifold_edges": 0,
+    "zero_area": 0,
+    "closed_components": 50,
+    "outward_winding": true,
+    "UV": true,
+    "vertex_colors": true,
+    "materials": 1
+  }
+}

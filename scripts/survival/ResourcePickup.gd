@@ -15,7 +15,7 @@ func _ready() -> void:
    var twig := MeshInstance3D.new();var c:=CylinderMesh.new();c.top_radius=0.012;c.bottom_radius=0.02;c.height=0.65;c.radial_segments=5
    twig.mesh=c;twig.material_override=mat;twig.rotation_degrees=Vector3(85,i*39,12);twig.position=Vector3((i-2)*0.06,0.07,0);add_child(twig)
  elif item_data.get("plant_species","")!="":
-  var mesh:=MeshInstance3D.new();mesh.mesh=preload("res://scripts/vegetation/VegetationVisuals.gd").mesh(str(item_data.plant_species));add_child(mesh)
+  var mesh:=MeshInstance3D.new();mesh.mesh=preload("res://scripts/vegetation/VegetationVisuals.gd").mesh(str(item_data.plant_species),0,resource_id);add_child(mesh)
  elif item_data.get("type") in ["antitoxin","field_notes","wood_tea"]:
   var mesh:=MeshInstance3D.new();var box:=BoxMesh.new();box.size=Vector3(0.22,0.12,0.17);mesh.mesh=box;mesh.position.y=0.08;mat.albedo_color=Color("c7c3a4");mesh.material_override=mat;add_child(mesh)
   var icon:=Sprite3D.new();icon.texture=preload("res://scripts/ui/JournalArt.gd").texture(str(item_data.type));icon.pixel_size=0.28/maxf(1,icon.texture.get_width()) if icon.texture!=null else 0.0022;icon.billboard=BaseMaterial3D.BILLBOARD_ENABLED;icon.position.y=0.32;add_child(icon)

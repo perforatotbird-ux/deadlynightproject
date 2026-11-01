@@ -1,0 +1,68 @@
+{
+  "audit_scripts": {
+    "exit_code": 0,
+    "summary": [
+      "SCRIPT AUDIT: 73 scripts, 0 failures"
+    ]
+  },
+  "test_gameplay_startup": {
+    "exit_code": 0,
+    "summary": [
+      "GAMEPLAY STARTUP SUMMARY: 18 PASS, 0 FAIL"
+    ]
+  },
+  "test_vegetation": {
+    "exit_code": 0,
+    "summary": [
+      "VEGETATION UNIT SUMMARY: 55 PASS, 0 FAIL"
+    ]
+  },
+  "test_vegetation_world": {
+    "exit_code": 0,
+    "summary": [
+      "VEGETATION WORLD SUMMARY: 45 PASS, 0 FAIL"
+    ]
+  },
+  "test_first_night": {
+    "exit_code": 0,
+    "summary": [
+      "FIRST NIGHT SUMMARY: 104 PASS, 0 FAIL"
+    ]
+  },
+  "test_first_night_integration": {
+    "exit_code": 0,
+    "summary": [
+      "FIRST NIGHT INTEGRATION SUMMARY: 28 PASS, 0 FAIL"
+    ]
+  },
+  "test_food_traits": {
+    "exit_code": 0,
+    "summary": [
+      "FOOD TRAITS SUMMARY: 63 PASS, 0 FAIL"
+    ]
+  },
+  "test_cooking_limits": {
+    "exit_code": 0,
+    "summary": [
+      "COOKING LIMITS SUMMARY: 9 PASS, 0 FAIL"
+    ]
+  },
+  "test_inventory_system": {
+    "exit_code": 0,
+    "summary": [
+      "INVENTORY TEST SUMMARY: 7 PASSED, 0 FAILED."
+    ]
+  },
+  "test_inventory_redesign": {
+    "exit_code": 0,
+    "summary": [
+      "INVENTORY REDESIGN SUMMARY: 141 PASS, 0 FAIL"
+    ]
+  },
+  "test_part2": {
+    "exit_code": 0,
+    "summary": [
+      "PART2 SUMMARY: 578 PASS, 0 FAIL"
+    ]
+  }
+}

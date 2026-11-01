@@ -1,0 +1,72 @@
+{
+  "forest_fat_00": {
+    "triangles": 1240,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "forest_fat_01": {
+    "triangles": 1240,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "wood_fan_00": {
+    "triangles": 3816,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "wood_fan_01": {
+    "triangles": 3816,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "copper_false_00": {
+    "triangles": 2036,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "copper_false_01": {
+    "triangles": 2036,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "pale_bell_00": {
+    "triangles": 2060,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "pale_bell_01": {
+    "triangles": 2060,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "stump_fan_00": {
+    "triangles": 4428,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  },
+  "stump_fan_01": {
+    "triangles": 4428,
+    "zero_area": 0,
+    "materials": 1,
+    "uv": true,
+    "colors": true
+  }
+}

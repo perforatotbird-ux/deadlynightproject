@@ -14,7 +14,7 @@ func _ready() -> void:
 func refresh() -> void:
  var bits:int=director.mask(record)
  visual.visible=Catalog.species(record.species).family=="berry" or bits==0
- if visual.visible:visual.mesh=Visuals.mesh(record.species,bits)
+ if visual.visible:visual.mesh=Visuals.mesh(record.species,bits,str(record.id))
  collision_layer=4 if Catalog.species(record.species).family=="berry" or director.mask(record)==0 else 0
 func get_interact_text() -> String:
  var d:=Catalog.species(record.species)

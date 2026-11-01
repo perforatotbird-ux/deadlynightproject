@@ -47,11 +47,13 @@ def surface(rings,n,color,offset=(0,0,0), fan=False):
   for i in range(n):
    a,b=row[i],row[(i+1)%n];face(idx,b,a) if rev else face(idx,a,b)
 def tube(points,radii,color,n=12):
- rows=[]
+ rows=[];frame_u=None
  for j,pt in enumerate(points):
-  p=Vector(pt);d=Vector(points[min(j+1,len(points)-1)])-Vector(points[max(j-1,0)]);d.normalize();u=d.cross(Vector((0,0,1)))
-  if u.length<.01:u=d.cross(Vector((0,1,0)))
-  u.normalize();v=d.cross(u);row=[]
+  p=Vector(pt);d=Vector(points[min(j+1,len(points)-1)])-Vector(points[max(j-1,0)]);d.normalize()
+  # Parallel transport prevents 180-degree frame flips on curved vertical stalks.
+  u=d.cross(Vector((0,1,0)) if abs(d.z)>.85 else Vector((0,0,1))) if frame_u is None else frame_u-d*frame_u.dot(d)
+  if u.length<.001:u=d.cross(Vector((0,1,0)) if abs(d.z)>.85 else Vector((0,0,1)))
+  u.normalize();frame_u=u.copy();v=d.cross(u);row=[]
   for i in range(n):
    a=i*2*math.pi/n;r=radii[j]*(1+.055*math.sin(i*2.7+j*.3));co=color(j,i) if callable(color) else color
    row.append(vert(p+r*(u*math.cos(a)+v*math.sin(a)),co,(i/n,j/(len(points)-1))))
@@ -166,11 +168,12 @@ elif STAGE=='fungi':
       for j in range(nr):
        t=(j+1)/nr;row=[]
        for aidx in range(n+1):
-        a=-2.3+4.6*aidx/n;rad=r*t*(1+.045*math.cos(a*11));x=math.sin(a)*rad;y=math.cos(a)*rad
-        h=z+.045*(1-t)+.009*math.sin(a*5)*t-(.008 if tea else .020)*side
+        a=-1.55+3.10*aidx/n;rad=r*t*(1+.045*math.cos(a*11));x=math.sin(a)*rad;y=math.cos(a)*rad
+        h=z+.045*(1-t)+(.007 if tea else .025)*math.sin(t*math.pi)+.009*math.sin(a*5+variant)*t-(.008 if tea else .020)*side
         bands= .5+.5*math.sin(t*29)
         co=((.25+.25*bands,.12+.19*bands,.045+.10*bands) if tea else (.42+.18*t,.43+.17*t,.37+.15*t)) if side==0 else (.66,.62,.48)
-        row.append(vert((x,y,h),co,(aidx/n,t)))
+        if tea and side==0 and t>.88:co=(.78,.69,.49)
+        row.append(vert((x+tier*.012*(1 if variant else -1),y-tier*.035,h),co,(aidx/n,t)))
        rows.append(row)
       for j in range(nr-1):
        for aidx in range(n):
@@ -180,10 +183,16 @@ elif STAGE=='fungi':
      for aidx in range(n):face(top[-1][aidx],bottom[-1][aidx],bottom[-1][aidx+1],top[-1][aidx+1])
      for edge in [0,n]:
       for j in range(nr-1):face(top[j][edge],top[j+1][edge],bottom[j+1][edge],bottom[j][edge])
-     for aidx in range(n):face(top[0][aidx],top[0][aidx+1],bottom[0][aidx+1],bottom[0][aidx])
+     ct=vert((tier*.012*(1 if variant else -1),-tier*.035,z+.045),(.37,.31,.21) if tea else (.48,.48,.40),(.5,0))
+     cb=vert((tier*.012*(1 if variant else -1),-tier*.035,z+.045-(.008 if tea else .020)),(.64,.60,.45),(.5,0))
+     for aidx in range(n):face(ct,top[0][aidx],top[0][aidx+1]);face(cb,bottom[0][aidx+1],bottom[0][aidx])
+     for edge in [0,n]:face(ct,cb,bottom[0][edge],top[0][edge])
      if not tea:
       for g in range(24):
-       a=-2.2+g*4.4/23;tube([(math.sin(a)*r*.18,math.cos(a)*r*.18,z+.018),(math.sin(a)*r*.6,math.cos(a)*r*.6,z-.002),(math.sin(a)*r*.94,math.cos(a)*r*.94,z-.017)],[.0025,.002,.0008],(.42,.40,.31),3)
+       a=-1.50+g*3.0/23
+       points=[]
+       for t in [.18,.6,.94]:points.append((math.sin(a)*r*t+tier*.012*(1 if variant else -1),math.cos(a)*r*t-tier*.035,z+.045*(1-t)+.025*math.sin(t*math.pi)+.009*math.sin(a*5+variant)*t-.024))
+       tube(points,[.0025,.002,.0008],(.42,.40,.31),3)
    else:
     fat=species=='forest_fat';bell=species=='pale_bell';h=(.23 if fat else .31)*k
     tube([(.01*math.sin(j*.3),0,j*h/12) for j in range(13)],[(.055 if fat else .018)*(1-.3*j/12)+( .025*(1-j/12)**4 if bell else 0) for j in range(13)],(.69,.60,.43),20)
@@ -194,15 +203,17 @@ elif STAGE=='fungi':
     def cc(t,a):
      if t>.65:return (.47,.43,.27) if fat else (.26,.23,.19)
      stripe=.92+.08*math.cos(a*(29 if bell else 7));return tuple(c*stripe for c in base)
-    surface(profile,40,cc)
+    profile=[(r*(1+.12*variant),z) for r,z in profile]
+    surface(profile,40,cc,offset=(.012*variant,0,0))
     if not fat:
      for g in range(30):
       a=g*math.tau/30;rad=.12 if bell else .165
       tube([(.022*math.cos(a),.022*math.sin(a),h-.025),(rad*.65*math.cos(a),rad*.65*math.sin(a),h-.039),(rad*math.cos(a),rad*math.sin(a),h-.037)],[.002,.0025,.0008],(.30,.27,.20),3)
+    if bell:surface([(.022,.012),(.050,.015),(.058,.052),(.043,.068),(.040,.045)],28,(.70,.65,.49))
     if species=='copper_false':surface([(.018,h*.61),(.052,h*.58),(.057,h*.55),(.020,h*.53)],32,(.77,.68,.47))
    objects.append(save(species+'_%02d'%variant))
 # Save native sources before presentation offsets.
-bpy.ops.wm.save_as_mainfile(filepath=str(SRC/(STAGE+'.blend')))
+# Native source saved below with separated assets, lights and a usable camera.
 (SRC/(STAGE+'_metrics.json')).write_text(json.dumps(MET,indent=2))
 # Render reusable evidence grid; texture is exactly the exported material.
 for index,o in enumerate(objects):o.hide_render=False;o.location=(index%4*.75,index//4*.85,0)
@@ -213,5 +224,5 @@ bpy.ops.object.camera_add(location=center+Vector((.15,-2.8,3.1)));cam=bpy.contex
 for loc,power,size in [((-2,-2,4),400,4),((3,2,3),300,3)]:
  bpy.ops.object.light_add(type='AREA',location=loc);l=bpy.context.object;l.data.energy=power;l.data.shape='DISK';l.data.size=size;aim(l,center)
 scene.render.resolution_x=1400;scene.render.resolution_y=1000 if len(objects)>4 else 650;scene.render.resolution_percentage=100
-scene.view_settings.view_transform='AgX';scene.render.image_settings.file_format='PNG';scene.render.filepath=str(SRC/(STAGE+'_preview.png'));bpy.ops.render.render(write_still=True)
+scene.view_settings.view_transform='AgX';scene.render.image_settings.file_format='PNG';scene.render.filepath=str(SRC/(STAGE+'_preview.png'));bpy.ops.wm.save_as_mainfile(filepath=str(SRC/(STAGE+'.blend')));bpy.ops.render.render(write_still=True)
 print('ASSET_METRICS',json.dumps(MET))
