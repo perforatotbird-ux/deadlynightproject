@@ -58,6 +58,7 @@ var drop_amount:SpinBox
 var belt_buttons:Array[Button]=[]
 var item_empty:Label
 var condition_temperature:Label
+var condition_climate:Label
 var condition_calories:Label
 var condition_info:Label
 var condition_values:Dictionary={}
@@ -615,6 +616,8 @@ func _build_condition() -> void:
  heading(overview,"Состояние персонажа",24)
  condition_temperature=label(overview,"",18)
  condition_temperature.name="AirTemperature"
+ condition_climate=label(overview,"",13)
+ condition_climate.name="Climate"
  condition_calories=label(overview,"",14)
  for id in ["health","warmth","water","food","energy","stamina","wetness"]:
   var line:=row(overview,8);var text:=label(line,{"health":"Здоровье","warmth":"Тепло","water":"Вода","food":"Калории","energy":"Отдых","stamina":"Выносливость","wetness":"Промокание"}[id],14)
@@ -628,6 +631,7 @@ func _build_condition() -> void:
  label(details,"Восстановление здоровья: сон, тепло выше 45%, питание и вода, отсутствие кровотечения и переохлаждения. Травма ноги проходит за 4 игровых часа или быстрее во сне.",13)
 func _refresh_condition(s:Node) -> void:
  condition_temperature.text="Температура воздуха: %.1f °C" % s.air_temperature()
+ condition_climate.text="Сезон: %s, день %d из %d · сутки %d · ветер: %s" % [s.season_name(),s.season_day(),s.SeasonModel.SEASON_DAYS,int(s.clock/86400.0)+1,s.wind_description()]
  condition_calories.text="Запас энергии: %.0f / %.0f ккал\nРасход сейчас: %.0f ккал/игр. час" % [s.body.calories,s.body.MAX_CALORIES,s.body.calorie_rate]
  for id in condition_values:
   var value:float=s.body.get(id) if id in ["water","food","stamina"] else s.get(id)

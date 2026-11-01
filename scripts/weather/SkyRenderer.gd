@@ -1,5 +1,6 @@
 extends Node3D
 # Sole writer of exterior Environment, sun and moon. Mine environment is untouched.
+const SeasonModel=preload("res://scripts/weather/SeasonModel.gd")
 static var _star_cubes:Dictionary={}
 var session:Node
 var model:RefCounted
@@ -37,6 +38,8 @@ func update_sky(state:Dictionary,flash:float=0.0) -> void:
  quality=clampi(int(sm.get_setting("graphics","sky_quality",1)),0,2)
  var body:Dictionary=model.celestial(session.clock)
  var day:float=session.daylight();var clouds:float=state.cloud
+ var tint:Color=SeasonModel.sun_tint(session.clock)
+ var energy_scale:float=SeasonModel.sun_energy_scale(session.clock)
  material.set_shader_parameter("quality",quality)
  material.set_shader_parameter("stars",star_texture(quality))
  material.set_shader_parameter("milky_way",preload("res://assets/sky/milky_way_low.png") if quality==0 else preload("res://assets/sky/milky_way.png"))
@@ -47,8 +50,8 @@ func update_sky(state:Dictionary,flash:float=0.0) -> void:
  material.set_shader_parameter("flash",flash)
  if sun:
   _aim(sun,body.sun)
-  sun.light_energy=1.3*day*smoothstep(-0.05,0.12,body.sun.y)*(1.0-clouds*0.6)+flash*0.35
-  sun.light_color=Color(1,0.68,0.42).lerp(Color(1,0.93,0.78),smoothstep(0.0,0.4,body.sun.y))
+  sun.light_energy=1.3*day*smoothstep(-0.05,0.12,body.sun.y)*(1.0-clouds*0.6)*energy_scale+flash*0.35
+  sun.light_color=Color(1,0.68,0.42).lerp(Color(1,0.93,0.78),smoothstep(0.0,0.4,body.sun.y))*tint
   sun.directional_shadow_max_distance=[40.0,70.0,110.0][quality]
  _aim(moon,body.moon)
  moon.light_energy=0.09*body.phase*smoothstep(0.0,0.35,body.moon.y)*(1.0-day)*(1.0-clouds*0.85)
@@ -57,8 +60,8 @@ func update_sky(state:Dictionary,flash:float=0.0) -> void:
  moon.directional_shadow_max_distance=45 if quality==1 else 70
  moon.shadow_blur=2.0
  environment.ambient_light_energy=lerpf(0.05,0.7,day)*(1.0-clouds*0.3)+flash*0.07
- environment.ambient_light_color=Color(0.3,0.4,0.65).lerp(Color(0.7,0.75,0.8),day)
- environment.fog_light_color=Color(0.025,0.04,0.065).lerp(Color(0.65,0.72,0.8),day)
+ environment.ambient_light_color=Color(0.3,0.4,0.65).lerp(Color(0.7,0.75,0.8),day)*tint
+ environment.fog_light_color=Color(0.025,0.04,0.065).lerp(Color(0.65,0.72,0.8),day)*tint
  environment.fog_density=state.fog
  _applied_flash=flash
 func _aim(light:DirectionalLight3D,direction:Vector3) -> void:

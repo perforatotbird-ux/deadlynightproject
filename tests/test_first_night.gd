@@ -83,7 +83,9 @@ func run() -> void:
  check(not s.job.is_empty() and s.job["success"],"loading preserves pre-rolled ignition result")
  s.advance(2);check(f["state"]=="burning","successful attempt ignites fire")
  var n:int=s.matches;check(not s.begin_ignition(f["id"],"match") and s.matches==n,"burning fire cannot spend another match")
- var fuel:float=f["fuel"];s.advance(1);check(is_equal_approx(fuel-f["fuel"],60),"one real second consumes one game minute")
+ var fuel:float=f["fuel"];var clock_start:float=s.clock;var wind_now:float=float(s.wind().strength);s.advance(1)
+ check(is_equal_approx(s.clock-clock_start,60.0),"one real second advances one game minute")
+ check(is_equal_approx(fuel-f["fuel"],60.0*(1.0+0.3*wind_now)),"one game minute of fuel is spent plus the wind factor")
  var model:=Fire.create("unit",Vector3.ZERO);model["fuel"]=60;model["state"]="burning"
  Fire.advance(model,120,false);check(model["state"]=="embers" and is_equal_approx(model["embers"],540),"overflow step accounts for embers")
  Fire.advance(model,540,false);check(model["state"]=="cold","embers eventually go cold")

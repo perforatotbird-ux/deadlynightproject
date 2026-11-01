@@ -24,14 +24,20 @@ func reset(clock:float,raining:bool) -> void:
  _last_sample={}
  previous_rain=raining;transition_start=clock-TRANSITION;epoch=clock
  rain_style="light_rain";dry_style="clear"
-func sample(clock:float,raining:bool,until:float,day:float) -> Dictionary:
+func sample(clock:float,raining:bool,until:float,day:float,season_cuts:Dictionary={}) -> Dictionary:
  if raining!=previous_rain:
   var old:Dictionary=_last_sample if not _last_sample.is_empty() else _current(clock,until,day)
   from_cloud=old.cloud;from_rain=old.rain;from_fog=old.fog;from_wind=old.wind
   previous_rain=raining;transition_start=clock;epoch=clock
   var pick:=posmod(int(clock/60.0)*73+seed_value,100)
-  if raining:rain_style="storm" if pick<18 else ("heavy_rain" if pick<53 else "light_rain")
-  else:dry_style="mist" if pick<20 else ("broken" if pick<65 else "clear")
+  # Legacy thresholds when no seasonal table is given (tests and callers that
+  # never heard of seasons keep the original style distribution).
+  var storm_cut:=float(season_cuts.get("storm",18))
+  var heavy_cut:=float(season_cuts.get("heavy",53))
+  var mist_cut:=float(season_cuts.get("mist",20))
+  var broken_cut:=float(season_cuts.get("broken",65))
+  if raining:rain_style="storm" if pick<storm_cut else ("heavy_rain" if pick<heavy_cut else "light_rain")
+  else:dry_style="mist" if pick<mist_cut else ("broken" if pick<broken_cut else "clear")
  _last_sample=_current(clock,until,day)
  return _last_sample
 func _current(clock:float,until:float,day:float) -> Dictionary:

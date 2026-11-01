@@ -1130,6 +1130,9 @@ func _physics_process(delta: float) -> void:
 	
 	# Movement vector relative to character heading
 	var move_vec = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+	# Wind: headwind resists movement, tailwind barely helps. Small and bounded.
+	if is_instance_valid(survival) and move_vec.length_squared() > 0.0:
+		final_speed *= survival.wind_move_multiplier(move_vec)
 	if move_vec.length_squared() > 0.0:
 		velocity.x = lerpf(velocity.x, move_vec.x * final_speed, delta * 12.0)
 		velocity.z = lerpf(velocity.z, move_vec.z * final_speed, delta * 12.0)

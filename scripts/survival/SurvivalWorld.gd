@@ -8,6 +8,8 @@ const Shelter = preload("res://scripts/survival/Shelter.gd")
 const UI = preload("res://scripts/survival/SurvivalHUD.gd")
 const Thermal = preload("res://scripts/survival/ThermalModel.gd")
 const WeatherSchedule = preload("res://scripts/weather/WeatherSchedule.gd")
+const SeasonModel = preload("res://scripts/weather/SeasonModel.gd")
+const WindModel = preload("res://scripts/weather/WindModel.gd")
 const TIME_SCALE := 60.0
 const SPLIT_SECONDS := 10.0
 const CAMP_COST := {"stone":6,"brush":4}
@@ -68,6 +70,7 @@ var _old_logs: Array = []
 var _mine_logs: Array = []
 var _saved_door_closed := true
 var _old_damaged:Dictionary={}
+var _last_season:=-1
 var sleep_point:Node3D
 var _physics_ready:=false
 var vegetation:Node3D
@@ -147,7 +150,7 @@ func _process(delta: float) -> void:
  if not is_instance_valid(player):return
  var sleeping:bool=job.get("kind")=="rest"
  advance(delta*dev_time_rate)
- weather_visual=weather_model.sample(clock,weather=="rain",weather_until,daylight())
+ weather_visual=_apply_wind(weather_model.sample(clock,weather=="rain",weather_until,daylight(),SeasonModel.style_cuts(clock)))
  if not dev_events_enabled:
   # Suppress scheduling, not animation of manually started diagnostic events.
   atmosphere.cooldown=maxf(60,atmosphere.cooldown)
@@ -178,10 +181,11 @@ func advance(real_seconds: float) -> void:
   dt=minf(dt,(weather_until-clock)/factor)
   if not job.is_empty():dt=minf(dt,maxf(0.000001,float(job["duration"])-float(job.get("elapsed",0))))
   var precipitation:=rain_intensity()
+  var wind_strength:=float(wind().strength)
   # Split at fuel/ember depletion too, so the body still gets the heat for
   # the fraction of the minute during which the fire was actually burning.
   for f in fires:
-   var lifetime:=Fire.time_to_change(f,precipitation)
+   var lifetime:=Fire.time_to_change(f,precipitation,wind_strength)
    if lifetime>0:dt=minf(dt,lifetime/factor)
   remaining-=dt
   var world_dt:=dt*factor
@@ -189,14 +193,19 @@ func advance(real_seconds: float) -> void:
   if precipitation>0:rain_reserve=minf(6,rain_reserve+world_dt/3600.0*precipitation)
   _update_body(world_dt,job.get("kind")=="rest")
   for f in fires:
-   Fire.advance(f,world_dt,precipitation>0,precipitation)
+   Fire.advance(f,world_dt,precipitation>0,precipitation,wind_strength)
    if f["state"]=="burning" and f["fuel"]<600 and not f.get("low_warning",false) and _fire_in_reach(f):
     f["low_warning"]=true
     notify("Костёр скоро погаснет: осталось меньше 10 игровых минут")
    elif f["fuel"]>=600:f["low_warning"]=false
   clock+=world_dt
   _advance_weather_if_due()
-  weather_model.sample(clock,weather=="rain",weather_until,daylight())
+  weather_model.sample(clock,weather=="rain",weather_until,daylight(),SeasonModel.style_cuts(clock))
+  var season_now:=season_index()
+  if _last_season==-1:_last_season=season_now
+  elif season_now!=_last_season:
+   _last_season=season_now
+   notify(SeasonModel.ARRIVAL[_last_season])
   if warmth<20 and not _cold_warned:_cold_warned=true;notify("Опасный холод! Найдите огонь или закрытое укрытие.")
   elif warmth>35:_cold_warned=false
   if health<=0:
@@ -222,15 +231,36 @@ func _advance_weather_if_due() -> void:
  notify("Начинается дождь: хворост сложнее разжечь" if weather=="rain" else "Дождь закончился")
 
 func hour() -> float:return fposmod(clock,86400.0)/3600.0
-func daylight() -> float:return smoothstep(5.0,7.0,hour())*(1.0-smoothstep(18.0,20.0,hour()))
+func daylight() -> float:return SeasonModel.daylight(clock)
+func season_index() -> int:return SeasonModel.season_index(clock)
+func season_name() -> String:return SeasonModel.NAMES[season_index()]
+func season_day() -> int:return SeasonModel.season_day(clock)
+func season_progress() -> float:return SeasonModel.season_progress(clock)
 func rain_intensity() -> float:
- return clampf(float(weather_model.sample(clock,weather=="rain",weather_until,daylight()).rain),0,1)
+ return clampf(float(weather_model.sample(clock,weather=="rain",weather_until,daylight(),SeasonModel.style_cuts(clock)).rain),0,1)
 func weather_description() -> String:
- var state:Dictionary=weather_model.sample(clock,weather=="rain",weather_until,daylight())
+ var state:Dictionary=weather_model.sample(clock,weather=="rain",weather_until,daylight(),SeasonModel.style_cuts(clock))
  if weather=="clear" and float(state.rain)>0.01:return "дождь стихает"
  if weather=="rain" and float(state.rain)<0.01:return "начинается дождь"
  return {"clear":"ясно","broken":"переменная облачность","overcast":"пасмурно","mist":"туман","light_rain":"небольшой дождь","heavy_rain":"ливень","storm":"гроза"}.get(str(state.kind),"облачно")
-func air_temperature() -> float:return lerpf(4,15,daylight())-3.0*rain_intensity()
+func air_temperature() -> float:return SeasonModel.air_temperature(clock,daylight(),rain_intensity())
+func wind() -> Dictionary:
+ # Deterministic wind from clock + season + precipitation; same clock always
+ # reproduces the same wind, so no extra save fields are needed.
+ var state:Dictionary=weather_model.sample(clock,weather=="rain",weather_until,daylight(),SeasonModel.style_cuts(clock))
+ return WindModel.sample(clock,SeasonModel.wind_base(clock),clampf(float(state.rain),0,1),clampf(float(state.storm),0,1))
+func wind_description() -> String:return WindModel.describe(wind())
+func wind_move_multiplier(move_dir:Vector3) -> float:
+ var w:=wind()
+ return WindModel.movement_multiplier(w.direction,float(w.strength),move_dir)
+func _apply_wind(state:Dictionary) -> Dictionary:
+ # One integration point: the visual weather dict carries the REAL wind for
+ # RainField drift, gust audio and anything else reading state.wind.
+ if state.is_empty():return state
+ var w:=wind()
+ state.wind=w.strength
+ state.wind_direction=w.direction
+ return state
 func safe_shelter() -> bool:return location=="forest" and is_instance_valid(shelter) and shelter.contains(player.global_position) and shelter.door_closed
 func covered() -> bool:return location=="mine" or (is_instance_valid(shelter) and shelter.contains(player.global_position))
 func heat_at_player() -> float:
@@ -246,15 +276,19 @@ func heat_at_player() -> float:
   heat=maxf(heat,Thermal.fire_heat(dist,str(f["state"])))
  return heat
 func thermal_status(seconds:float=0.0) -> Dictionary:
- var state:Dictionary=weather_model.sample(clock,weather=="rain",weather_until,daylight())
+ var state:Dictionary=weather_model.sample(clock,weather=="rain",weather_until,daylight(),SeasonModel.style_cuts(clock))
  var precipitation:=clampf(float(state.rain),0,1)
- return Thermal.step(wetness,seconds,lerpf(4,15,daylight())-3.0*precipitation,heat_at_player(),float(state.wind),precipitation,covered(),safe_shelter(),location=="mine")
+ var air:=SeasonModel.air_temperature(clock,daylight(),precipitation)
+ return Thermal.step(wetness,seconds,air,heat_at_player(),float(wind().strength),precipitation,covered(),safe_shelter(),location=="mine")
 func thermal_description() -> String:
  var t:=thermal_status()
  var warmth_rate:float=t.warmth_rate;var wet_rate:float=t.wet_rate
  if (warmth>=100 and warmth_rate>0) or (warmth<=0 and warmth_rate<0):warmth_rate=0
  if (wetness>=100 and wet_rate>0) or (wetness<=0 and wet_rate<0):wet_rate=0
- return "Воздух %.1f °C · ощущается %.1f °C\nТепло: %+.1f%%/игр. мин · сырость: %+.1f%%/игр. мин\n%s" % [air_temperature(),float(t.felt),warmth_rate,wet_rate,"Огонь согревает и сушит; сильнее всего в 1–2 м." if float(t.heat)>0 else ("Под крышей: защита от осадков, постепенная сушка." if covered() else "Сырость усиливает холод. Ищите огонь или укрытие.")]
+ var wind_line:=""
+ var wind_strength:=float(wind().strength)
+ if not covered() and wind_strength>=0.35:wind_line="Ветер: "+wind_description()+". Встречный ветер выстуживает быстрее.\n"
+ return "Воздух %.1f °C · ощущается %.1f °C\n%sТепло: %+.1f%%/игр. мин · сырость: %+.1f%%/игр. мин\n%s" % [air_temperature(),float(t.felt),wind_line,warmth_rate,wet_rate,"Огонь согревает и сушит; сильнее всего в 1–2 м." if float(t.heat)>0 else ("Под крышей: защита от осадков, постепенная сушка." if covered() else "Сырость усиливает холод. Ищите огонь или укрытие.")]
 func _update_body(world_dt: float, resting: bool) -> void:
  if body.freeze_needs:body.causes.clear();return
  var minutes:=world_dt/60.0
@@ -264,6 +298,9 @@ func _update_body(world_dt: float, resting: bool) -> void:
  var moving:bool=Vector2(player.velocity.x,player.velocity.z).length()>0.2
  var sprinting:bool=moving and (player._is_action_down("sprint") or player._is_sprint_jumping) and not player._is_crouching and body.can_sprint(energy)
  var effort:=0.09+(0.10 if sprinting else 0.0)+(0.08 if job.get("kind")=="split" or player._is_lmb_held else 0.0)
+ if moving:
+  var w:=wind()
+  effort+=0.04*maxf(0.0,WindModel.headwind(w.direction,Vector3(player.velocity.x,0,player.velocity.z)))*float(w.strength)
  if not body.freeze_needs:energy=clampf(energy+minutes*(0.5 if resting and warmth>=20 else -effort),0,100)
  health=clampf(health+body.tick(minutes,resting,warmth,energy,sprinting,moving,job.get("kind")=="split" or player._is_lmb_held,player.backpack_weight/maxf(1,player.max_backpack_kg)),0,100)
  var warning:=""
@@ -344,7 +381,7 @@ func add_tinder(id: String) -> bool:
  if f.is_empty() or not _fire_in_reach(f) or not job.is_empty():return false
  if not Items.transact(player,{"brush":1}):notify("Нужен хворост для растопки");return false
  f["tinder"]+=1;ui.refresh();return true
-func ignition_chance(method: String) -> float:return Fire.chance(method,wetness,rain_intensity()>0,rain_intensity())
+func ignition_chance(method: String) -> float:return Fire.chance(method,wetness,rain_intensity()>0,rain_intensity(),float(wind().strength))
 func begin_ignition(id: String, method: String) -> bool:
  var f:=find_fire(id)
  if method not in ["match","spark"] or not job.is_empty() or f.is_empty() or not _fire_in_reach(f):return false
@@ -575,7 +612,7 @@ func _setup_weather_fx() -> void:
  _wind_audio=_loop_audio("res://assets/sounds/level_01/ambience/amb_forest_bed.mp3",-23)
 func _update_lighting() -> void:
  var day:=daylight()
- weather_visual=weather_model.sample(clock,weather=="rain",weather_until,day)
+ weather_visual=_apply_wind(weather_model.sample(clock,weather=="rain",weather_until,day,SeasonModel.style_cuts(clock)))
  if location=="mine":
   var entrance=get_parent().get_node_or_null("Geometry/EntranceDaylight")
   if entrance:entrance.light_energy=0.8*daylight()

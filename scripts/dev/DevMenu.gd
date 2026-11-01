@@ -161,7 +161,7 @@ func close_menu() -> void:
  Input.mouse_mode=_mouse_before;session.player._is_mouse_captured=Input.mouse_mode==Input.MOUSE_MODE_CAPTURED;session.player._jump_buffer_timer=0
 func refresh_values(fill:bool=true) -> void:
  var s=session
- readout.text="%s · %s · %.1f ч · здоровье %.1f%% · питание %.1f%% · вода %.1f%% · %.0f FPS · узлов %d%s" % [s.location,str(s.player.global_position),s.clock/3600,s.health,s.body.food,s.body.water,Engine.get_frames_per_second(),get_tree().get_node_count()," · DEV" if s.dev_tainted else ""]
+ readout.text="%s · %s · %.1f ч · здоровье %.1f%% · питание %.1f%% · вода %.1f%% · %.0f FPS · узлов %d%s\nСезон: %s, день %d/%d · воздух %.1f °C · ветер: %s" % [s.location,str(s.player.global_position),s.clock/3600,s.health,s.body.food,s.body.water,Engine.get_frames_per_second(),get_tree().get_node_count()," · DEV" if s.dev_tainted else "",s.season_name(),s.season_day(),s.SeasonModel.SEASON_DAYS,s.air_temperature(),s.wind_description()]
  if fill:
   for key in commands.STATS:inputs[key].value=s.body.get(key) if key in ["food","water","stamina"] else s.get(key)
   inputs.day.value=int(s.clock/86400)+1;inputs.hour.value=s.hour();inputs.rate_value.value=s.dev_time_rate

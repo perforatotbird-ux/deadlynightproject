@@ -1,6 +1,6 @@
 # Документация Deadly Night — карта и статусы
 
-**Сверено с кодом:** 1 ноября 2026 г. · ветка `main` · коммит `cff2608` · версия проекта **0.4.7** · Godot **4.7.2** (Forward+)
+**Сверено с кодом:** 1 ноября 2026 г. · ветка `main` · версия проекта **0.4.7** · Godot **4.7.2** (Forward+)
 
 Этот файл — точка входа в документацию. Он отвечает на три вопроса: что читать первым, какой документ считать источником истины по конкретной теме, и что в папке `Docs/` является историей, а не описанием текущего поведения.
 
@@ -28,6 +28,7 @@
 | Мир, рельеф, POI, дороги | `data/spec.json`, `data/level_layout.json` | [unified_level_design_mvp.md](unified_level_design_mvp.md) (историческая спецификация), [forest_level_design_mvp.md](forest_level_design_mvp.md) |
 | Рубка, породы, надрубы | `TreeChoppable.SPECIES_CONFIG`, `VoxelTreeTrunk.gd` | [smooth_tree_chopping.md](smooth_tree_chopping.md) |
 | Выживание, время, погода, тепло | `SurvivalWorld.gd`, `ThermalModel.gd`, `WeatherSchedule.gd` | [first_night_survival.md](first_night_survival.md), [weather_temperature_audit.md](weather_temperature_audit.md) |
+| Сезоны и ветер | `SeasonModel.gd`, `WindModel.gd`, `FireModel.gd` | [seasons_wind.md](seasons_wind.md) |
 | Калории и питание | `BodyModel.gd`, `SurvivalItems.calories_for()` | [Calorie_System.md](Calorie_System.md) |
 | Здоровье, травмы, Dev Menu | `BodyModel.gd`, `DevMenu.gd` | [health_dev_design.md](health_dev_design.md) |
 | Растительность, грибы, чай | `scripts/vegetation/` | [vegetation_implementation.md](vegetation_implementation.md), план — [vegetation_plan.md](vegetation_plan.md) |
@@ -54,6 +55,7 @@
 | [vegetation_implementation.md](vegetation_implementation.md) | Ягоды, грибы, чай, стриминг, сохранения, границы приёмки | актуально |
 | [vegetation_plan.md](vegetation_plan.md) | План системы растительности; реализован, сохранён как ТЗ | план (реализован) |
 | [weather_temperature_audit.md](weather_temperature_audit.md) | Почему костёр не грел и дождь шёл слишком часто; что исправлено | актуально |
+| [seasons_wind.md](seasons_wind.md) | Четыре сезона, длина дня, сезонные температуры и свет; детерминированный ветер и его влияние | актуально, новое |
 | [external_models_integration.md](external_models_integration.md) | Quaternius-деревья и топор от первого лица, лицензии | актуально |
 | [axe_swing.md](axe_swing.md) | Полуторная скорость замаха, Blender-кисти, воспроизведение | актуально |
 | [smooth_tree_chopping.md](smooth_tree_chopping.md) | Фоновая геометрия, реальный перелом, падение | актуально |
