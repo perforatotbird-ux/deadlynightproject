@@ -226,7 +226,6 @@ var survival: Node = null
 func _ready() -> void:
 	_init_inventory_data()
 	_setup_camera_and_viewmodel()
-	watch_arm=preload("res://scripts/player/WatchArm.gd").new();watch_arm.player=self;_camera.add_child(watch_arm)
 	_setup_audio()
 	_setup_hud()
 	_setup_inventory_ui()
@@ -235,6 +234,17 @@ func _ready() -> void:
 	_connect_settings_signals()
 	_is_mouse_captured = true
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	# Optional visuals must never prevent HUD, pause or movement initialization.
+	_setup_watch()
+
+func _setup_watch() -> void:
+	var script = load("res://scripts/player/WatchArm.gd")
+	if script == null or not script.can_instantiate():
+		push_warning("[WatchArm] Optional watch script unavailable; player controls remain active.")
+		return
+	watch_arm = script.new()
+	watch_arm.player = self
+	_camera.add_child(watch_arm)
 
 func _init_inventory_data() -> void:
 	inventory_slots.clear()
@@ -899,7 +909,11 @@ func _input(event: InputEvent) -> void:
 	# Keyboard Events (TAB toggles inventory!)
 	if event is InputEventKey and event.pressed and not event.echo:
 		if _event_matches_action(event,"check_watch"):
-			watch_arm.toggle();get_viewport().set_input_as_handled();return
+			if is_instance_valid(watch_arm) and watch_arm.has_method("toggle"):
+				watch_arm.toggle()
+			else:
+				_show_tool_banner("Модель часов не загружена. См. logs/DeadlyNight-startup.log")
+			get_viewport().set_input_as_handled();return
 		if _event_matches_action(event, "inventory"):
 			get_viewport().set_input_as_handled()
 			_toggle_inventory()

@@ -73,7 +73,9 @@ K:\Deadly Night\
 ./run.bat
 ```
 
-`run.bat` проверяет наличие движка и LFS-иконок, выполняет **инкрементальный** импорт (`--editor --import`), останавливается при `ERROR:` в логе импорта и затем запускает `scenes/viewer/MapViewer.tscn`.
+`run.bat` проверяет наличие движка, незагруженные LFS-указатели во всех runtime-ассетах (`assets/`, `data/`) и модель часов. После **инкрементального** импорта (`--editor --import`) запускается `scripts/core/LaunchCheck.gd`: компиляция игровых зависимостей, загрузка игрока и проверка GLB часов. При ошибке запуск отменяется с диагностикой, а не открывает неуправляемого персонажа. После успешной проверки запускается `scenes/viewer/MapViewer.tscn`.
+
+Логи сохраняются рядом с проектом в `logs/`: `DeadlyNight-import.log`, `DeadlyNight-startup.log`, `DeadlyNight-runtime.log`. После обновления выполните `git lfs install` и `git lfs pull`, затем `run.bat`. Если все файлы скачаны, но лог указывает на повреждённый импорт, закройте Godot и переименуйте `.godot` в свободное имя, например `.godot-backup`; следующий запуск пересоздаст кэш. **Не удаляйте сохранения или настройки в AppData.**
 
 > `run.bat` стартует игровую сцену напрямую, минуя меню. Штатная точка входа проекта — `scenes/menu/MainMenu.tscn` (`run/main_scene` в `project.godot`).
 
@@ -105,6 +107,9 @@ K:\Deadly Night\
 # Модульные наборы
 ./Godot/godot.exe --headless --path . --script tests/test_calories.gd
 ./Godot/godot.exe --headless --path . --script tests/test_vegetation.gd
+
+# Сквозной запуск той же сцены, что run.bat: физика, WASD, Tab, M, Esc, T
+./Godot/godot.exe --headless --path . --script tests/test_gameplay_startup.gd
 
 # Интеграция с реальными сценами и дисковыми слотами
 ./Godot/godot.exe --headless --path . --script tests/test_vegetation_world.gd
@@ -168,4 +173,4 @@ K:\Deadly Night\
 4. **Мир 4 × 4 км, 256 чанков по 250 м.** Террейн — единый `assets/models/terrain/terrain_256_chunks.glb`, коллизии строятся по чанкам. Схема 8 × 8 по 500 м осталась в истории как первая версия.
 5. **`MapViewer` — игровая сцена.** Имя сохранилось с этапа просмотра карты, но именно здесь живут `WorldMap`, `Player` и `FreeFlyCamera`; `SurvivalWorld` добавляется в рантайме. Смена сцен только лес ↔ шахта, меню — отдельная точка входа.
 6. **Локальный бинарник вместо Godot MCP.** Плагин `godot-mcp` ищет движок по фиксированному пути `C:\Program Files\Godot\Godot.exe`; проект использует `Godot/godot.exe`, поэтому все команды идут через CLI.
-7. **Git LFS.** `.glb`, `.blend`, `.wav`, `.ogg`, `.png`, `.r16` — LFS-объекты. Без `git lfs pull` проект не соберётся: `run.bat` явно проверяет маркеры LFS у иконок журнала.
+7. **Git LFS.** `.glb`, `.blend`, `.wav`, `.ogg`, `.png`, `.r16` — LFS-объекты. Без `git lfs pull` проект не соберётся: `run.bat` проверяет маркеры LFS во всех runtime-ассетах `assets/` и `data/`.
