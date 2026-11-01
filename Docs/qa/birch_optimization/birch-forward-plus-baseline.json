@@ -1,0 +1,86 @@
+{
+  "adapter": "llvmpipe (LLVM 15.0.7, 256 bits)",
+  "baseline": true,
+  "chunk": "Chunk_07_12",
+  "renderer": "forward_plus",
+  "resolution": [
+    960,
+    540
+  ],
+  "scope": "densest real birch chunk only; no terrain/gameplay; not full-game FPS",
+  "trees": 137,
+  "views": [
+    {
+      "camera_distance": 80.0,
+      "detail_trees": 0,
+      "samples": [
+        {
+          "draw_calls": 75,
+          "frame_ms": 1794.276,
+          "primitives": 504000
+        },
+        {
+          "draw_calls": 75,
+          "frame_ms": 1810.795,
+          "primitives": 504000
+        },
+        {
+          "draw_calls": 75,
+          "frame_ms": 1794.243,
+          "primitives": 504000
+        },
+        {
+          "draw_calls": 75,
+          "frame_ms": 1822.865,
+          "primitives": 504000
+        },
+        {
+          "draw_calls": 75,
+          "frame_ms": 2511.891,
+          "primitives": 504000
+        },
+        {
+          "draw_calls": 75,
+          "frame_ms": 2716.809,
+          "primitives": 504000
+        }
+      ]
+    },
+    {
+      "camera_distance": 500.0,
+      "detail_trees": 0,
+      "samples": [
+        {
+          "draw_calls": 15,
+          "frame_ms": 388.479,
+          "primitives": 60840
+        },
+        {
+          "draw_calls": 15,
+          "frame_ms": 396.582,
+          "primitives": 60840
+        },
+        {
+          "draw_calls": 15,
+          "frame_ms": 431.873,
+          "primitives": 60840
+        },
+        {
+          "draw_calls": 15,
+          "frame_ms": 387.652,
+          "primitives": 60840
+        },
+        {
+          "draw_calls": 15,
+          "frame_ms": 398.438,
+          "primitives": 60840
+        },
+        {
+          "draw_calls": 15,
+          "frame_ms": 366.286,
+          "primitives": 60840
+        }
+      ]
+    }
+  ]
+}

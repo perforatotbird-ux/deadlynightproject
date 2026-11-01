@@ -12,7 +12,9 @@ Modifications for Deadly Night: separated five variants and three authored
 LOD levels, removed exhibition offsets, converted to Y-up/ground pivot,
 normalized total height to 18 m, resized shared textures to 2048 pixels,
 separated lower-stem atlas components for bark collision/cutting, and baked
-native Godot ArrayMesh LODs. Original geometry, UVs and texture artwork retained.
+native Godot ArrayMesh LODs. Added eight-view albedo/alpha impostor atlases
+baked from each authored LOD0 for distant rendering. Original near geometry,
+UVs and texture artwork retained.
 The author does not endorse this game or these modifications.
 
 When redistributing the game or its assets, retain this attribution and the

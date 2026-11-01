@@ -1,0 +1,69 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+===========================================================================
+DEADLY NIGHT - MAIN MENU, PERSISTENCE & PAUSE SYSTEM TEST SUITE
+Godot Engine 4.7.2 Forward+  ·  Commercial Survival Architecture
+===========================================================================
+
+--- TEST 1: SettingsManager Configuration & Persistence ---
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+PASS: SettingsManager instance successfully acquired.
+[SettingsManager] Settings saved to: user://settings.cfg
+[SettingsManager] Settings loaded successfully from: user://settings.cfg
+PASS: Settings values correctly saved to user://settings.cfg and loaded.
+[SettingsManager] Settings saved to: user://settings.cfg
+PASS: Reset to defaults successfully restored original values (vol=0.85).
+
+--- TEST 2: MainMenu Scene Loading & 3D Scenic Vista ---
+PASS: 3D Scenic MenuBackdrop3D found in MainMenu.
+PASS: Camera3D and WorldEnvironment correctly configured in backdrop.
+PASS: All primary navigation buttons present and typed.
+
+--- TEST 3: Menu Subscreens Instantiation & Interfaces ---
+PASS: NewGameScreen loaded with 4 difficulty options and slot picker.
+PASS: LoadGameScreen loaded with slot management cards & inspection panel.
+
+--- TEST 4: SaveManager Multi-Slot & Atomic Persistence ---
+[SaveManager] Deleted save slot: slot_test_qa
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+[WaterSource] WATER_OLD_WELL grounded at (-938.0, 24.9939, 1098.0)
+[WaterSource] WATER_FOREST_SPRING grounded at (-170.0, 21.23364, -775.0)
+[WaterSource] WATER_FORD_POOL grounded at (775.0, 63.66071, -495.0)
+PASS: Game saved atomically to slot_test_qa.
+PASS: Manifest correctly updated with metadata (items=2, name='Тест Выживания QA').
+[SaveManager] Loaded game state successfully applied to active scene.
+PASS: load_game('slot_test_qa') succeeded.
+PASS: Full state restored: position (dist_h=0.000), tool=1, weight=18.0 kg, tree_felled=true, oak_logs=2.
+[SaveManager] Deleted save slot: slot_test_qa
+PASS: Test save slot deleted and removed from manifest.
+
+--- TEST 5: In-Game PauseMenu Overlay & Tree Pause Lifecycle ---
+PASS: open_pause() pauses SceneTree, makes menu visible, and uncaptures mouse.
+PASS: resume_game() unpauses SceneTree, hides menu, and recaptures mouse.
+
+--- TEST 6: Autosave Rolling Slots & Queue Safety ---
+PASS: Autosaves adhere to MAX_AUTOSAVE_SLOTS limit (3 <= 3) via rolling slot rotation.
+[SaveManager] Deleted save slot: autosave_1
+[SaveManager] Deleted save slot: autosave_2
+[SaveManager] Deleted save slot: autosave_3
+
+===========================================================================
+TEST RUN SUMMARY: 15 PASSED, 0 FAILED
+===========================================================================
+SUCCESS: ALL MAIN MENU & PERSISTENCE ACCEPTANCE TESTS PASSED (100%)
+
+WARNING: 3 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)

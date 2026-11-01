@@ -27,6 +27,10 @@ var _player_ref: Node3D = null
 var _dynamic_update_timer: float = 0.0
 var _remnant_requested: Dictionary = {}
 var _hidden_tree_ids:Dictionary={}
+var _birch_forest:RefCounted
+var _interaction_cells:Dictionary={}
+var _last_proximity_position:=Vector3(INF,INF,INF)
+var _last_candidate_count:=0
 
 func _ready() -> void:
 	_load_tree_models()
@@ -288,6 +292,7 @@ func _load_vegetation() -> void:
 	_all_trees_data = trees
 	print("[WorldMap] Loaded %d tree records from JSON." % trees.size())
 	
+	_birch_forest=preload("res://scripts/world/BirchForest.gd").new(self)
 	# Partition trees by chunk and species
 	# chunk_map[chunk_name][species] = [tree_data, ...]
 	var chunk_map = {}
@@ -310,6 +315,10 @@ func _load_vegetation() -> void:
 		if not _chunk_trees_data.has(chunk_name):
 			_chunk_trees_data[chunk_name] = []
 		_chunk_trees_data[chunk_name].append(tree)
+		var a:Array=tree["pos"]
+		var cell:=Vector2i(floori(a[0]/32.0),floori(-a[1]/32.0))
+		if not _interaction_cells.has(cell):_interaction_cells[cell]=[]
+		_interaction_cells[cell].append(tree)
 		
 	# Create MultiMeshInstance3D per chunk & species
 	var total_instances = 0
@@ -325,6 +334,10 @@ func _load_vegetation() -> void:
 			if mesh == null:
 				continue
 				
+			if str(sp).begins_with("birch_"):
+				_birch_forest.add_batch(chunk_node,sp,tree_list,mesh,_tree_mmi_index,_hidden_tree_ids)
+				total_instances+=tree_list.size()
+				continue
 			var mmi = MultiMeshInstance3D.new()
 			mmi.name = "MMI_" + sp
 			
@@ -411,6 +424,8 @@ func _setup_dynamic_trees() -> void:
 	_dynamic_trees_root = Node3D.new()
 	_dynamic_trees_root.name = "DynamicTrees"
 	add_child(_dynamic_trees_root)
+	var player:=get_node_or_null("../Player") as Node3D
+	if player and _birch_forest:_birch_forest.update(player.global_position,_tree_mmi_index,_hidden_tree_ids,true)
 
 func _process(delta: float) -> void:
 	_dynamic_update_timer += delta
@@ -424,38 +439,14 @@ func _process(delta: float) -> void:
 			return
 			
 	var p_pos = _player_ref.global_position
-	# Find player's current chunk
-	var chunk_x = clampi(int(floor((p_pos.x + 2000.0) / 250.0)), 0, 15)
-	var chunk_y = clampi(int(floor((-p_pos.z + 2000.0) / 250.0)), 0, 15)
-	
-	# Check adjacent chunks within 1 step
-	for dx in range(-1, 2):
-		for dy in range(-1, 2):
-			var cx = chunk_x + dx
-			var cy = chunk_y + dy
-			if cx < 0 or cx > 15 or cy < 0 or cy > 15:
-				continue
-			var chunk_name = "Chunk_%02d_%02d" % [cx, cy]
-			if not _chunk_trees_data.has(chunk_name):
-				continue
-				
-			var tree_list = _chunk_trees_data[chunk_name]
-			for t in tree_list:
-				var t_id = t["id"]
-				var pos_arr = t["pos"]
-				var origin = Vector3(pos_arr[0], pos_arr[2], -pos_arr[1])
-				var dist = p_pos.distance_to(origin)
-				
-				# Activate tree within 24m
-				if dist <= 24.0:
-					var pos_id = "pos_%d_%d_%d" % [int(round(origin.x)), int(round(origin.y)), int(round(origin.z))]
-					if TreeChoppable.felled_tree_ids.has(t_id) or TreeChoppable.felled_tree_ids.has(pos_id):
-						_set_mmi_tree_scale(t_id, 0.0)
-						_ensure_saved_remnant(t_id, origin, str(t.get("species","birch")))
-						continue
-					if not _dynamic_trees.has(t_id) and not _interactive_trees.has(t_id):
-						_activate_dynamic_tree(t, origin)
-						
+	var camera:=get_viewport().get_camera_3d()
+	if _birch_forest:_birch_forest.update(camera.global_position if camera else p_pos,_tree_mmi_index,_hidden_tree_ids)
+	# Only revisit nearby records after movement; lookup is bounded to nine 32 m cells.
+	# Active trees are still retired below even after a teleport or loaded position.
+	if p_pos.distance_squared_to(_last_proximity_position)>=1.0:
+		_last_proximity_position=p_pos
+		_update_nearby_trees(p_pos)
+
 	# Deactivate distant dynamic trees (> 36m)
 	var to_remove = []
 	for t_id in _dynamic_trees.keys():
@@ -468,6 +459,24 @@ func _process(delta: float) -> void:
 			
 	for t_id in to_remove:
 		_deactivate_dynamic_tree(t_id)
+
+func _update_nearby_trees(p_pos:Vector3)->void:
+	var cell:=Vector2i(floori(p_pos.x/32.0),floori(p_pos.z/32.0))
+	_last_candidate_count=0
+	for dx in range(-1,2):
+		for dz in range(-1,2):
+			for t in _interaction_cells.get(cell+Vector2i(dx,dz),[]):
+				_last_candidate_count+=1
+				var a:Array=t["pos"]
+				var origin:=Vector3(a[0],a[2],-a[1])
+				if p_pos.distance_squared_to(origin)>24.0*24.0:continue
+				var t_id:String=t["id"]
+				var pos_id:="pos_%d_%d_%d"%[roundi(origin.x),roundi(origin.y),roundi(origin.z)]
+				if TreeChoppable.felled_tree_ids.has(t_id) or TreeChoppable.felled_tree_ids.has(pos_id):
+					_set_mmi_tree_scale(t_id,0.0)
+					_ensure_saved_remnant(t_id,origin,str(t.get("species","birch")))
+				elif not _dynamic_trees.has(t_id) and not _interactive_trees.has(t_id):
+					_activate_dynamic_tree(t,origin)
 
 func _activate_dynamic_tree(tree_data: Dictionary, origin: Vector3) -> void:
 	var t_id = tree_data["id"]
@@ -544,8 +553,10 @@ func restore_felled_stumps() -> void:
 	# Called after a loaded player's position is applied. Far remnants are
 	# reconstructed lazily by the normal proximity loop, not all at world load.
 	_remnant_requested.clear()
+	_last_proximity_position=Vector3(INF,INF,INF)
 	var player := get_node_or_null("../Player") as Node3D
 	if player == null:return
+	if _birch_forest:_birch_forest.update(player.global_position,_tree_mmi_index,_hidden_tree_ids,true)
 	var seen: Dictionary={}
 	for key in TreeChoppable.felled_tree_ids:
 		var stored_info=TreeChoppable.felled_tree_ids[key]
@@ -572,6 +583,9 @@ func _set_mmi_tree_scale(t_id: String, scale_mult: float) -> void:
 	else:_hidden_tree_ids.erase(t_id)
 	if _tree_mmi_index.has(t_id):
 		var data = _tree_mmi_index[t_id]
+		if data.has("far_mm"):
+			_birch_forest.sync(data,_hidden_tree_ids.has(t_id))
+			return
 		var mm: MultiMesh = data["mm"]
 		var idx: int = data["index"]
 		var orig_xform: Transform3D = data["xform"]
@@ -583,6 +597,9 @@ func _restore_mmi_tree_scale(t_id: String) -> void:
 	_hidden_tree_ids.erase(t_id)
 	if _tree_mmi_index.has(t_id):
 		var data = _tree_mmi_index[t_id]
+		if data.has("far_mm"):
+			_birch_forest.sync(data,_hidden_tree_ids.has(t_id))
+			return
 		var mm: MultiMesh = data["mm"]
 		var idx: int = data["index"]
 		var orig_xform: Transform3D = data["xform"]

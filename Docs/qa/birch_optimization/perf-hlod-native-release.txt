@@ -1,0 +1,26 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 24.2.6 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 15.0.7, 256 bits)
+
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+PASS: every non-tutorial record in 32m interaction grid
+PASS: all 14758 scattered birches have paired near/far representation
+PASS: rotating impostor bounds contain tree tops
+PASS: 128m detail batches rebase transforms without moving trees
+PASS: nearby tree selects authored detailed geometry
+PASS: stationary/small-motion frame skips world-cell traversal
+PASS: interactive hide preserves active cell state
+PASS: interactive hide masks both render representations
+PASS: teleport demotes cell without reviving hidden tree
+PASS: hidden tree remains absent after demotion
+PASS: restore far tree only, no doubled detail
+PASS: visibility registry restored
+PASS: promotion swaps far for exactly one detailed tree
+PASS: hysteresis retains active tree inside leave radius
+PASS: cell demotes beyond leave radius
+PASS: interaction lookup examines local records, not nine 250m chunks
+LOCAL_CANDIDATES 55
+BIRCH HLOD SUMMARY: 16 PASS, 0 FAIL

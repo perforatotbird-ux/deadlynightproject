@@ -1,0 +1,19 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+PASS: every non-tutorial record in 32m interaction grid
+PASS: all 14758 scattered birches have paired near/far representation
+PASS: rotating impostor bounds contain tree tops
+PASS: 128m detail batches rebase transforms without moving trees
+PASS: nearby tree selects authored detailed geometry
+PASS: stationary/small-motion frame skips world-cell traversal
+PASS: interactive hide preserves active cell state
+PASS: teleport demotes cell without reviving hidden tree
+PASS: visibility registry restored
+PASS: hysteresis retains active tree inside leave radius
+PASS: cell demotes beyond leave radius
+PASS: interaction lookup examines local records, not nine 250m chunks
+LOCAL_CANDIDATES 55
+BIRCH HLOD SUMMARY: 12 PASS, 0 FAIL

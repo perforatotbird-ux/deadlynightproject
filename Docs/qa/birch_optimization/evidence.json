@@ -1,0 +1,63 @@
+{
+  "plan": {
+    "question": "Does far HLOD reduce geometry submission while retaining near authored assets?",
+    "grain": "one rendered frame per renderer/camera/workload/version",
+    "population": "137 birches from densest real source chunk, no terrain or gameplay",
+    "decision": "prose + technical QA table; workload counters, not hardware FPS estimate",
+    "omit": "frame times: software rendering and concurrent non-render tests are not representative of GTX1060"
+  },
+  "sources": {
+    "before": "birch-baseline.json",
+    "after": "birch-optimized-final-assets.json"
+  },
+  "matched_configuration": {
+    "chunk": "Chunk_07_12",
+    "trees": 137,
+    "renderer": "gl_compatibility",
+    "adapter": "llvmpipe (LLVM 15.0.7, 256 bits)",
+    "resolution": [
+      960,
+      540
+    ],
+    "scope": "densest real birch chunk only; no terrain/gameplay; not full-game FPS"
+  },
+  "profile_resolution": "Generic JSON profiler treats outer arrays as rows; explicitly normalized nested views[].samples[] to 24 frame rows. Constant metadata expected, no null/duplicate frames.",
+  "summary": [
+    {
+      "distance_m": 80,
+      "before_primitives": 504000,
+      "before_draw_calls": 75,
+      "after_primitives": 633342,
+      "after_draw_calls": 191
+    },
+    {
+      "distance_m": 500,
+      "before_primitives": 60840,
+      "before_draw_calls": 15,
+      "after_primitives": 274,
+      "after_draw_calls": 5
+    }
+  ],
+  "full_scene_limit": "Before and after native full-game attempts terminated with exit137 on 4GB software-rendering host; no completed full-scene FPS comparison.",
+  "gtx1060_tested": false,
+  "forward_plus_summary": [
+    {
+      "distance_m": 80,
+      "before_primitives": 504000,
+      "before_draw_calls": 75,
+      "after_primitives": 633342,
+      "after_draw_calls": 191
+    },
+    {
+      "distance_m": 500,
+      "before_primitives": 60840,
+      "before_draw_calls": 15,
+      "after_primitives": 274,
+      "after_draw_calls": 5
+    }
+  ],
+  "sources_forward_plus": {
+    "before": "birch-forward-plus-baseline.json",
+    "after": "birch-forward-plus-final-assets.json"
+  }
+}

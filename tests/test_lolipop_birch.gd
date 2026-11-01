@@ -142,7 +142,9 @@ func run() -> void:
  if DisplayServer.get_name()!="headless":check(index.mm.get_instance_transform(index.index).basis.determinant()==0.0,"GPU MultiMesh hides correct distant variant")
  world._restore_mmi_tree_scale(candidate.id)
  check(not world._hidden_tree_ids.has(candidate.id),"deactivation restores distant-variant visibility registry")
- if DisplayServer.get_name()!="headless":check(index.mm.get_instance_transform(index.index).is_equal_approx(index.xform),"GPU MultiMesh restores original variant transform")
+ if DisplayServer.get_name()!="headless":
+  check(index.far_mm.get_instance_transform(index.far_index).is_equal_approx(index.far_xform),"GPU MultiMesh restores original far variant transform")
+  check(is_zero_approx(index.mm.get_instance_transform(index.index).basis.determinant()),"inactive detail does not double-render far variant")
  var output:=OS.get_environment("DN_QA_OUTPUT")
  if not output.is_empty():
   DirAccess.make_dir_recursive_absolute(output)

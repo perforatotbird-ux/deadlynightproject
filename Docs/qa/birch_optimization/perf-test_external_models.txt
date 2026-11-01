@@ -1,0 +1,47 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+PASS: birch: external model is active, not fallback
+PASS: birch: single baked mesh compatible with MultiMesh
+PASS: birch: ground pivot and configured tree height
+PASS: birch: no lost node transforms in distant forest
+PASS: birch: forest uses downloaded mesh resource
+PASS: birch: bark collision/fracture tagging and canopy materials
+PASS: birch: interactive tree matches distant model
+PASS: birch: real bark collision retained
+PASS: birch: actual physics ray reaches imported bark
+PASS: spruce: external model is active, not fallback
+PASS: spruce: single baked mesh compatible with MultiMesh
+PASS: spruce: ground pivot and configured tree height
+PASS: spruce: no lost node transforms in distant forest
+PASS: spruce: forest uses downloaded mesh resource
+PASS: spruce: bark collision/fracture tagging and canopy materials
+PASS: spruce: interactive tree matches distant model
+PASS: spruce: real bark collision retained
+PASS: spruce: actual physics ray reaches imported bark
+PASS: beech: external model is active, not fallback
+PASS: beech: single baked mesh compatible with MultiMesh
+PASS: beech: ground pivot and configured tree height
+PASS: beech: no lost node transforms in distant forest
+PASS: beech: forest uses downloaded mesh resource
+PASS: beech: bark collision/fracture tagging and canopy materials
+PASS: beech: interactive tree matches distant model
+PASS: beech: real bark collision retained
+PASS: beech: actual physics ray reaches imported bark
+PASS: oak: external model is active, not fallback
+PASS: oak: single baked mesh compatible with MultiMesh
+PASS: oak: ground pivot and configured tree height
+PASS: oak: no lost node transforms in distant forest
+PASS: oak: forest uses downloaded mesh resource
+PASS: oak: bark collision/fracture tagging and canopy materials
+PASS: oak: interactive tree matches distant model
+PASS: oak: real bark collision retained
+PASS: oak: actual physics ray reaches imported bark
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+PASS: player equips downloaded axe
+PASS: axe length matches original animation and hand sockets
+PASS: original handle heel offset retained
+PASS: both existing hands retained
+PASS: tool switching hides axe and hands
+PASS: tool switching restores axe
+PASS: missing external tree resolves to legacy resource path
+EXTERNAL MODELS SUMMARY: 43 PASS, 0 FAIL
