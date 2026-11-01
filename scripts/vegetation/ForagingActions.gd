@@ -4,7 +4,7 @@ const Catalog=preload("res://scripts/vegetation/VegetationCatalog.gd")
 const Items=preload("res://scripts/survival/SurvivalItems.gd")
 var session:Node
 func cook_recipe(id:String,amount:int) -> Dictionary:
- if amount<1 or amount>10:return {}
+ if amount<1 or amount>1000:return {}
  if id=="wood_tea":
   var tea:=Items.item(id);tea.count=amount
   return {"costs":{"stump_fan":amount,"water":amount},"outputs":[tea],"minutes":5.0*amount}
@@ -12,8 +12,15 @@ func cook_recipe(id:String,amount:int) -> Dictionary:
  if result=="":return {}
  var food:=Items.item(result);food.count=amount
  return {"costs":{id:amount},"outputs":[food],"minutes":3.0*amount}
+func max_cook_amount(id:String)->int:
+ var recipe:=cook_recipe(id,1)
+ if recipe.is_empty():return 0
+ var available:=1000
+ for ingredient in recipe.costs:available=mini(available,Items.count(session.player.inventory_slots,str(ingredient))/int(recipe.costs[ingredient]))
+ return available
 func begin_cook(id:String,amount:int=1) -> bool:
  if session.health<=0 or not session.job.is_empty():return false
+ if amount<1 or amount>max_cook_amount(id):session.notify("Нельзя приготовить больше порций, чем ингредиентов в рюкзаке");return false
  if id=="wood_tea" and not session.vegetation.inspected.has("stump_fan"):
   session.notify("Сначала осмотрите пеньковый веер или прочитайте памятку с рецептом");return false
  var recipe:=cook_recipe(id,amount);var fire:Dictionary=session.find_fire(session.selected_fire)

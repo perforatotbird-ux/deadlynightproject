@@ -576,14 +576,18 @@ func refresh_actions() -> void:
  var boil_ready:bool=not f.is_empty() and f.get("state")=="burning" and raw_portions>=roundi(boil_volume.value*2)
  buttons["boil"].disabled=busy or not boil_ready
  boil_info.text="%.1f л · %.0f игровых секунд · сырая вода: %.1f л" % [boil_volume.value,boil_volume.value*2*s.BOIL_WORLD_SECONDS,raw_portions*0.5]
- var cooking_recipe:Dictionary=s.foraging.cook_recipe(str(Catalog.FIRE_RECIPES[cook_select.selected].id),int(cook_amount.value))
+ var cook_id:=str(Catalog.FIRE_RECIPES[cook_select.selected].id)
+ var cook_available:int=s.foraging.max_cook_amount(cook_id)
+ cook_amount.max_value=maxi(1,cook_available)
+ cook_amount.set_value_no_signal(clampf(cook_amount.value,1,maxi(1,cook_available)))
+ var cooking_recipe:Dictionary=s.foraging.cook_recipe(cook_id,int(cook_amount.value))
  var cooking_ready:bool=not f.is_empty() and f.get("state")=="burning" and not cooking_recipe.is_empty()
- buttons["cook"].disabled=busy or not cooking_ready or not s.Items.transact(player,cooking_recipe.costs,cooking_recipe.outputs,-1,true)
+ buttons["cook"].disabled=busy or cook_available<1 or not cooking_ready or not s.Items.transact(player,cooking_recipe.costs,cooking_recipe.outputs,-1,true)
  if Catalog.FIRE_RECIPES[cook_select.selected].id=="wood_tea" and not s.vegetation.inspected.has("stump_fan"):buttons["cook"].disabled=true
- cook_amount.editable=not busy;cook_select.disabled=busy
+ cook_amount.editable=not busy and cook_available>0;cook_select.disabled=busy
  var ingredients:PackedStringArray=[]
  for id in cooking_recipe.get("costs",{}):ingredients.append("%s ×%d"%[s.Items.item(id).name,int(cooking_recipe.costs[id])])
- cook_info.text=(" + ".join(ingredients)+" · %.0f игровых минут"%float(cooking_recipe.get("minutes",0))) if cooking_ready else "Нужен горящий костёр рядом и ингредиенты в рюкзаке."
+ cook_info.text="Доступно порций: %d\n" % cook_available + ((" + ".join(ingredients)+" · %.0f игровых минут"%float(cooking_recipe.get("minutes",0))) if cooking_ready else "Нужен горящий костёр рядом и ингредиенты в рюкзаке.")
  var ready:=not f.is_empty();var fuel_slot:=fuel_select.get_selected_id();var available:=0
  if fuel_slot>=0 and fuel_slot<player.inventory_slots.size() and player.inventory_slots[fuel_slot]!=null:available=int(player.inventory_slots[fuel_slot]["count"])
  fuel_amount.max_value=maxi(1,available);fuel_amount.editable=not busy and available>0
