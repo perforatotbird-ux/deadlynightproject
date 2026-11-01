@@ -49,7 +49,7 @@ func _run_auto_chop_and_no_respawn_test() -> void:
 	var trees = root.get_tree().get_nodes_in_group("choppable_trees")
 	var target_tree: TreeChoppable = null
 	for t in trees:
-		if t is TreeChoppable and t.species == "birch" and t.current_hp == 8:
+		if t is TreeChoppable and t.species == "birch" and t.tree_id == "tree_055432":
 			target_tree = t
 			break
 			
@@ -77,7 +77,8 @@ func _run_auto_chop_and_no_respawn_test() -> void:
 		failed += 1
 
 	# Wait and allow auto-chop to strike repeatedly while holding LMB
-	var timeout = 6.0
+	var timeout = 25.0
+	var started = Time.get_ticks_msec()
 	var elapsed = 0.0
 	var prev_hp = target_tree.current_hp
 	var observed_hp_drops = 0
@@ -85,7 +86,7 @@ func _run_auto_chop_and_no_respawn_test() -> void:
 	print("  -> Holding LMB and awaiting continuous auto-chop...")
 	while elapsed < timeout and is_instance_valid(target_tree) and target_tree.current_hp > 0:
 		await process_frame
-		elapsed += 0.016
+		elapsed = (Time.get_ticks_msec()-started)/1000.0
 		if target_tree.current_hp < prev_hp:
 			observed_hp_drops += 1
 			print("     [Auto-chop] Tree HP dropped to %d (strike #%d, elapsed %.2fs)" % [target_tree.current_hp, observed_hp_drops, elapsed])
@@ -99,9 +100,9 @@ func _run_auto_chop_and_no_respawn_test() -> void:
 		failed += 1
 
 	# Let it finish felling if not already 0 HP
-	while elapsed < 10.0 and is_instance_valid(target_tree) and target_tree.current_hp > 0:
+	while elapsed < 40.0 and is_instance_valid(target_tree) and target_tree.current_hp > 0:
 		await process_frame
-		elapsed += 0.016
+		elapsed = (Time.get_ticks_msec()-started)/1000.0
 		
 	# Release LMB
 	var release_event = InputEventMouseButton.new()
@@ -154,12 +155,14 @@ func _run_auto_chop_and_no_respawn_test() -> void:
 	print("\n[TEST 4] Testing prevention of standing tree re-instantiation...")
 	var re_tree_scene = load("res://scenes/props/TreeInteractive.tscn")
 	var re_tree = re_tree_scene.instantiate() as TreeChoppable
+	re_tree.species = "birch"
+	re_tree.tree_id = target_tree_id
+	re_tree.position = target_pos
 	viewer.add_child(re_tree)
-	re_tree.global_position = target_pos
-	re_tree.init_tree("birch", target_tree_id)
-	
-	# Give it 1 frame to run _ready / queue_free
-	await process_frame
+	# Restoration is asynchronous and reconstructs the actual cut stump.
+	var restore_deadline = Time.get_ticks_msec()+15000
+	while is_instance_valid(re_tree) and not re_tree.is_queued_for_deletion() and Time.get_ticks_msec()<restore_deadline:
+		await create_timer(0.01).timeout
 	
 	if not is_instance_valid(re_tree) or re_tree.is_queued_for_deletion():
 		print("  -> PASS: Re-instantiating felled tree was automatically culled/freed.")

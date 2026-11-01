@@ -21,6 +21,7 @@ var weakest_y: float = 1.3
 var remaining_ratio: float = 1.0
 var section_ratios: Dictionary = {}
 var elapsed_usec: int = 0
+var cap_contours: int = 0
 
 func run() -> void:
 	var start := Time.get_ticks_usec()
@@ -31,7 +32,7 @@ func run() -> void:
 		for p in profile: actual_radius += Vector2(p.x, p.z).length() / SAMPLES
 		var work: float = float(cut.get("work", 1.0)) / maxf(strength, 1.0)
 		cut["depth"] = actual_radius * 2.2 * work
-		cut["width"] = actual_radius * minf(1.4, 0.8 + 0.6 * work)
+		cut["width"] = actual_radius * minf(2.8, 0.8 + 0.6 * work)
 		cut["height"] = minf(0.17, 0.115 + float(cut.get("work", 1.0)) * 0.003)
 	_update_sections()
 	if prepared.is_empty():
@@ -93,20 +94,90 @@ func _update_sections() -> void:
 		for i in range(floori((cy-0.18)/0.04), ceili((cy+0.18)/0.04)+1):
 			candidates[clampf(i*0.04,0.04,height-0.04)] = true
 	for y in candidates:
-		var ring := _profile(y)
-		var intact_area := 0.0
-		var damaged_area := 0.0
-		for i in SAMPLES:
-			var p: Vector3 = ring[i]
-			var q: Vector3 = ring[(i+1)%SAMPLES]
-			intact_area += Vector2(p.x,p.z).cross(Vector2(q.x,q.z))
-			p = deform(p); q = deform(q)
-			damaged_area += Vector2(p.x,p.z).cross(Vector2(q.x,q.z))
-		var ratio := absf(damaged_area) / maxf(absf(intact_area),0.000001)
+		var contours: Array = _section_contours(y)
+		if contours.is_empty():contours=[_profile(y)]
+		var intact_area := _section_area(contours,false)
+		var damaged_area := _section_area(contours,true)
+		var ratio := damaged_area / maxf(intact_area,0.000001)
 		section_ratios[y] = ratio
 		if ratio < remaining_ratio:
 			remaining_ratio = ratio
 			weakest_y = y
+
+func _section_contours(y: float, from_results: bool = false) -> Array:
+	# Trace actual connected stem cross-sections, not a single radial fan.
+	# LOLIPOP includes forked/asymmetric bases; a fan at the tree origin closes
+	# the gap between stems and leaves the second stem open.
+	var cache_key := "contours_%0.6f"%y
+	if not from_results and profiles.has(cache_key):return profiles[cache_key]
+	var points: Array[Vector3] = []
+	var lookup: Dictionary = {}
+	var links: Array = []
+	var edges: Dictionary = {}
+	for data in (results if from_results else inputs):
+		if not data["bark"]:continue
+		var arrays: Array=data["arrays"]
+		var vertices: PackedVector3Array=arrays[Mesh.ARRAY_VERTEX]
+		var indices: PackedInt32Array=arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX]!=null else PackedInt32Array()
+		var xform: Transform3D=Transform3D.IDENTITY if from_results else data["transform"]
+		var count: int=indices.size() if not indices.is_empty() else vertices.size()
+		for t in range(0,count,3):
+			var tri: Array[Vector3]=[]
+			for j in 3:tri.append(xform*vertices[indices[t+j] if not indices.is_empty() else t+j])
+			var cross_points: Array[Vector3]=[]
+			for j in 3:
+				var a:=tri[j];var b:=tri[(j+1)%3]
+				if (a.y<=y and b.y>y) or (b.y<=y and a.y>y):cross_points.append(a.lerp(b,(y-a.y)/(b.y-a.y)))
+			if cross_points.size()!=2 or cross_points[0].distance_squared_to(cross_points[1])<0.000000000001:continue
+			var ids: Array[int]=[]
+			for p in cross_points:
+				var key:=Vector2i(floori(p.x*10000),floori(p.z*10000))
+				var match_id: int=-1
+				for dx in range(-1,2):
+					for dz in range(-1,2):
+						for candidate in lookup.get(key+Vector2i(dx,dz),[]):
+							if points[candidate].distance_squared_to(p)<0.0000000001:match_id=candidate;break
+				if match_id<0:
+					match_id=points.size();points.append(p);links.append([])
+					if not lookup.has(key):lookup[key]=[]
+					lookup[key].append(match_id)
+				ids.append(match_id)
+			if ids[0]==ids[1]:continue
+			var edge:=Vector2i(mini(ids[0],ids[1]),maxi(ids[0],ids[1]))
+			if not edges.has(edge):edges[edge]=false;links[ids[0]].append(ids[1]);links[ids[1]].append(ids[0])
+	var contours: Array=[]
+	for edge in edges:
+		if edges[edge]:continue
+		var start: int=edge.x;var previous: int=start;var current: int=edge.y
+		var loop:=PackedVector3Array([points[start]])
+		edges[edge]=true
+		for step in edges.size()+1:
+			if current==start:break
+			loop.append(points[current])
+			var next: int=-1
+			for candidate in links[current]:
+				var key:=Vector2i(mini(current,candidate),maxi(current,candidate))
+				if candidate!=previous and not edges[key]:next=candidate;edges[key]=true;break
+			if next<0:break
+			previous=current;current=next
+		if current==start and loop.size()>=3:contours.append(loop)
+	if not from_results:profiles[cache_key]=contours
+	if from_results and contours.is_empty():
+		var degrees:Dictionary={}
+		for link in links:degrees[link.size()]=degrees.get(link.size(),0)+1
+		print("CAP TRACE y=",y," points=",points.size()," degrees=",degrees)
+	return contours
+
+func _section_area(contours: Array, damaged: bool) -> float:
+	var total:=0.0
+	for contour in contours:
+		var area:=0.0
+		for i in contour.size():
+			var a: Vector3=deform(contour[i]) if damaged else contour[i]
+			var b: Vector3=deform(contour[(i+1)%contour.size()]) if damaged else contour[(i+1)%contour.size()]
+			area+=Vector2(a.x,a.z).cross(Vector2(b.x,b.z))
+		total+=absf(area)*0.5
+	return total
 
 func sample_field(p: Vector3) -> Vector4:
 	var r := Vector2(p.x,p.z).length()
@@ -132,12 +203,14 @@ func sample_field(p: Vector3) -> Vector4:
 func depth_at(p: Vector3) -> float:return sample_field(p).x
 
 func deform(p: Vector3) -> Vector3:
+	if Vector2(p.x,p.z).length()>radius*1.5:return p
 	return p-Vector3(p.x,0,p.z).normalized()*depth_at(p)
 
 func _empty_arrays() -> Array:
 	var a: Array = []; a.resize(Mesh.ARRAY_MAX)
 	a[Mesh.ARRAY_VERTEX] = PackedVector3Array(); a[Mesh.ARRAY_NORMAL] = PackedVector3Array()
 	a[Mesh.ARRAY_TEX_UV] = PackedVector2Array(); a[Mesh.ARRAY_COLOR] = PackedColorArray()
+	a[Mesh.ARRAY_TANGENT] = PackedFloat32Array()
 	return a
 
 func _prepare(data: Dictionary) -> Dictionary:
@@ -185,9 +258,26 @@ func _refine(tri: Array, output: Array, level: int = 0) -> void:
 	_refine([midpoint,tri[j],tri[k]],output,level+1)
 
 func _append_tri(arrays: Array, tri: Array) -> void:
+	# Rebuild the UV tangent basis on the worker, including newly deformed bark.
+	# Reusing a normal-map material with missing tangents rotates its lighting.
+	var dp1: Vector3 = tri[1][0]-tri[0][0]
+	var dp2: Vector3 = tri[2][0]-tri[0][0]
+	var uv1: Vector2 = tri[1][2]-tri[0][2]
+	var uv2: Vector2 = tri[2][2]-tri[0][2]
+	var det: float = uv1.cross(uv2)
+	var tangent := Vector3.RIGHT
+	var bitangent := Vector3.BACK
+	if absf(det)>0.0000001:
+		tangent=(dp1*uv2.y-dp2*uv1.y)/det
+		bitangent=(dp2*uv1.x-dp1*uv2.x)/det
 	for v in tri:
 		arrays[Mesh.ARRAY_VERTEX].append(v[0]); arrays[Mesh.ARRAY_NORMAL].append(v[1])
 		arrays[Mesh.ARRAY_TEX_UV].append(v[2]); arrays[Mesh.ARRAY_COLOR].append(v[3])
+		var normal: Vector3 = v[1]
+		var t: Vector3 = tangent-normal*normal.dot(tangent)
+		if t.length_squared()<0.000001:t=normal.cross(Vector3.UP if absf(normal.y)<0.9 else Vector3.RIGHT)
+		t=t.normalized()
+		arrays[Mesh.ARRAY_TANGENT].append_array(PackedFloat32Array([t.x,t.y,t.z,-1.0 if normal.cross(t).dot(bitangent)<0.0 else 1.0]))
 
 func _damage(data: Dictionary) -> Dictionary:
 	if not data["bark"]: return {"arrays":data["arrays"],"material":data["material"],"bark":false}
@@ -236,14 +326,22 @@ func _split() -> void:
 			_clip(tri,low,true);_clip(tri,high,false)
 		if not low[Mesh.ARRAY_VERTEX].is_empty(): lower.append({"arrays":low,"material":data["material"],"bark":data["bark"]})
 		if not high[Mesh.ARRAY_VERTEX].is_empty(): upper.append({"arrays":high,"material":data["material"],"bark":data["bark"]})
-	# The deformed star-shaped stem contour closes both fracture surfaces.
-	var ring := _profile(weakest_y)
+	# Close each actual cut loop independently; never bridge two stems.
+	var contours: Array = _section_contours(weakest_y,true)
+	cap_contours=0
 	var cap_low := _empty_arrays(); var cap_high := _empty_arrays()
-	var center := Vector3(0,weakest_y,0)
-	for i in SAMPLES:
-		var p := deform(ring[i]);var q := deform(ring[(i+1)%SAMPLES])
-		_append_tri(cap_low,[[center,Vector3.UP,Vector2.ZERO,wood_color],[q,Vector3.UP,Vector2(q.x,q.z),wood_color],[p,Vector3.UP,Vector2(p.x,p.z),wood_color]])
-		_append_tri(cap_high,[[center,Vector3.DOWN,Vector2.ZERO,wood_color],[p,Vector3.DOWN,Vector2(p.x,p.z),wood_color],[q,Vector3.DOWN,Vector2(q.x,q.z),wood_color]])
+	for contour in contours:
+		var polygon:=PackedVector2Array()
+		for p in contour:polygon.append(Vector2(p.x,p.z))
+		var indices:=Geometry2D.triangulate_polygon(polygon)
+		if not indices.is_empty():cap_contours+=1
+		else:push_warning("Could not triangulate cut contour")
+		for i in range(0,indices.size(),3):
+			var a: Vector3=contour[indices[i]];var b: Vector3=contour[indices[i+1]];var c: Vector3=contour[indices[i+2]]
+			# Godot front faces are clockwise; stored top normal remains +Y.
+			if (b-a).cross(c-a).y>0.0:var temp:=b;b=c;c=temp
+			_append_tri(cap_low,[[a,Vector3.UP,Vector2(a.x,a.z),wood_color],[b,Vector3.UP,Vector2(b.x,b.z),wood_color],[c,Vector3.UP,Vector2(c.x,c.z),wood_color]])
+			_append_tri(cap_high,[[a,Vector3.DOWN,Vector2(a.x,a.z),wood_color],[c,Vector3.DOWN,Vector2(c.x,c.z),wood_color],[b,Vector3.DOWN,Vector2(b.x,b.z),wood_color]])
 	lower.append({"arrays":cap_low,"material":-1,"bark":true});upper.append({"arrays":cap_high,"material":-1,"bark":true})
 
 func _clip(tri: Array, output: Array, below: bool) -> void:

@@ -40,7 +40,7 @@
 | Атмосферные события (глаза, огни) | `AtmosphereDirector.gd`, `NightVisual.gd` | [atmosphere_qa.md](atmosphere_qa.md) |
 | Сохранения и переходы | `SaveManager.gd`, `SurvivalWorld.export_state()` (payload v4) | [world_stability_qa.md](world_stability_qa.md) |
 | Интерфейс, журнал, меню, пауза | `BackpackUI.gd`, `scenes/menu/` | [field_journal_ui_qa.md](field_journal_ui_qa.md), [minimal_pause_qa.md](minimal_pause_qa.md), [inventory_redesign_qa.md](inventory_redesign_qa.md) |
-| Внешние модели и лицензии | `scripts/core/ExternalModels.gd`, `third_party/` | [external_models_integration.md](external_models_integration.md) |
+| Внешние модели и лицензии | `scripts/core/ExternalModels.gd`, `third_party/` | [lolipop_birch_integration.md](lolipop_birch_integration.md), [external_models_integration.md](external_models_integration.md) |
 | Аудио | `default_bus_layout.tres`, `data/audio_manifest.json`, `assets/sounds/*/CREDITS.md` | [audio_design_level1.md](audio_design_level1.md) — спецификация |
 
 ---
@@ -60,7 +60,8 @@
 | [vegetation_plan.md](vegetation_plan.md) | План системы растительности; реализован, сохранён как ТЗ | план (реализован) |
 | [weather_temperature_audit.md](weather_temperature_audit.md) | Почему костёр не грел и дождь шёл слишком часто; что исправлено | актуально |
 | [seasons_wind.md](seasons_wind.md) | Четыре сезона, длина дня, сезонные температуры и свет; детерминированный ветер и его влияние | актуально, новое |
-| [external_models_integration.md](external_models_integration.md) | Quaternius-деревья и топор от первого лица, лицензии | актуально |
+| [lolipop_birch_integration.md](lolipop_birch_integration.md) | Пять берёз LOLIPOP, авторские LOD, многствольные срезы, тесты и лицензия | актуально |
+| [external_models_integration.md](external_models_integration.md) | Первоначальные Quaternius-деревья и топор; берёзы заменены LOLIPOP | история этапа, остальное актуально |
 | [axe_swing.md](axe_swing.md) | Полуторная скорость замаха, Blender-кисти, воспроизведение | актуально |
 | [smooth_tree_chopping.md](smooth_tree_chopping.md) | Фоновая геометрия, реальный перелом, падение | актуально |
 | [first_night_survival.md](first_night_survival.md) | Костёр, ресурсы, сутки, стоянка, сон | актуально |

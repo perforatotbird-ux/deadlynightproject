@@ -1,0 +1,51 @@
+{
+  "failures": 0,
+  "passes": 211,
+  "variants": [
+    {
+      "cap_contours": 1,
+      "hits": 13,
+      "id": "lolipop_0",
+      "last_worker_usec": 372526,
+      "radius": 0.35,
+      "triangles": 9463,
+      "variant": 0
+    },
+    {
+      "cap_contours": 1,
+      "hits": 6,
+      "id": "lolipop_1",
+      "last_worker_usec": 149371,
+      "radius": 0.35,
+      "triangles": 7641,
+      "variant": 1
+    },
+    {
+      "cap_contours": 2,
+      "hits": 11,
+      "id": "lolipop_2",
+      "last_worker_usec": 282951,
+      "radius": 0.6922,
+      "triangles": 14591,
+      "variant": 2
+    },
+    {
+      "cap_contours": 2,
+      "hits": 4,
+      "id": "lolipop_3",
+      "last_worker_usec": 353300,
+      "radius": 1.157,
+      "triangles": 20465,
+      "variant": 3
+    },
+    {
+      "cap_contours": 1,
+      "hits": 6,
+      "id": "lolipop_4",
+      "last_worker_usec": 336214,
+      "radius": 0.6935,
+      "triangles": 14120,
+      "variant": 4
+    }
+  ]
+}

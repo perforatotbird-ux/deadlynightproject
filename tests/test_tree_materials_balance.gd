@@ -32,7 +32,7 @@ func verify_bark(tree,label:String):
   var source:Material
   for original in trunk._materials:
    if original!=null and original.resource_name==mat.resource_name:source=original
-  bark_ok=source==mat and mat.albedo_color!=Color.WHITE
+  bark_ok=source==mat and (mat.albedo_texture!=null or mat.albedo_color!=Color.WHITE)
   for j in vertices.size():
    if vertices[j].y>3.5:
     bark_ok=bark_ok and colors[j].is_equal_approx(Color.WHITE);break

@@ -1,0 +1,194 @@
+{
+  "source_sha256": "aa36f8f7ec9c0ef67fa9194c66757b4c11490d26e4cfbe9f3bf7300defc2c46a",
+  "source_url": "https://sketchfab.com/3d-models/five-birch-trees-pack-lowpoly-lods-08fe5117138e4fdaa7ca440ef1201e07",
+  "author": "LOLIPOP (@lolipop_1707)",
+  "license": "CC-BY-4.0",
+  "texture_max_dimension": 2048,
+  "variants": [
+    {
+      "variant": 0,
+      "height": 18.0,
+      "levels": [
+        {
+          "lod": 0,
+          "triangles": 9463,
+          "surface_triangles": [
+            3657,
+            180,
+            5626
+          ],
+          "file": "birch_0_lod0.glb"
+        },
+        {
+          "lod": 1,
+          "triangles": 5987,
+          "surface_triangles": [
+            2646,
+            180,
+            3161
+          ],
+          "file": "birch_0_lod1.glb"
+        },
+        {
+          "lod": 2,
+          "triangles": 3440,
+          "surface_triangles": [
+            1868,
+            180,
+            1392
+          ],
+          "file": "birch_0_lod2.glb"
+        }
+      ],
+      "radius": 0.35
+    },
+    {
+      "variant": 1,
+      "height": 18.0,
+      "levels": [
+        {
+          "lod": 0,
+          "triangles": 7641,
+          "surface_triangles": [
+            3401,
+            180,
+            4060
+          ],
+          "file": "birch_1_lod0.glb"
+        },
+        {
+          "lod": 1,
+          "triangles": 5168,
+          "surface_triangles": [
+            2726,
+            180,
+            2262
+          ],
+          "file": "birch_1_lod1.glb"
+        },
+        {
+          "lod": 2,
+          "triangles": 2819,
+          "surface_triangles": [
+            1624,
+            180,
+            1015
+          ],
+          "file": "birch_1_lod2.glb"
+        }
+      ],
+      "radius": 0.35
+    },
+    {
+      "variant": 2,
+      "height": 18.0,
+      "levels": [
+        {
+          "lod": 0,
+          "triangles": 14591,
+          "surface_triangles": [
+            6981,
+            360,
+            7250
+          ],
+          "file": "birch_2_lod0.glb"
+        },
+        {
+          "lod": 1,
+          "triangles": 9890,
+          "surface_triangles": [
+            5470,
+            360,
+            4060
+          ],
+          "file": "birch_2_lod1.glb"
+        },
+        {
+          "lod": 2,
+          "triangles": 6470,
+          "surface_triangles": [
+            4312,
+            360,
+            1798
+          ],
+          "file": "birch_2_lod2.glb"
+        }
+      ],
+      "radius": 0.6922
+    },
+    {
+      "variant": 3,
+      "height": 18.0,
+      "levels": [
+        {
+          "lod": 0,
+          "triangles": 20465,
+          "surface_triangles": [
+            9085,
+            360,
+            11020
+          ],
+          "file": "birch_3_lod0.glb"
+        },
+        {
+          "lod": 1,
+          "triangles": 13013,
+          "surface_triangles": [
+            6476,
+            360,
+            6177
+          ],
+          "file": "birch_3_lod1.glb"
+        },
+        {
+          "lod": 2,
+          "triangles": 7835,
+          "surface_triangles": [
+            4720,
+            360,
+            2755
+          ],
+          "file": "birch_3_lod2.glb"
+        }
+      ],
+      "radius": 1.157
+    },
+    {
+      "variant": 4,
+      "height": 18.0,
+      "levels": [
+        {
+          "lod": 0,
+          "triangles": 14120,
+          "surface_triangles": [
+            6924,
+            236,
+            6960
+          ],
+          "file": "birch_4_lod0.glb"
+        },
+        {
+          "lod": 1,
+          "triangles": 9350,
+          "surface_triangles": [
+            5199,
+            236,
+            3915
+          ],
+          "file": "birch_4_lod1.glb"
+        },
+        {
+          "lod": 2,
+          "triangles": 5756,
+          "surface_triangles": [
+            3780,
+            236,
+            1740
+          ],
+          "file": "birch_4_lod2.glb"
+        }
+      ],
+      "radius": 0.6935
+    }
+  ]
+}

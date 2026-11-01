@@ -1,0 +1,47 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+======================================================================
+TESTING DITCH / UNEVEN TERRAIN TREE FALL & LOG ANTI-FALLTHROUGH
+======================================================================
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+[WaterSource] WATER_OLD_WELL grounded at (-938.0, 24.9939, 1098.0)
+[WaterSource] WATER_FOREST_SPRING grounded at (-170.0, 21.23364, -775.0)
+[WaterSource] WATER_FORD_POOL grounded at (775.0, 63.66071, -495.0)
+
+[TEST 1] Instantiating test tree on uneven slope...
+  -> PASS: Test tree instantiated on slope.
+
+[TEST 2] Testing terrain-adaptive fall angle calculation...
+  -> Calculated target fall angle: 88.00 deg (standard flat is 88 deg)
+  -> PASS: _target_fall_angle adaptively constrained by terrain profile.
+  -> Waiting for fall animation and log spawn...
+
+[TEST 3] Auditing spawned log elevations relative to terrain mesh...
+     Log at (-890.11, 25.16, 1088.32): ground_y = 24.99, diff = +0.171m
+     Log at (-889.96, 25.16, 1085.57): ground_y = 24.99, diff = +0.171m
+     Log at (-889.91, 25.16, 1083.86): ground_y = 24.99, diff = +0.171m
+  -> PASS: All 3 spawned logs are strictly above ground surface.
+
+[TEST 4] Testing anti-fallthrough recovery failsafe on LogPickup...
+  -> Position after failsafe check: Y = 25.34 (expected >= 24.99)
+  -> PASS: Log successfully caught by failsafe and resurfaced above terrain!
+
+[TEST 5] Testing original lower trunk placement...
+  -> Lower root error=0.00000m, mesh top=1.300m, cut=1.300m
+  -> PASS: Actual lower trunk preserved at grounded root and fracture height.
+
+======================================================================
+DITCH TREE FALL TEST SUMMARY: 5 PASSED, 0 FAILED.
+======================================================================

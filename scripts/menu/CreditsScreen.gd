@@ -62,6 +62,9 @@ DEADLY NIGHT — СИМУЛЯТОР ВЫЖИВАНИЯ В ДИКОЙ ПРИРО�
 • Игровой движок: Godot Engine v4.7.2.stable.official (Forward Plus)
 
 3D Модели и визуальное окружение:
+• Five Birch trees pack (lowpoly, LODs) — LOLIPOP (@lolipop_1707), CC BY 4.0
+  https://sketchfab.com/3d-models/five-birch-trees-pack-lowpoly-lods-08fe5117138e4fdaa7ca440ef1201e07
+  https://creativecommons.org/licenses/by/4.0/ — адаптировано: масштаб, LOD, текстуры и рубка
 • Высокодетализированный горный ландшафт 4×4 км (256 чанков с физическими коллизиями)
 • 55 430 деревьев 4 европейских пород (Берёза, Ель, Бук, Дуб) с динамическим воксельным разрушением
 • Процедурное моделирование ассетов в Blender 5.2.1 LTS: деревья, пни, поленья, шахта, мост, вагонетки

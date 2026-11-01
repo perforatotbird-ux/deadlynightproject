@@ -1,0 +1,220 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 24.2.6 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 15.0.7, 256 bits)
+
+PASS: variant 0: stable variant path
+PASS: variant 0: single baked mesh
+PASS: variant 0: identity transform for MultiMesh
+PASS: variant 0: ground pivot and 18m height
+PASS: variant 0: same mesh for distant and interactive tree
+PASS: variant 0: albedo/normal texture and tangent basis
+PASS: variant 0: shared texture at most 2K
+PASS: variant 0: albedo/normal texture and tangent basis
+PASS: variant 0: shared texture at most 2K
+PASS: variant 0: albedo/normal texture and tangent basis
+PASS: variant 0: shared texture at most 2K
+PASS: variant 0: authored LOD0 triangle count unchanged
+PASS: variant 0: native authored LOD1 and LOD2 on bark and canopy
+PASS: variant 0: native GPU LOD index counts exactly match authored levels
+PASS: variant 0: base stem tagged as bark; two-sided cutout canopy
+PASS: variant 0: authored bark collision
+PASS: variant 0: real axe ray intersects base bark
+PASS: variant 0: hit inside variant-specific damage radius
+PASS: cut worker completes within 30 seconds
+PASS: variant 0: first hit creates cut without premature fracture
+PASS: variant 0: deformed bark and cut surfaces have complete tangent basis
+PASS: cut worker completes within 30 seconds
+PASS: variant 0: save restoration keeps exact variant
+PASS: variant 0: partial damage restored from JSON
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: variant 0: repeated real hits cause fracture
+PASS: variant 0: every independent stem has a triangulated cap
+PASS: variant 0: upper tree pivots at actual cut
+PASS: variant 0: one permanent stump
+PASS: variant 0: stump top matches break height
+PASS: variant 0: stump cap front winding faces upward in Godot
+PASS: variant 0: canonical felling record replaces standing damage
+PASS: variant 0: fall produces three birch logs
+PASS: cut worker completes within 30 seconds
+PASS: variant 0: felled-save reload rebuilds stump, not standing tree
+PASS: variant 1: stable variant path
+PASS: variant 1: single baked mesh
+PASS: variant 1: identity transform for MultiMesh
+PASS: variant 1: ground pivot and 18m height
+PASS: variant 1: same mesh for distant and interactive tree
+PASS: variant 1: albedo/normal texture and tangent basis
+PASS: variant 1: shared texture at most 2K
+PASS: variant 1: albedo/normal texture and tangent basis
+PASS: variant 1: shared texture at most 2K
+PASS: variant 1: albedo/normal texture and tangent basis
+PASS: variant 1: shared texture at most 2K
+PASS: variant 1: authored LOD0 triangle count unchanged
+PASS: variant 1: native authored LOD1 and LOD2 on bark and canopy
+PASS: variant 1: native GPU LOD index counts exactly match authored levels
+PASS: variant 1: base stem tagged as bark; two-sided cutout canopy
+PASS: variant 1: authored bark collision
+PASS: variant 1: real axe ray intersects base bark
+PASS: variant 1: hit inside variant-specific damage radius
+PASS: cut worker completes within 30 seconds
+PASS: variant 1: first hit creates cut without premature fracture
+PASS: variant 1: deformed bark and cut surfaces have complete tangent basis
+PASS: cut worker completes within 30 seconds
+PASS: variant 1: save restoration keeps exact variant
+PASS: variant 1: partial damage restored from JSON
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: variant 1: repeated real hits cause fracture
+PASS: variant 1: every independent stem has a triangulated cap
+PASS: variant 1: upper tree pivots at actual cut
+PASS: variant 1: one permanent stump
+PASS: variant 1: stump top matches break height
+PASS: variant 1: stump cap front winding faces upward in Godot
+PASS: variant 1: canonical felling record replaces standing damage
+PASS: variant 1: fall produces three birch logs
+PASS: cut worker completes within 30 seconds
+PASS: variant 1: felled-save reload rebuilds stump, not standing tree
+PASS: variant 2: stable variant path
+PASS: variant 2: single baked mesh
+PASS: variant 2: identity transform for MultiMesh
+PASS: variant 2: ground pivot and 18m height
+PASS: variant 2: same mesh for distant and interactive tree
+PASS: variant 2: albedo/normal texture and tangent basis
+PASS: variant 2: shared texture at most 2K
+PASS: variant 2: albedo/normal texture and tangent basis
+PASS: variant 2: shared texture at most 2K
+PASS: variant 2: albedo/normal texture and tangent basis
+PASS: variant 2: shared texture at most 2K
+PASS: variant 2: authored LOD0 triangle count unchanged
+PASS: variant 2: native authored LOD1 and LOD2 on bark and canopy
+PASS: variant 2: native GPU LOD index counts exactly match authored levels
+PASS: variant 2: base stem tagged as bark; two-sided cutout canopy
+PASS: variant 2: authored bark collision
+PASS: variant 2: real axe ray intersects base bark
+PASS: variant 2: hit inside variant-specific damage radius
+PASS: cut worker completes within 30 seconds
+PASS: variant 2: first hit creates cut without premature fracture
+PASS: variant 2: deformed bark and cut surfaces have complete tangent basis
+PASS: cut worker completes within 30 seconds
+PASS: variant 2: save restoration keeps exact variant
+PASS: variant 2: partial damage restored from JSON
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: variant 2: repeated real hits cause fracture
+PASS: variant 2: every independent stem has a triangulated cap
+PASS: variant 2: upper tree pivots at actual cut
+PASS: variant 2: one permanent stump
+PASS: variant 2: stump top matches break height
+PASS: variant 2: stump cap front winding faces upward in Godot
+PASS: variant 2: canonical felling record replaces standing damage
+PASS: variant 2: fall produces three birch logs
+PASS: cut worker completes within 30 seconds
+PASS: variant 2: felled-save reload rebuilds stump, not standing tree
+PASS: variant 3: stable variant path
+PASS: variant 3: single baked mesh
+PASS: variant 3: identity transform for MultiMesh
+PASS: variant 3: ground pivot and 18m height
+PASS: variant 3: same mesh for distant and interactive tree
+PASS: variant 3: albedo/normal texture and tangent basis
+PASS: variant 3: shared texture at most 2K
+PASS: variant 3: albedo/normal texture and tangent basis
+PASS: variant 3: shared texture at most 2K
+PASS: variant 3: albedo/normal texture and tangent basis
+PASS: variant 3: shared texture at most 2K
+PASS: variant 3: authored LOD0 triangle count unchanged
+PASS: variant 3: native authored LOD1 and LOD2 on bark and canopy
+PASS: variant 3: native GPU LOD index counts exactly match authored levels
+PASS: variant 3: base stem tagged as bark; two-sided cutout canopy
+PASS: variant 3: authored bark collision
+PASS: variant 3: real axe ray intersects base bark
+PASS: variant 3: hit inside variant-specific damage radius
+PASS: cut worker completes within 30 seconds
+PASS: variant 3: first hit creates cut without premature fracture
+PASS: variant 3: deformed bark and cut surfaces have complete tangent basis
+PASS: cut worker completes within 30 seconds
+PASS: variant 3: save restoration keeps exact variant
+PASS: variant 3: partial damage restored from JSON
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: variant 3: repeated real hits cause fracture
+PASS: variant 3: every independent stem has a triangulated cap
+PASS: variant 3: upper tree pivots at actual cut
+PASS: variant 3: one permanent stump
+PASS: variant 3: stump top matches break height
+PASS: variant 3: stump cap front winding faces upward in Godot
+PASS: variant 3: canonical felling record replaces standing damage
+PASS: variant 3: fall produces three birch logs
+PASS: cut worker completes within 30 seconds
+PASS: variant 3: felled-save reload rebuilds stump, not standing tree
+PASS: variant 4: stable variant path
+PASS: variant 4: single baked mesh
+PASS: variant 4: identity transform for MultiMesh
+PASS: variant 4: ground pivot and 18m height
+PASS: variant 4: same mesh for distant and interactive tree
+PASS: variant 4: albedo/normal texture and tangent basis
+PASS: variant 4: shared texture at most 2K
+PASS: variant 4: albedo/normal texture and tangent basis
+PASS: variant 4: shared texture at most 2K
+PASS: variant 4: albedo/normal texture and tangent basis
+PASS: variant 4: shared texture at most 2K
+PASS: variant 4: authored LOD0 triangle count unchanged
+PASS: variant 4: native authored LOD1 and LOD2 on bark and canopy
+PASS: variant 4: native GPU LOD index counts exactly match authored levels
+PASS: variant 4: base stem tagged as bark; two-sided cutout canopy
+PASS: variant 4: authored bark collision
+PASS: variant 4: real axe ray intersects base bark
+PASS: variant 4: hit inside variant-specific damage radius
+PASS: cut worker completes within 30 seconds
+PASS: variant 4: first hit creates cut without premature fracture
+PASS: variant 4: deformed bark and cut surfaces have complete tangent basis
+PASS: cut worker completes within 30 seconds
+PASS: variant 4: save restoration keeps exact variant
+PASS: variant 4: partial damage restored from JSON
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: cut worker completes within 30 seconds
+PASS: variant 4: repeated real hits cause fracture
+PASS: variant 4: every independent stem has a triangulated cap
+PASS: variant 4: upper tree pivots at actual cut
+PASS: variant 4: one permanent stump
+PASS: variant 4: stump top matches break height
+PASS: variant 4: stump cap front winding faces upward in Godot
+PASS: variant 4: canonical felling record replaces standing damage
+PASS: variant 4: fall produces three birch logs
+PASS: cut worker completes within 30 seconds
+PASS: variant 4: felled-save reload rebuilds stump, not standing tree
+PASS: all five variants use separate collision cache entries
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+PASS: real forest records batched into all five matching MultiMeshes
+PASS: dynamic activation marks correct distant variant hidden
+PASS: GPU MultiMesh hides correct distant variant
+PASS: deactivation restores distant-variant visibility registry
+PASS: GPU MultiMesh restores original variant transform
+LOLIPOP BIRCH SUMMARY: 211 PASS, 0 FAIL

@@ -33,7 +33,10 @@ func run() -> void:
 		tree.hit(1, tree.global_position + Vector3(0, 1.3, 0.3), Vector3(0, 1.3, 1.5))
 		await settle(trunk)
 		check(mi.mesh != shared_before and shared_before.get_surface_count() == original_count, species + ": instance-local real mesh damage")
-		check(mi.mesh.surface_get_material(0).vertex_color_use_as_albedo, species + ": exposed wood uses vertex blend")
+		var exposed_wood := false
+		for surface in mi.mesh.get_surface_count():
+			exposed_wood = exposed_wood or mi.mesh.surface_get_material(surface)==trunk._wood_material
+		check(exposed_wood, species + ": exposed notch uses separate wood material, not recolored bark")
 		var p := Vector3(0, 1.3, 0.2)
 		var first: float = trunk._depth_at(p)
 		check(first > 0.025 and is_zero_approx(trunk._depth_at(Vector3(0, 1.6, 0.2))), species + ": local elliptical cavity")

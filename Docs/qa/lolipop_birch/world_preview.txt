@@ -1,0 +1,27 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 24.2.6 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 15.0.7, 256 bits)
+
+[SettingsManager] No existing settings.cfg found or error (7). Using defaults.
+[WorldMap] Loading 256 terrain chunks...
+[WorldMap] Generated collision for 256 terrain chunk meshes.
+[WorldMap] Terrain chunks loaded successfully.
+[WorldMap] Loading vegetation scatter data...
+[WorldMap] Loaded 55435 tree records from JSON.
+[WorldMap] Spawned 55430 trees across 231 chunks using MultiMesh.
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055431) at (-884.44, 24.99, 1084.44)
+[WorldMap] Spawned tutorial BIRCH tree (tree_055432) at (-900.0, 24.99, 1096.0)
+[WorldMap] Spawned tutorial OAK tree (tree_055433) at (-934.47, 24.99, 1106.08)
+[WorldMap] Spawned tutorial BEECH tree (tree_055434) at (-904.34, 24.99, 1124.62)
+[WorldMap] Spawned tutorial SPRUCE tree (tree_055435) at (-867.09, 24.99, 1119.0)
+[MapViewer] Mode switched to: FIRST PERSON PLAYER
+[WaterSource] WATER_OLD_WELL grounded at (-938.0, 24.9939, 1098.0)
+[WaterSource] WATER_FOREST_SPRING grounded at (-170.0, 21.23364, -775.0)
+[WaterSource] WATER_FORD_POOL grounded at (775.0, 63.66071, -495.0)
+WORLD_MODEL: res://assets/models/external/lolipop/birch_2.tscn cuts=1
+EXTERNAL WORLD PREVIEW: 3 native captures; axe=res://assets/models/external/quaternius/axe_quaternius.glb
+ERROR: Texture with GL ID of 153: leaked 349524 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)
+ERROR: Texture with GL ID of 154: leaked 349524 bytes.
+   at: ~Utilities (drivers/gles3/storage/utilities.cpp:82)

@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="ArrayMesh" path="res://assets/models/external/lolipop/birch_0.res" id="1_utmr0"]
+
+[node name="LOLIPOP_Birch_0" type="Node3D" unique_id=357130831]
+
+[node name="BirchMesh" type="MeshInstance3D" parent="." unique_id=424462304]
+mesh = ExtResource("1_utmr0")

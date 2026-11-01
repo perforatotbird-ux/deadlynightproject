@@ -36,6 +36,7 @@ var _fractured: bool = false
 var weakest_y: float = 1.3
 var remaining_ratio: float = 1.0
 var last_worker_usec: int = 0
+var last_cap_contours: int = 0
 var last_upload_usec: int = 0
 var _last_lower: ArrayMesh
 var _last_upper: ArrayMesh
@@ -119,7 +120,7 @@ func _process(_delta: float) -> void:
 	if _task_id<0 or not WorkerThreadPool.is_task_completed(_task_id):return
 	WorkerThreadPool.wait_for_task_completion(_task_id);_task_id=-1
 	var job=_job;_job=null
-	_profiles=job.profiles;last_worker_usec=job.elapsed_usec
+	_profiles=job.profiles;last_worker_usec=job.elapsed_usec;last_cap_contours=job.cap_contours
 	if _job_revision!=_revision:
 		# Never display a stale hit over a newer one. Inputs/cache are immutable.
 		_schedule();return

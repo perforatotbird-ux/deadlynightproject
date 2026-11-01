@@ -1,0 +1,3 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+CLEAN CACHE IMPORT: 5 scenes, 15 textured surfaces; failures=0

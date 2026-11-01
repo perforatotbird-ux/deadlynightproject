@@ -22,7 +22,7 @@ func run() -> void:
  var world:=EmptyWorld.new();stage.add_child(world);world._load_tree_models()
  for sp in ["birch","spruce","beech","oak"]:
   var path:=Models.tree_path(sp)
-  check(path.begins_with(Models.ROOT),sp+": external model is active, not fallback")
+  check(path.begins_with(Models.BIRCH_ROOT if sp=="birch" else Models.ROOT),sp+": external model is active, not fallback")
   var scene=load(path).instantiate();stage.add_child(scene)
   var meshes=scene.find_children("*","MeshInstance3D",true,false)
   check(meshes.size()==1,sp+": single baked mesh compatible with MultiMesh")
@@ -37,7 +37,7 @@ func run() -> void:
   check(bark and canopy,sp+": bark collision/fracture tagging and canopy materials")
   var tree:=Trees.new();tree.species=sp;tree.tree_id="external_"+sp;stage.add_child(tree);tree.set_process(false)
   await physics_frame;await process_frame
-  check(tree._visual_node.scene_file_path==path,sp+": interactive tree matches distant model")
+  check(tree._visual_node.scene_file_path==Models.tree_path(sp,tree.tree_id),sp+": interactive tree matches distant model")
   check(tree.get_node("CollisionShape3D").shape is ConcavePolygonShape3D,sp+": real bark collision retained")
   var ray:=PhysicsRayQueryParameters3D.create(tree.to_global(Vector3(0,1.3,3)),tree.to_global(Vector3(0,1.3,-3)),2)
   var hit:=root.world_3d.direct_space_state.intersect_ray(ray)

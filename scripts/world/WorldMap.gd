@@ -50,6 +50,18 @@ func _load_tree_models() -> void:
 				# Cache the resource, not an orphaned scene instance on every menu/game cycle.
 				inst.free()
 
+	_cache_birch_variants()
+
+func _cache_birch_variants() -> void:
+	var models = preload("res://scripts/core/ExternalModels.gd")
+	for variant in models.BIRCH_VARIANTS:
+		var path: String = models.BIRCH_ROOT + "birch_%d.tscn" % variant
+		if not ResourceLoader.exists(path): continue
+		var instance: Node = load(path).instantiate()
+		var visual := _find_mesh_instance(instance)
+		if visual and visual.mesh:_tree_meshes["birch_%d"%variant]=visual.mesh
+		instance.free()
+
 func _find_mesh_instance(node: Node) -> MeshInstance3D:
 	if node is MeshInstance3D:
 		return node
@@ -285,7 +297,7 @@ func _load_vegetation() -> void:
 			continue
 			
 		var chunk_name = tree.get("chunk", "Chunk_00_00")
-		var sp = tree.get("species", "birch")
+		var sp = preload("res://scripts/core/ExternalModels.gd").tree_key(tree.get("species", "birch"), tree.get("id", ""))
 		
 		if not chunk_map.has(chunk_name):
 			chunk_map[chunk_name] = {}

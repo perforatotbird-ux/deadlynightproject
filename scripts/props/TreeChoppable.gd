@@ -140,7 +140,7 @@ func _setup_voxel_trunk() -> void:
 		_voxel_trunk.hide()
 		_voxel_trunk.queue_free()
 		
-	var cfg = SPECIES_CONFIG.get(species, SPECIES_CONFIG["birch"])
+	var cfg = _geometry_config()
 	_voxel_trunk = VoxelTreeTrunkScript.new()
 	_voxel_trunk.name = "VoxelTrunk"
 	add_child(_voxel_trunk)
@@ -150,8 +150,13 @@ func _setup_voxel_trunk() -> void:
 	_voxel_trunk.fracture_ready.connect(_on_fracture_ready)
 	_voxel_trunk.mesh_updated.connect(_on_cut_mesh_updated)
 
+func _geometry_config() -> Dictionary:
+	var cfg: Dictionary = SPECIES_CONFIG.get(species, SPECIES_CONFIG["birch"]).duplicate()
+	cfg["radius"] = preload("res://scripts/core/ExternalModels.gd").tree_radius(species, tree_id, cfg["radius"])
+	return cfg
+
 func _apply_species_config() -> void:
-	var cfg = SPECIES_CONFIG.get(species, SPECIES_CONFIG["birch"])
+	var cfg = _geometry_config()
 	max_hp = cfg["hp"]
 	current_hp = max_hp
 	log_count = cfg["logs"]
@@ -159,7 +164,7 @@ func _apply_species_config() -> void:
 	chip_color = cfg["color"]
 
 func _setup_collision() -> void:
-	var cfg = SPECIES_CONFIG.get(species, SPECIES_CONFIG["birch"])
+	var cfg = _geometry_config()
 	var col = get_node_or_null("CollisionShape3D")
 	if col == null:
 		col = CollisionShape3D.new()
@@ -237,7 +242,7 @@ func _update_mesh_stage(stage: int) -> void:
 		
 	# Damage/fracture is cut from the same authored model as the distant forest.
 	# Legacy stage silhouettes must not reappear after activation or save reload.
-	var path = preload("res://scripts/core/ExternalModels.gd").tree_path(species)
+	var path = preload("res://scripts/core/ExternalModels.gd").tree_path(species, tree_id)
 		
 	if ResourceLoader.exists(path):
 		var scene = load(path)
@@ -252,9 +257,10 @@ func _update_cut_collision() -> void:
 	if _visual_node == null:
 		return
 	var cached_col := get_node_or_null("CollisionShape3D") as CollisionShape3D
-	if _collision_cache.has(species) and cached_col:
+	var cache_key := preload("res://scripts/core/ExternalModels.gd").tree_path(species, tree_id)
+	if _collision_cache.has(cache_key) and cached_col:
 		cached_col.position=Vector3.ZERO
-		cached_col.set_deferred("shape",_collision_cache[species])
+		cached_col.set_deferred("shape",_collision_cache[cache_key])
 		return
 	var faces := PackedVector3Array()
 	# Only trunk/branch bark, never canopy: leaves must not block axe impacts.
@@ -278,7 +284,7 @@ func _update_cut_collision() -> void:
 		return
 	var shape := ConcavePolygonShape3D.new()
 	shape.set_faces(faces)
-	_collision_cache[species]=shape
+	_collision_cache[cache_key]=shape
 	var col := get_node_or_null("CollisionShape3D") as CollisionShape3D
 	if col:
 		col.position = Vector3.ZERO
@@ -289,7 +295,7 @@ func hit(damage: int, hit_point: Vector3, player_pos: Vector3) -> bool:
 		return false
 		
 	var local_hit := to_local(hit_point)
-	var cfg: Dictionary = SPECIES_CONFIG.get(species,SPECIES_CONFIG["birch"])
+	var cfg: Dictionary = _geometry_config()
 	if Vector2(local_hit.x,local_hit.z).length()>float(cfg["radius"])*1.5:return false
 	current_hp = maxi(1, current_hp - damage)
 	if _voxel_trunk:
@@ -407,7 +413,7 @@ func _calculate_target_fall_angle() -> float:
 	if space_state == null:
 		return deg_to_rad(88.0)
 		
-	var cfg = SPECIES_CONFIG.get(species, SPECIES_CONFIG["birch"])
+	var cfg = _geometry_config()
 	var tree_h: float = maxf(0.5, cfg["height"] - _break_height) * global_basis.y.length()
 	var radius: float = cfg["radius"] * global_basis.x.length()
 	var base_pos: Vector3 = global_transform * Vector3(0,_break_height,0)
@@ -464,7 +470,7 @@ func _spawn_stump(mesh: ArrayMesh) -> void:
 	var col := CollisionShape3D.new()
 	var shape := CylinderShape3D.new()
 	shape.height = maxf(0.05,_break_height)
-	shape.radius = SPECIES_CONFIG.get(species,SPECIES_CONFIG["birch"])["radius"] * 0.65
+	shape.radius = _geometry_config()["radius"] * 0.65
 	col.shape = shape
 	col.position.y = _break_height * 0.5
 	stump.add_child(col)

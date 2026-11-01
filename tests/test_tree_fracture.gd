@@ -72,6 +72,14 @@ func run() -> void:
 	var high:=Choppable.new();high.tree_id="high_cut"
 	root.add_child(high);high.set_process(false)
 	var ht=high._voxel_trunk
+	# Isolate the global-weakest-section invariant from asset-specific forks and
+	# branches intersecting y=6. Real authored variants are covered separately.
+	high._visual_node.free()
+	var controlled:=Node3D.new();high.add_child(controlled);high._visual_node=controlled
+	var stem:=MeshInstance3D.new();var cylinder:=CylinderMesh.new()
+	cylinder.height=18.0;cylinder.top_radius=0.25;cylinder.bottom_radius=0.25;cylinder.radial_segments=32
+	var bark:=StandardMaterial3D.new();bark.resource_name="Test_Bark";cylinder.material=bark
+	stem.mesh=cylinder;stem.position.y=9.0;controlled.add_child(stem);ht.bind_visual(controlled)
 	ht.restore_cuts([{"angle":PI/2,"y":6.0,"work":8.0,"depth":0.0,"width":0.16,"height":0.12}])
 	high.hit(1,Vector3(0,1.0,0.2),Vector3(0,1,2))
 	await idle(ht)

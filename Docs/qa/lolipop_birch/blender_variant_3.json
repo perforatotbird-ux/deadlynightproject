@@ -1,0 +1,192 @@
+{
+  "actions": [],
+  "blender": {
+    "background": true,
+    "build_hash": "e13b728c6880",
+    "version": "5.2.3 LTS",
+    "version_tuple": [
+      5,
+      2,
+      3
+    ]
+  },
+  "hard_gate_pass": true,
+  "input": "/vercel/sandbox/data/deadlynightproject/assets/models/external/lolipop/birch_3_lod0.glb",
+  "issues": [],
+  "material_details": [
+    {
+      "image_texture_nodes": 2,
+      "images": [
+        "bark_color.png",
+        "bark_normal.png"
+      ],
+      "name": "Birch_bark",
+      "node_count": 5,
+      "use_nodes": true
+    },
+    {
+      "image_texture_nodes": 2,
+      "images": [
+        "atlas_color.png",
+        "atlas_normal.png"
+      ],
+      "name": "Birch_bark_base",
+      "node_count": 5,
+      "use_nodes": true
+    },
+    {
+      "image_texture_nodes": 2,
+      "images": [
+        "atlas_color.png",
+        "atlas_normal.png"
+      ],
+      "name": "Birch_foliage",
+      "node_count": 8,
+      "use_nodes": true
+    }
+  ],
+  "materials": [
+    "Birch_bark",
+    "Birch_bark_base",
+    "Birch_foliage"
+  ],
+  "meshes": [
+    {
+      "boundary_edges": 7393,
+      "connected_components": 477,
+      "data_name": "Birch_3_LOD0",
+      "degenerate_faces": 0,
+      "edges": 34394,
+      "flat_polygons": 0,
+      "invalid_vertices": 0,
+      "isolated_vertices": 0,
+      "material_slots": [
+        "Birch_bark",
+        "Birch_bark_base",
+        "Birch_foliage"
+      ],
+      "missing_material_faces": 0,
+      "modifiers": [],
+      "name": "Birch_3_LOD0",
+      "non_manifold_edges": 7393,
+      "polygons": 20465,
+      "refinement_modifiers": [],
+      "shape_keys": 0,
+      "smooth_polygon_ratio": 1.0,
+      "smooth_polygons": 20465,
+      "source_polygons": 20465,
+      "source_vertices": 14390,
+      "triangles": 20465,
+      "uv_layers": 2,
+      "vertex_groups": 0,
+      "vertices": 14390,
+      "weighted_vertices": 0,
+      "wire_edges": 0,
+      "world_bounds": [
+        [
+          -7.345828,
+          -5.330505,
+          0.0
+        ],
+        [
+          5.278697,
+          7.995368,
+          18.0
+        ]
+      ],
+      "zero_length_edges": 0
+    }
+  ],
+  "objects": [
+    {
+      "action": null,
+      "collections": [
+        "Scene Collection"
+      ],
+      "dimensions": [
+        12.624525,
+        13.325872,
+        18.0
+      ],
+      "hidden_render": false,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "name": "Birch_3_LOD0",
+      "parent": null,
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "transform_is_finite": true,
+      "type": "MESH"
+    }
+  ],
+  "scene": {
+    "bounds": {
+      "dimensions": [
+        12.624525,
+        13.325873,
+        18.0
+      ],
+      "max": [
+        5.278697,
+        7.995368,
+        18.0
+      ],
+      "min": [
+        -7.345828,
+        -5.330505,
+        0.0
+      ]
+    },
+    "fps": 24.0,
+    "frame_end": 250,
+    "frame_start": 1,
+    "name": "Scene"
+  },
+  "schema_version": 3,
+  "totals": {
+    "actions": 0,
+    "armatures": 0,
+    "bones": 0,
+    "boundary_edges": 7393,
+    "cameras": 0,
+    "constraints": 0,
+    "degenerate_faces": 0,
+    "edges": 34394,
+    "flat_polygons": 0,
+    "geometry_nodes_modifiers": 0,
+    "images": 4,
+    "invalid_vertices": 0,
+    "isolated_vertices": 0,
+    "lights": 0,
+    "materials": 3,
+    "mesh_objects": 1,
+    "missing_material_faces": 0,
+    "node_materials": 3,
+    "non_manifold_edges": 7393,
+    "objects": 1,
+    "polygons": 20465,
+    "refinement_modifiers": 0,
+    "rigid_body_objects": 0,
+    "shape_keys": 0,
+    "simulation_modifiers": 0,
+    "smooth_polygons": 20465,
+    "textured_materials": 3,
+    "triangles": 20465,
+    "uv_mapped_meshes": 1,
+    "vertices": 14390,
+    "weighted_meshes": 0,
+    "wire_edges": 0,
+    "zero_length_edges": 0
+  }
+}
