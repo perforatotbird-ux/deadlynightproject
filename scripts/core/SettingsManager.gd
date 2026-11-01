@@ -65,6 +65,7 @@ const DEFAULTS: Dictionary = {
 			"crouch": KEY_CTRL,
 			"interact": KEY_E,
 			"inventory": KEY_TAB,
+			"check_watch": KEY_T,
 			"hotbar_1": KEY_1,
 			"hotbar_2": KEY_2,
 			"hotbar_3": KEY_3,

@@ -226,6 +226,7 @@ var survival: Node = null
 func _ready() -> void:
 	_init_inventory_data()
 	_setup_camera_and_viewmodel()
+	watch_arm=preload("res://scripts/player/WatchArm.gd").new();watch_arm.player=self;_camera.add_child(watch_arm)
 	_setup_audio()
 	_setup_hud()
 	_setup_inventory_ui()
@@ -852,6 +853,7 @@ func _use_knife() -> void:
 	_play_ui_sound("res://assets/sounds/level_01/axe/axe_swing_01.wav")
 	_show_tool_banner("ОХОТНИЧИЙ НОЖ: Готов к снятию бересты и крафту")
 
+var watch_arm:Node3D
 var _backpack_ui: Node
 func _setup_inventory_ui() -> void:
 	_backpack_ui = preload("res://scripts/ui/BackpackUI.gd").new()
@@ -887,6 +889,8 @@ func _input(event: InputEvent) -> void:
 
 	# Keyboard Events (TAB toggles inventory!)
 	if event is InputEventKey and event.pressed and not event.echo:
+		if _event_matches_action(event,"check_watch"):
+			watch_arm.toggle();get_viewport().set_input_as_handled();return
 		if _event_matches_action(event, "inventory"):
 			get_viewport().set_input_as_handled()
 			_toggle_inventory()
@@ -934,6 +938,7 @@ func _input(event: InputEvent) -> void:
 			_handle_mouse_look(event.relative)
 			return
 			
+	if is_instance_valid(watch_arm) and watch_arm.visible and event is InputEventMouseButton:return
 	# Mouse Buttons & Wheel (FPS mode)
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
