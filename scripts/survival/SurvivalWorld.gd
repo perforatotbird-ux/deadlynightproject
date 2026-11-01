@@ -253,7 +253,7 @@ func advance(real_seconds: float) -> void:
    if job.get("kind")=="rest":
     if not has_sleep_access() or not safe_sleep_place() or warmth<20 or body.water<=0 or body.food<=0 or body.conditions.has("bleeding") or body.poison_limits_effort():
      cancel_job();notify("Отдых прерван: холод, открытая дверь, голод, жажда, кровотечение или отравление");continue
-   elif player.global_position.distance_to(_v3(job.get("origin",[])))>0.7:
+   elif not is_background_job() and player.global_position.distance_to(_v3(job.get("origin",[])))>0.7:
     cancel_job();notify("Действие прервано движением");continue
    job["elapsed"]=float(job.get("elapsed",0))+dt
    if job["elapsed"]+0.000001>=float(job["duration"]):_finish_job()
@@ -365,8 +365,10 @@ func open_backpack(fire_id: String = "", page: String = "camp") -> void:
  player._backpack_ui.refresh_actions()
  if page=="rest" and has_sleep_access():player._backpack_ui.focus_rest()
  elif fire_id!="":player._backpack_ui.focus_fire()
+func is_background_job() -> bool:
+ return job.get("kind", "") in ["split", "vegetation_cook", "boil"]
 func close_backpack() -> void:
- cancel_job()
+ if not is_background_job():cancel_job()
  if is_instance_valid(player._backpack_ui):player._backpack_ui.hide_context_pages()
  sleep_point=null
  if player._is_inventory_open:player._toggle_inventory()

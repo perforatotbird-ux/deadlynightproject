@@ -56,6 +56,9 @@ func refresh() -> void:
  context_label.text=""
  if s.health<=0:context_label.text="ВЫ ПОГИБЛИ · "+s.body.death_reason+"\nEsc — меню загрузки · F8 — Dev Menu"
  elif s.placing:context_label.text=s.placement.get("reason","Выберите площадку")
+ elif s.is_background_job():
+  var names:={"split":"Раскол брёвен","vegetation_cook":"Готовка","boil":"Кипячение"}
+  context_label.text="%s · осталось %.1f с · рюкзак: посмотреть / отменить" % [names.get(s.job.kind,"Создание"),maxf(0,float(s.job.duration)-float(s.job.elapsed))]
  context_label.add_theme_color_override("font_color",Color("f0a78e") if s.health<=0 else Color("eee5d3"))
  context_label.visible=not context_label.text.is_empty() and s.player._hud_enabled and not s.player._is_inventory_open
  _refresh_vitals(s)

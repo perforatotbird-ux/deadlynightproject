@@ -205,7 +205,7 @@ func run() -> void:
  p.select_hotbar_slot(3);check(s.begin_split(0),"split starts while matches were selected")
  p.drop_item(0);check(Items.count(p.inventory_slots,"log")==1,"cannot drop job input while splitting")
  check(not s.begin_split(0),"cannot start second job")
- s.close_backpack();check(s.job.is_empty() and not p._is_inventory_open and not p._inv_layer.visible,"closing backpack cancels job and actual UI")
+ s.close_backpack();check(not s.job.is_empty() and not p._is_inventory_open and not p._inv_layer.visible,"closing backpack preserves background split and closes actual UI");s.cancel_job()
  check(not s.begin_split(0),"split cannot start outside backpack")
  var fingerprint:=str(p.inventory_slots)
  check(not Items.transact(p,{"log":-1}) and str(p.inventory_slots)==fingerprint,"negative recipe costs rejected atomically")

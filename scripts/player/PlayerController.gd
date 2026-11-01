@@ -1056,7 +1056,9 @@ func _toggle_inventory() -> void:
 		_refresh_inventory_ui()
 	else:
 		_inv_layer.visible = false
-		if is_instance_valid(survival): survival.cancel_job();survival.revoke_sleep_access()
+		if is_instance_valid(survival):
+			if not survival.is_background_job():survival.cancel_job()
+			survival.revoke_sleep_access()
 		_backpack_ui.hide_context_pages()
 		_is_mouse_captured = true
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
