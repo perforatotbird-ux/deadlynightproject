@@ -49,6 +49,7 @@ var ui: CanvasLayer
 var woodland:Node3D
 var atmosphere: Node3D
 var job: Dictionary = {}
+var water_sources:Array[Node3D]=[]
 var rng := RandomNumberGenerator.new()
 var selected_fire := ""
 var placing := false
@@ -167,7 +168,9 @@ func _ready() -> void:
    _restore_exterior_logs(_mine_logs)
  map_ui=preload("res://scripts/ui/WorldMapUI.gd").new();map_ui.session=self;add_child(map_ui)
  dev_menu=preload("res://scripts/dev/DevMenu.gd").new();dev_menu.session=self;add_child(dev_menu)
- if location=="forest":call_deferred("_setup_supplies")
+ if location=="forest":
+  call_deferred("_setup_supplies")
+  call_deferred("_setup_water_sources")
  _update_lighting()
 
 func notify(text: String) -> void:
@@ -788,3 +791,19 @@ func _spawn_supplies() -> void:
  for i in supply_ids.size():
   var id:="camp_supply_"+str(i)
   if not picked.has(id):_spawn_pickup(Items.item(supply_ids[i]),id,shelter.to_global(Vector3(-1.2+(i%4)*0.65,0.15,0.1+(i/4)*0.6)))
+
+func _setup_water_sources()->void:
+ # Await physics registration of imported terrain; never guess an elevation.
+ if location!="forest" or not water_sources.is_empty() or get_parent().get_node_or_null("WorldMap")==null:return
+ await get_tree().physics_frame
+ if not is_instance_valid(player):return
+ for entry in preload("res://scripts/survival/WaterSourceCatalog.gd").SOURCES:
+  var xz:=Vector2(entry.xz[0],entry.xz[1])
+  var query:=PhysicsRayQueryParameters3D.create(Vector3(xz.x,1024,xz.y),Vector3(xz.x,-512,xz.y),1)
+  query.exclude=[player.get_rid()]
+  var hit:=player.get_world_3d().direct_space_state.intersect_ray(query)
+  if hit.is_empty() or hit.normal.y<0.75 or not hit.collider.is_in_group("camp_ground"):
+   push_warning("[WaterSource] No safe terrain for "+str(entry.id));continue
+  var source=preload("res://scripts/survival/ForestWaterSource.gd").new();source.session=self;source.data=entry.duplicate(true)
+  get_parent().add_child(source);source.global_position=hit.position;water_sources.append(source)
+  print("[WaterSource] ",entry.id," grounded at ",source.global_position)

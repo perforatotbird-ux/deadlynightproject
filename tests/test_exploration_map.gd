@@ -8,7 +8,7 @@ func check(ok:bool,text:String)->void:
 func _initialize()->void:call_deferred("run")
 func run()->void:
  var model:=Model.new()
- check(model.landmarks.size()==13,"all twelve spec landmarks plus first-night cabin included")
+ check(model.landmarks.size()==16,"all twelve spec landmarks, cabin and three raw water sources included")
  check(model.explored.is_empty() and model.markers.is_empty(),"new map starts unexplored")
  var spawn:=Vector2(-900,1100);model.explore(spawn)
  check(model.is_revealed(spawn) and model.discovered.has("SPAWN"),"walking reveals ground and discovers real spawn landmark")

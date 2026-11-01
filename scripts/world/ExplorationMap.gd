@@ -22,6 +22,7 @@ func _init()->void:
  for poi in spec.get("pois",[]):
   landmarks.append({"id":str(poi.id),"name":str(poi.name),"xz":[float(poi.position[0]),-float(poi.position[1])]})
  landmarks.append({"id":"FIRST_NIGHT_CABIN","name":"Лесная стоянка","xz":[-914.0,1086.0]})
+ for source in preload("res://scripts/survival/WaterSourceCatalog.gd").SOURCES:landmarks.append(source.duplicate(true))
 func in_bounds(point:Vector2)->bool:
  return point.is_finite() and point.x>=MIN_WORLD and point.x<=2000 and point.y>=MIN_WORLD and point.y<=2000
 func cell_at(point:Vector2)->Vector2i:

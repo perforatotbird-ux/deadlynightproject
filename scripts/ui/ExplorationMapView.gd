@@ -113,7 +113,9 @@ func _draw()->void:
  draw_texture_rect(model.fog_texture(),rect,false)
  for poi in model.landmarks:
   if not model.discovered.has(str(poi.id)):continue
-  var point:=to_screen(Vector2(poi.xz[0],poi.xz[1]));draw_rect(Rect2(point-Vector2.ONE*3,Vector2.ONE*6),INK)
+  var point:=to_screen(Vector2(poi.xz[0],poi.xz[1]))
+  if str(poi.id).begins_with("WATER_"):draw_circle(point,5,Color("32779c"))
+  else:draw_rect(Rect2(point-Vector2.ONE*3,Vector2.ONE*6),INK)
   reserve_icon(point,5);map_label(font,point,str(poi.name))
  if is_instance_valid(session):
   for fire in session.fires:
