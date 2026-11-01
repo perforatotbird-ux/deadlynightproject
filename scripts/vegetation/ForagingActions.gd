@@ -69,9 +69,8 @@ func use(slot:int,confirmed:bool=false) -> bool:
  if Items.calories_for(id)>0 and session.body.food>=100:session.notify("Запас калорий полон");return false
  if not Items.transact(session.player,{item.id:1},[],slot):return false
  session.body.add_calories(Items.calories_for(id))
- session.body.water=clampf(session.body.water+float(d.get("water",0)),0,100)
  var effects:=Catalog.food_effects(id)
- session.body.water=clampf(session.body.water+float(effects.get("water",0)),0,100)
+ session.body.water=clampf(session.body.water+float(d.get("water",0))+float(effects.get("water",0)),0,100)
  session.body.stamina=clampf(session.body.stamina+float(effects.get("stamina",0)),0,100)
  session.energy=clampf(session.energy+float(effects.get("energy",0)),0,100)
  session.warmth=clampf(session.warmth+float(effects.get("warmth",0)),0,100)

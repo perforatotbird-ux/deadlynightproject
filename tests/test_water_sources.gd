@@ -19,6 +19,8 @@ func run()->void:
   check(not ground.is_empty() and absf(ground.position.y-at.y)<0.04,str(source.name)+" is grounded, not floating")
   p.global_position=at+Vector3(0,0.1,1.9);await settle(2)
   check(source.can_collect(),str(source.name)+" is reachable from bank")
+  p._camera.look_at(at+Vector3.UP*0.12);p._raycast.force_raycast_update()
+  check(p._raycast.is_colliding() and p._raycast.get_collider()==source,str(source.name)+" is selectable by real player interaction ray")
   var before:int=Items.count(p.inventory_slots,"raw_water")
   source.survival_interact();source.survival_interact()
   check(Items.count(p.inventory_slots,"raw_water")==before+1,"one interaction yields 0.5 l raw only; cooldown blocks immediate repeat")

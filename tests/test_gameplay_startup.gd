@@ -50,6 +50,20 @@ func run()->void:
  start=p.global_position
  Input.action_press("move_backward");await frames(24);Input.action_release("move_backward")
  check(Vector2(p.global_position.x-start.x,p.global_position.z-start.z).length()>0.2,"movement still works after all UI interactions")
+ # Real viewport input and active player physics while crafting, not a QA teleport.
+ for i in 3:p._add_to_backpack({"species":"birch","weight":4.0})
+ var log_slot:=-1
+ for i in p.inventory_slots.size():
+  if p.inventory_slots[i]!=null and p.inventory_slots[i].type=="log":log_slot=i;break
+ await key(KEY_TAB)
+ check(p.survival.begin_split(log_slot,3),"start thirty-second batch in actual forest")
+ await key(KEY_TAB)
+ check(not p._is_inventory_open and p.survival.job.get("kind")=="split","Tab closes craft UI without cancelling batch")
+ start=p.global_position
+ Input.action_press("move_forward");await frames(24);Input.action_release("move_forward")
+ check(Vector2(p.global_position.x-start.x,p.global_position.z-start.z).length()>0.2 and not p.survival.job.is_empty(),"W movement works during pending background craft")
+ p.survival.advance(30)
+ check(p.survival.Items.count(p.inventory_slots,"firewood")==9 and p.survival.job.is_empty(),"walking batch produces nine pieces exactly once")
  # Exercise missing source independently of production cache.
  var optional=load("res://scripts/player/WatchArm.gd").new()
  optional.model_path="res://assets/nonexistent-watch-test.glb";optional.player=p;p._camera.add_child(optional)

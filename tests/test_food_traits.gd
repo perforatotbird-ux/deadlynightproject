@@ -31,5 +31,10 @@ func run()->void:
  for i in p.inventory_slots.size():
   if p.inventory_slots[i]!=null and p.inventory_slots[i].id=="krasnitsa":s.use_supply(i);break
  check(s.body.stamina==100 and s.body.water>=0 and s.energy<=100,"benefits and drawbacks stay bounded")
+ s.body.calories=1000;s.body.water=100
+ Items.transact(p,{},[Items.item("krasnitsa")])
+ for i in p.inventory_slots.size():
+  if p.inventory_slots[i]!=null and p.inventory_slots[i].id=="krasnitsa":s.use_supply(i);break
+ check(s.body.water==99,"net hydration trade-off stays accurate at full water")
  print("FOOD TRAITS SUMMARY: %d PASS, %d FAIL" % [passes,failures])
  arena.free();await process_frame;quit(1 if failures else 0)
